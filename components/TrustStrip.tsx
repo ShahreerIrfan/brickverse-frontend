@@ -29,23 +29,23 @@ const items = [
 
 export default function TrustStrip() {
   return (
-    <div className="bg-white border border-[#EAE3F7] rounded-[20px] px-3 sm:px-10 py-4 sm:py-6 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+    <div className="bg-white border border-[#EAE3F7] rounded-xl sm:rounded-[20px] px-3 sm:px-6 py-2.5 sm:py-4 grid grid-cols-2 lg:grid-cols-4 gap-x-2 gap-y-2 sm:gap-4 lg:gap-6 shadow-[0_2px_10px_rgba(23,17,54,0.03)]">
       {items.map((item, i) => (
         <div
           key={item.title}
-          className={`flex items-center gap-2.5 sm:gap-4 border-[#EAE3F7] pl-0 ${
-            i % 2 === 1 ? "border-l pl-2.5" : ""
-          } lg:border-l lg:pl-6 lg:first:border-l-0 lg:first:pl-0`}
+          className={`flex items-center gap-2 sm:gap-3 border-[#EAE3F7] pl-0 ${
+            i % 2 === 1 ? "border-l pl-2 sm:pl-3" : ""
+          } lg:border-l lg:pl-5 lg:first:border-l-0 lg:first:pl-0`}
         >
           <span
-            className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-[14px] flex items-center justify-center shrink-0"
-            style={{ backgroundColor: `${item.color}24` }}
+            className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-[12px] flex items-center justify-center shrink-0"
+            style={{ backgroundColor: `${item.color}20` }}
           >
-            <item.icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: item.color }} />
+            <item.icon className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" style={{ color: item.color }} />
           </span>
-          <div>
-            <p className="text-[11.5px] sm:text-[13.5px] font-bold text-[#171136] leading-snug">{item.title}</p>
-            <p className="text-[10px] sm:text-[11.5px] text-[#736E9B] mt-0.5 leading-snug">{item.subtitle}</p>
+          <div className="min-w-0">
+            <p className="text-[10px] sm:text-[12.5px] font-bold text-[#171136] leading-tight truncate">{item.title}</p>
+            <p className="text-[8.5px] sm:text-[11px] text-[#736E9B] mt-0.5 leading-tight truncate">{item.subtitle}</p>
           </div>
         </div>
       ))}
