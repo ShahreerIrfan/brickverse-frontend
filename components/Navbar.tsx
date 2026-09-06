@@ -1,10 +1,12 @@
 import Image from "next/image";
 import { IconChevronRight, IconSearch, IconHeart, IconBag, IconUser } from "./icons";
+import MobileMenu from "./MobileMenu";
 
 export default function Navbar() {
   return (
     <div className="bg-white border-b border-[#EAE3F7]">
-      <div className="max-w-[1440px] mx-auto px-6 lg:px-[100px] py-4 flex items-center gap-4 flex-wrap lg:flex-nowrap">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-[100px] py-3 sm:py-4 flex items-center gap-3 sm:gap-4 flex-wrap lg:flex-nowrap">
+        <MobileMenu />
         <a href="#" className="flex items-center gap-2.5 shrink-0">
           <Image src="/images/logo-mark.svg" alt="Brickverse" width={40} height={40} />
           <span className="flex flex-col leading-tight">
@@ -17,7 +19,7 @@ export default function Navbar() {
           </span>
         </a>
 
-        <div className="order-3 lg:order-none w-full lg:w-auto flex-1 lg:mx-6 flex items-center bg-[#F6F1FF] border border-[#EAE3F7] rounded-full h-13 px-5 gap-2 min-w-0">
+        <div className="order-3 lg:order-none w-full lg:w-auto lg:flex-1 lg:mx-6 flex items-center bg-[#F6F1FF] border border-[#EAE3F7] rounded-full h-13 px-5 gap-2 min-w-0">
           <span className="hidden sm:flex items-center gap-1.5 text-[13px] font-semibold text-[#171136] shrink-0">
             All categories
             <IconChevronRight className="w-3.5 h-3.5 text-[#736E9B]" />

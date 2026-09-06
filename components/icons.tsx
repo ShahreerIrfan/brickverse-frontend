@@ -164,6 +164,22 @@ export function IconSpark({ className, style }: IconProps) {
   );
 }
 
+export function IconMenu({ className, style }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} style={style} fill="none">
+      <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function IconClose({ className, style }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} style={style} fill="none">
+      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function IconStar({ className, filled = true }: IconProps & { filled?: boolean }) {
   return (
     <svg viewBox="0 0 20 20" className={className} fill={filled ? "#FFC93C" : "#E3DEF2"}>

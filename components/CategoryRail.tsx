@@ -1,7 +1,7 @@
 import { IconChevronRight, IconGrid, IconArrowRight } from "./icons";
 import { categories } from "./productData";
 
-function CategoryGlyph({ id, color }: { id: string; color: string }) {
+export function CategoryGlyph({ id, color }: { id: string; color: string }) {
   const common = { fill: color };
   switch (id) {
     case "figure":
@@ -91,7 +91,7 @@ function CategoryGlyph({ id, color }: { id: string; color: string }) {
 
 export default function CategoryRail() {
   return (
-    <aside className="w-full lg:w-[280px] bg-white border border-[#EAE3F7] rounded-[22px] shadow-[0_16px_0_-4px_rgba(23,17,54,0.06)] overflow-hidden shrink-0">
+    <aside className="hidden lg:block w-[280px] bg-white border border-[#EAE3F7] rounded-[22px] shadow-[0_16px_0_-4px_rgba(23,17,54,0.06)] overflow-hidden shrink-0">
       <div className="bg-grad-menuhead px-6 py-4 flex items-center gap-3">
         <IconGrid className="w-5 h-5 text-white" />
         <h3 className="font-[family-name:var(--font-display)] font-bold text-white text-[14.5px]">
