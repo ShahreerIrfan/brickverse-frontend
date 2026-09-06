@@ -5,7 +5,7 @@ import MobileMenu from "./MobileMenu";
 export default function Navbar() {
   return (
     <div className="bg-white border-b border-[#EAE3F7]">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-[100px] py-3 sm:py-4 flex items-center gap-3 sm:gap-4 flex-wrap lg:flex-nowrap">
+      <div className="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-[100px] py-3 sm:py-4 flex items-center gap-2 sm:gap-4 flex-wrap lg:flex-nowrap">
         <MobileMenu />
         <a href="#" className="flex items-center gap-2.5 shrink-0">
           <Image src="/images/logo-mark.svg" alt="Brickverse" width={40} height={40} />

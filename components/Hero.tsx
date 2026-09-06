@@ -3,39 +3,35 @@ import { IconArrowRight, IconArrowLeft, IconArrowRightSlim } from "./icons";
 
 export default function Hero() {
   return (
-    <div className="relative flex-1 bg-grad-hero rounded-2xl sm:rounded-[26px] overflow-hidden min-h-[190px] sm:min-h-[360px] lg:min-h-[420px]">
+    <div className="relative flex-1 bg-grad-hero rounded-2xl sm:rounded-[26px] overflow-hidden sm:min-h-[360px] lg:min-h-[420px]">
       <div className="absolute -right-10 -top-10 w-[300px] h-[300px] rounded-full bg-white/[0.06]" />
       <div className="absolute left-[120px] bottom-[-60px] w-[240px] h-[240px] rounded-full bg-white/[0.05]" />
       <div className="absolute right-[140px] top-[70px] w-[336px] h-[336px] rounded-full border border-white/20 hidden lg:block" />
 
-      <span className="sm:hidden absolute right-3 top-3 z-10 bg-black/25 text-white text-[10.5px] font-semibold rounded-full px-2.5 py-1">
-        01 / 03
-      </span>
-
       <div className="relative z-10 px-4 py-4 sm:px-10 sm:pt-10 sm:pb-8 lg:px-12 sm:max-w-[440px]">
-        <span className="hidden sm:inline-flex items-center gap-2 bg-white/15 rounded-full px-4 py-1.5 text-white text-[12.5px] font-bold tracking-wide">
+        <span className="inline-flex items-center gap-1.5 sm:gap-2 bg-white/15 rounded-full px-2.5 sm:px-4 py-1 sm:py-1.5 text-white text-[10px] sm:text-[12.5px] font-bold tracking-wide">
           <span className="text-[#FFC93C]">✦</span> New season drop
         </span>
-        <h1 className="font-[family-name:var(--font-display)] font-extrabold text-white text-xl leading-tight sm:text-[44px] sm:leading-[1.05] tracking-tight sm:mt-6">
+        <h1 className="font-[family-name:var(--font-display)] font-extrabold text-white text-xl leading-tight sm:text-[44px] sm:leading-[1.05] tracking-tight mt-2.5 sm:mt-6 max-w-[75%] sm:max-w-none">
           Build your own <span className="text-[#FFC93C]">universe.</span>
         </h1>
-        <p className="hidden sm:block text-[#DCD3F5] text-[14.5px] mt-5 leading-relaxed">
+        <p className="text-[#DCD3F5] text-[11.5px] sm:text-[14.5px] mt-2 sm:mt-5 leading-snug sm:leading-relaxed max-w-[78%] sm:max-w-none">
           Anime figures, cartoon collectibles, brick sets and coding kits —
           shipped from Melbourne in 48 hours.
         </p>
-        <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-3 sm:mt-8">
-          <button className="flex items-center gap-2 bg-[#FF4D6D] text-white font-bold text-[12.5px] sm:text-[15.5px] rounded-full h-9 sm:h-[54px] px-4 sm:px-8">
-            Shop now <IconArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 mt-3 sm:mt-8">
+          <button className="flex items-center gap-1.5 sm:gap-2 bg-[#FF4D6D] text-white font-bold text-[11.5px] sm:text-[15.5px] rounded-full h-8 sm:h-[54px] px-3.5 sm:px-8">
+            Shop now <IconArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
           </button>
-          <button className="hidden sm:block border border-white text-white font-semibold text-[15.5px] rounded-full h-[54px] px-8">
+          <button className="flex items-center border border-white text-white font-semibold text-[11.5px] sm:text-[15.5px] rounded-full h-8 sm:h-[54px] px-3.5 sm:px-8">
             Explore sets
           </button>
         </div>
-        <div className="hidden sm:flex items-center gap-3 mt-10">
-          <span className="w-[30px] h-2 rounded-full bg-[#FFC93C]" />
-          <span className="w-2 h-2 rounded-full bg-white/45" />
-          <span className="w-2 h-2 rounded-full bg-white/45" />
-          <span className="text-white/70 text-[11.5px] font-semibold ml-2">01 / 03</span>
+        <div className="flex items-center gap-2 sm:gap-3 mt-3 sm:mt-10 pb-1 sm:pb-0">
+          <span className="w-5 sm:w-[30px] h-1.5 sm:h-2 rounded-full bg-[#FFC93C]" />
+          <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white/45" />
+          <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white/45" />
+          <span className="text-white/70 text-[10px] sm:text-[11.5px] font-semibold ml-1 sm:ml-2">01 / 03</span>
         </div>
       </div>
 
@@ -64,7 +60,7 @@ export default function Hero() {
         </div>
       </div>
 
-      <div className="hidden md:block absolute right-[8%] bottom-0 w-[150px] lg:w-[190px]">
+      <div className="absolute right-1 sm:right-[8%] bottom-0 w-[78px] sm:w-[150px] lg:w-[190px]">
         <Image
           src="/images/figure-samurai-red.svg"
           alt="Neo Samurai figure"
