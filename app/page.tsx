@@ -9,11 +9,12 @@ import ProductGrid from "@/components/ProductGrid";
 import PromoBanner from "@/components/PromoBanner";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
+import BottomNav from "@/components/BottomNav";
 import { productSections } from "@/components/productData";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 bg-[#FFF6EE]">
+    <div className="flex flex-col flex-1 bg-[#FFF6EE] pb-16 lg:pb-0">
       <AnnouncementBar />
       <Navbar />
       <NavLinks />
@@ -38,6 +39,7 @@ export default function Home() {
       </main>
 
       <Footer />
+      <BottomNav />
     </div>
   );
 }
