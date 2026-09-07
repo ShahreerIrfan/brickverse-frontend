@@ -10,72 +10,11 @@ interface RelatedShelfProps {
 }
 
 export default function RelatedShelf({ products = [] }: RelatedShelfProps) {
-  // Default fallback related companion products matching the SVG design
-  const defaultItems: Product[] = [
-    {
-      id: "mecha-pilot",
-      category: "Anime figures",
-      categoryColor: "#FF4D6D",
-      name: "Mecha Pilot",
-      subtitle: "Zero deluxe box set",
-      image: "/images/figure-mecha-teal.svg",
-      cardBg: "#FFEAF0",
-      badge: "HOT",
-      badgeColor: "#FF4D6D",
-      rating: 4.9,
-      reviews: 94,
-      price: "৳58.00",
-      accent: "#FF4D6D",
-    },
-    {
-      id: "sky-ninja",
-      category: "Anime figures",
-      categoryColor: "#13BFC9",
-      name: "Sky Ninja",
-      subtitle: "Kage limited colourway",
-      image: "/images/figure-ninja-gold.svg",
-      cardBg: "#E4F7F8",
-      badge: "-25%",
-      badgeColor: "#13BFC9",
-      rating: 4.6,
-      reviews: 212,
-      price: "৳29.50",
-      originalPrice: "৳39.00",
-      accent: "#13BFC9",
-    },
-    {
-      id: "ronin-base",
-      category: "Accessories",
-      categoryColor: "#E8A317",
-      name: "Ronin Base",
-      subtitle: "Display stand · walnut",
-      image: "/images/bricks-stack-navy.svg",
-      cardBg: "#FFF4DA",
-      badge: "ADD-ON",
-      badgeColor: "#E8A317",
-      rating: 4.7,
-      reviews: 58,
-      price: "৳18.00",
-      accent: "#E8A317",
-    },
-    {
-      id: "star-mage",
-      category: "Anime figures",
-      categoryColor: "#7B5CFF",
-      name: "Star Mage",
-      subtitle: "Luna glow-in-the-dark",
-      image: "/images/figure-mage-purple.svg",
-      cardBg: "#EFE9FF",
-      badge: "LIMITED",
-      badgeColor: "#7B5CFF",
-      rating: 4.7,
-      reviews: 76,
-      price: "৳42.00",
-      accent: "#7B5CFF",
-    },
-  ];
+  if (!products || products.length === 0) {
+    return null;
+  }
 
-  const displayList = products.length >= 2 ? products : defaultItems;
+  const displayList = products;
 
   return (
     <div className="mt-12 sm:mt-16">

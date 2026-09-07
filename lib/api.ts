@@ -1,4 +1,4 @@
-import { ProductSection, Category, Product, productSections as fallbackSections, categories as fallbackCategories } from "@/components/productData";
+import { ProductSection, Category, Product } from "@/components/productData";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
 
@@ -10,12 +10,12 @@ export async function getProductSections(): Promise<ProductSection[]> {
     const res = await fetch(`${API_BASE_URL}/sections/`, {
       next: { revalidate: 30 },
     });
-    if (!res.ok) return fallbackSections;
+    if (!res.ok) return [];
     const data = await res.json();
-    return Array.isArray(data) && data.length > 0 ? data : fallbackSections;
+    return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.warn("[API] Products API unreachable, using fallback:", error);
-    return fallbackSections;
+    console.warn("[API] Products API unreachable:", error);
+    return [];
   }
 }
 
@@ -24,12 +24,12 @@ export async function getCategories(): Promise<Category[]> {
     const res = await fetch(`${API_BASE_URL}/categories/`, {
       next: { revalidate: 30 },
     });
-    if (!res.ok) return fallbackCategories;
+    if (!res.ok) return [];
     const data = await res.json();
-    return Array.isArray(data) && data.length > 0 ? data : fallbackCategories;
+    return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.warn("[API] Categories API unreachable, using fallback:", error);
-    return fallbackCategories;
+    console.warn("[API] Categories API unreachable:", error);
+    return [];
   }
 }
 
@@ -134,12 +134,6 @@ export async function getProductById(id: string): Promise<Product | null> {
   } catch (error) {
     console.warn(`[API] Failed to fetch product ${id}:`, error);
   }
-
-  // Fallback to local catalog
-  for (const section of fallbackSections) {
-    const found = section.products.find((p) => p.id === id);
-    if (found) return found;
-  }
   return null;
 }
 
@@ -158,10 +152,7 @@ export async function getRelatedProducts(category?: string, excludeId?: string):
   } catch (error) {
     console.warn("[API] Failed to fetch related products:", error);
   }
-
-  // Fallback related items
-  const allFallback = fallbackSections.flatMap((s) => s.products);
-  return allFallback.filter((p) => p.id !== excludeId).slice(0, 4);
+  return [];
 }
 
 // -------------------------------------------------------------

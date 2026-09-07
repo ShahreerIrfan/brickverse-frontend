@@ -3,6 +3,10 @@ import ProductCard from "./ProductCard";
 import type { ProductSection } from "./productData";
 
 export default function ProductGrid({ section }: { section: ProductSection }) {
+  if (!section || !section.products || section.products.length === 0) {
+    return null;
+  }
+
   return (
     <section>
       <div className="flex flex-wrap items-end justify-between gap-3 sm:gap-4 mb-4 sm:mb-8">

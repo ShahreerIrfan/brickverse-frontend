@@ -125,7 +125,7 @@ export default function MobileMenu() {
                 <div className="flex items-center justify-between pt-1">
                   {user.role === "admin" ? (
                     <a
-                      href="http://127.0.0.1:8000/admin/"
+                      href={(process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/?$/, "") : "https://brickbackend.eezzymart.tech") + "/admin/"}
                       target="_blank"
                       rel="noreferrer"
                       className="font-bold text-[#7B5CFF] hover:underline flex items-center gap-1"

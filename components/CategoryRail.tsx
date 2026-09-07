@@ -101,41 +101,49 @@ export default function CategoryRail({ initialCategories }: { initialCategories?
         </h3>
       </div>
       <ul className="p-2.5">
-        {displayCategories.map((cat) => (
-          <li key={cat.id}>
-            <a
-              href="#"
-              className={`group flex items-center gap-3 rounded-[14px] px-3 py-2.5 relative ${
-                cat.featured ? "bg-[#FFF1F4]" : "hover:bg-[#FAF7FF]"
-              }`}
-            >
-              {cat.featured && (
-                <span className="absolute left-0 top-2 bottom-2 w-1 rounded-full bg-[#FF4D6D]" />
-              )}
-              <span
-                className="w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0"
-                style={{ backgroundColor: `${cat.color}24` }}
-              >
-                <CategoryGlyph id={cat.id} color={cat.color} />
-              </span>
-              <span
-                className={`text-[13.5px] flex-1 ${
-                  cat.featured ? "font-bold text-[#171136]" : "font-medium text-[#3B3468]"
+        {displayCategories.length === 0 ? (
+          <li className="py-8 px-4 text-center text-xs text-[#736E9B]">
+            Categories will appear here once products are created.
+          </li>
+        ) : (
+          displayCategories.map((cat) => (
+            <li key={cat.id}>
+              <a
+                href="#"
+                className={`group flex items-center gap-3 rounded-[14px] px-3 py-2.5 relative ${
+                  cat.featured ? "bg-[#FFF1F4]" : "hover:bg-[#FAF7FF]"
                 }`}
               >
-                {cat.label}
-              </span>
-              <IconChevronRight className="w-3.5 h-3.5 text-[#736E9B] opacity-0 group-hover:opacity-100 transition-opacity" />
-            </a>
-          </li>
-        ))}
+                {cat.featured && (
+                  <span className="absolute left-0 top-2 bottom-2 w-1 rounded-full bg-[#FF4D6D]" />
+                )}
+                <span
+                  className="w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: `${cat.color}24` }}
+                >
+                  <CategoryGlyph id={cat.id} color={cat.color} />
+                </span>
+                <span
+                  className={`text-[13.5px] flex-1 ${
+                    cat.featured ? "font-bold text-[#171136]" : "font-medium text-[#3B3468]"
+                  }`}
+                >
+                  {cat.label}
+                </span>
+                <IconChevronRight className="w-3.5 h-3.5 text-[#736E9B] opacity-0 group-hover:opacity-100 transition-opacity" />
+              </a>
+            </li>
+          ))
+        )}
       </ul>
-      <div className="border-t border-[#EAE3F7] px-6 py-4">
-        <a href="#" className="inline-flex items-center gap-2 text-[13px] font-bold text-[#FF4D6D]">
-          See all 48 categories
-          <IconArrowRight className="w-4 h-4" />
-        </a>
-      </div>
+      {displayCategories.length > 0 && (
+        <div className="border-t border-[#EAE3F7] px-6 py-4">
+          <a href="#" className="inline-flex items-center gap-2 text-[13px] font-bold text-[#FF4D6D]">
+            See all categories
+            <IconArrowRight className="w-4 h-4" />
+          </a>
+        </div>
+      )}
     </aside>
   );
 }
