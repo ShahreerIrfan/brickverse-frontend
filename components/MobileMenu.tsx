@@ -7,12 +7,14 @@ import {
   IconClose,
   IconChevronRight,
   IconUser,
+  IconShield,
   IconPhone,
   IconTruck,
   IconArrowRight,
 } from "./icons";
 import { CategoryGlyph } from "./CategoryRail";
 import { categories } from "./productData";
+import { useAuth } from "@/context/AuthContext";
 
 const navLinks = [
   { label: "Home", active: true },
@@ -27,6 +29,7 @@ const navLinks = [
 
 export default function MobileMenu() {
   const [open, setOpen] = useState(false);
+  const { user, isAuthenticated, openLoginModal, logout } = useAuth();
 
   useEffect(() => {
     if (!open) return;
@@ -66,7 +69,7 @@ export default function MobileMenu() {
         }`}
       >
         <div className="flex items-center justify-between gap-3 bg-white px-5 py-4 border-b border-[#EAE3F7] shrink-0">
-          <a href="#" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
+          <a href="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
             <Image src="/images/logo-mark.svg" alt="Brickverse" width={34} height={34} />
             <span className="font-[family-name:var(--font-display)] font-extrabold text-lg tracking-tight text-[#171136]">
               Brickverse
@@ -82,19 +85,86 @@ export default function MobileMenu() {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          <a
-            href="#"
-            className="flex items-center gap-3 mx-4 mt-4 rounded-2xl bg-white border border-[#EAE3F7] px-4 py-3"
-          >
-            <span className="w-10 h-10 rounded-full bg-[#FFF1F4] flex items-center justify-center shrink-0">
-              <IconUser className="w-4 h-4 text-[#FF4D6D]" />
-            </span>
-            <span className="flex-1">
-              <span className="block text-[13.5px] font-bold text-[#171136]">Sign in</span>
-              <span className="block text-[11.5px] text-[#736E9B]">Track orders & wishlist</span>
-            </span>
-            <IconChevronRight className="w-4 h-4 text-[#736E9B]" />
-          </a>
+          {/* User Auth Card */}
+          {isAuthenticated && user ? (
+            <div className="mx-4 mt-4 rounded-2xl bg-white border border-[#EAE3F7] p-3.5 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
+                  style={{ backgroundColor: user.role === "admin" ? "#7B5CFF" : "#FF4D6D" }}
+                >
+                  {user.first_name ? user.first_name[0].toUpperCase() : user.email[0].toUpperCase()}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-bold text-[#171136] truncate">
+                    {user.first_name ? `${user.first_name} ${user.last_name || ""}` : user.email}
+                  </p>
+                  <p className="text-[11px] text-[#736E9B] truncate">{user.email}</p>
+                </div>
+                <span
+                  className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full"
+                  style={{
+                    backgroundColor: user.role === "admin" ? "#EFE9FF" : "#FFF1F4",
+                    color: user.role === "admin" ? "#7B5CFF" : "#FF4D6D",
+                  }}
+                >
+                  {user.role}
+                </span>
+              </div>
+
+              <div className="mt-3 pt-2.5 border-t border-[#EAE3F7] flex flex-col gap-2 text-xs">
+                <a
+                  href="/dashboard"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-between font-bold text-[#171136] hover:text-[#FF4D6D]"
+                >
+                  <span>📊 {user.role === "admin" ? "Admin Dashboard" : "Customer Dashboard"}</span>
+                  <IconChevronRight className="w-3.5 h-3.5 text-[#736E9B]" />
+                </a>
+
+                <div className="flex items-center justify-between pt-1">
+                  {user.role === "admin" ? (
+                    <a
+                      href="http://127.0.0.1:8000/admin/"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-bold text-[#7B5CFF] hover:underline flex items-center gap-1"
+                    >
+                      <IconShield className="w-3.5 h-3.5" /> Django Admin
+                    </a>
+                  ) : (
+                    <span className="text-[11.5px] text-[#736E9B]">VIP Member</span>
+                  )}
+                  <button
+                    onClick={() => {
+                      logout();
+                      setOpen(false);
+                    }}
+                    className="text-red-500 font-bold hover:underline"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                setOpen(false);
+                openLoginModal();
+              }}
+              className="flex items-center gap-3 mx-4 mt-4 w-[calc(100%-32px)] text-left rounded-2xl bg-white border border-[#EAE3F7] px-4 py-3 shadow-sm active:scale-98 transition-all cursor-pointer"
+            >
+              <span className="w-10 h-10 rounded-full bg-[#FFF1F4] flex items-center justify-center shrink-0">
+                <IconUser className="w-4 h-4 text-[#FF4D6D]" />
+              </span>
+              <span className="flex-1">
+                <span className="block text-[13.5px] font-bold text-[#171136]">Sign in / Sign up</span>
+                <span className="block text-[11.5px] text-[#736E9B]">Join Brickverse rewards</span>
+              </span>
+              <IconChevronRight className="w-4 h-4 text-[#736E9B]" />
+            </button>
+          )}
 
           <p className="px-5 mt-6 mb-2 text-[11px] font-bold tracking-wider text-[#736E9B]">
             CATEGORIES

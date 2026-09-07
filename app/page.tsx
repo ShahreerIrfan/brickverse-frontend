@@ -10,9 +10,14 @@ import PromoBanner from "@/components/PromoBanner";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
-import { productSections } from "@/components/productData";
+import { getProductSections, getCategories } from "@/lib/api";
 
-export default function Home() {
+export default async function Home() {
+  const [sections, categories] = await Promise.all([
+    getProductSections(),
+    getCategories(),
+  ]);
+
   return (
     <div className="flex flex-col flex-1 bg-[#FFF6EE] pb-16 lg:pb-0">
       <AnnouncementBar />
@@ -21,7 +26,7 @@ export default function Home() {
 
       <main className="max-w-[1440px] w-full mx-auto px-3 sm:px-6 lg:px-[100px] py-4 sm:py-8 flex flex-col gap-4 sm:gap-8">
         <div className="flex flex-col lg:flex-row gap-6">
-          <CategoryRail />
+          <CategoryRail initialCategories={categories} />
           <div className="flex-1 flex flex-col">
             <Hero />
             <PromoColumns />
@@ -30,7 +35,7 @@ export default function Home() {
 
         <TrustStrip />
 
-        {productSections.map((section) => (
+        {sections.map((section) => (
           <ProductGrid key={section.id} section={section} />
         ))}
 

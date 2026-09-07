@@ -1,18 +1,80 @@
 export type Product = {
   id: string;
+  slug?: string;
+  sku?: string;
   category: string;
-  categoryColor: string;
+  categoryColor?: string;
+  subcategory?: any;
+  subcategoryId?: string;
   name: string;
-  subtitle: string;
+  subtitle?: string;
+  series?: string;
   image: string;
-  cardBg: string;
+  image_file?: string | null;
+  gallery_images?: {
+    id: number;
+    image_file?: string | null;
+    image_url?: string;
+    imageUrl?: string;
+    order?: number;
+  }[];
+  cardBg?: string;
   badge?: string;
-  badgeColor: string;
-  rating: number;
-  reviews: number;
+  badgeColor?: string;
+  rating?: number;
+  reviews?: number;
   price: string;
   originalPrice?: string;
-  accent: string;
+  regularPrice?: string;
+  discountedPrice?: string;
+  tradePrice?: string;
+  discountPercent?: number;
+  accent?: string;
+  description?: string;
+  stock?: number;
+  thumbnails?: string[];
+  reviews_list?: {
+    id: number;
+    author: string;
+    rating: number;
+    comment: string;
+    date: string;
+  }[];
+};
+
+
+export type SubCategory = {
+  id: string;
+  categoryId?: string;
+  label: string;
+  slug?: string;
+  description?: string;
+  image?: string;
+  order?: number;
+};
+
+export type Category = {
+  id: string;
+  label: string;
+  color: string;
+  icon_type?: string;
+  featured?: boolean;
+  order?: number;
+  subcategories?: SubCategory[];
+};
+
+export type UserRole = "admin" | "customer";
+
+export type User = {
+  id: number;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+  avatar?: string;
+  role: UserRole;
+  is_verified?: boolean;
+  created_at?: string;
 };
 
 export type ProductSection = {
@@ -46,8 +108,8 @@ export const productSections: ProductSection[] = [
         badgeColor: "#FF4D6D",
         rating: 4.8,
         reviews: 128,
-        price: "$34.99",
-        originalPrice: "$46.00",
+        price: "৳34.99",
+        originalPrice: "৳46.00",
         accent: "#FF4D6D",
       },
       {
@@ -62,7 +124,7 @@ export const productSections: ProductSection[] = [
         badgeColor: "#13BFC9",
         rating: 4.9,
         reviews: 94,
-        price: "$58.00",
+        price: "৳58.00",
         accent: "#13BFC9",
       },
       {
@@ -77,8 +139,8 @@ export const productSections: ProductSection[] = [
         badgeColor: "#E8A317",
         rating: 4.6,
         reviews: 212,
-        price: "$29.50",
-        originalPrice: "$39.00",
+        price: "৳29.50",
+        originalPrice: "৳39.00",
         accent: "#E8A317",
       },
       {
@@ -93,7 +155,7 @@ export const productSections: ProductSection[] = [
         badgeColor: "#7B5CFF",
         rating: 4.7,
         reviews: 76,
-        price: "$42.00",
+        price: "৳42.00",
         accent: "#7B5CFF",
       },
     ],
@@ -118,8 +180,8 @@ export const productSections: ProductSection[] = [
         badgeColor: "#FF4D6D",
         rating: 4.9,
         reviews: 341,
-        price: "$79.99",
-        originalPrice: "$99.00",
+        price: "৳79.99",
+        originalPrice: "৳99.00",
         accent: "#FF4D6D",
       },
       {
@@ -134,7 +196,7 @@ export const productSections: ProductSection[] = [
         badgeColor: "#13BFC9",
         rating: 4.5,
         reviews: 87,
-        price: "$34.00",
+        price: "৳34.00",
         accent: "#13BFC9",
       },
       {
@@ -149,8 +211,8 @@ export const productSections: ProductSection[] = [
         badgeColor: "#E8A317",
         rating: 4.8,
         reviews: 156,
-        price: "$64.50",
-        originalPrice: "$82.00",
+        price: "৳64.50",
+        originalPrice: "৳82.00",
         accent: "#E8A317",
       },
       {
@@ -165,8 +227,8 @@ export const productSections: ProductSection[] = [
         badgeColor: "#7B5CFF",
         rating: 4.4,
         reviews: 203,
-        price: "$24.99",
-        originalPrice: "$32.00",
+        price: "৳24.99",
+        originalPrice: "৳32.00",
         accent: "#7B5CFF",
       },
     ],
@@ -191,7 +253,7 @@ export const productSections: ProductSection[] = [
         badgeColor: "#FF4D6D",
         rating: 4.9,
         reviews: 118,
-        price: "$89.00",
+        price: "৳89.00",
         accent: "#FF4D6D",
       },
       {
@@ -206,8 +268,8 @@ export const productSections: ProductSection[] = [
         badgeColor: "#13BFC9",
         rating: 4.6,
         reviews: 264,
-        price: "$49.99",
-        originalPrice: "$65.00",
+        price: "৳49.99",
+        originalPrice: "৳65.00",
         accent: "#13BFC9",
       },
       {
@@ -222,7 +284,7 @@ export const productSections: ProductSection[] = [
         badgeColor: "#E8A317",
         rating: 4.7,
         reviews: 62,
-        price: "$39.00",
+        price: "৳39.00",
         accent: "#E8A317",
       },
       {
@@ -237,8 +299,8 @@ export const productSections: ProductSection[] = [
         badgeColor: "#7B5CFF",
         rating: 4.8,
         reviews: 45,
-        price: "$119.00",
-        originalPrice: "$139.00",
+        price: "৳119.00",
+        originalPrice: "৳139.00",
         accent: "#7B5CFF",
       },
     ],

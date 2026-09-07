@@ -22,7 +22,7 @@ export default function PromoColumns() {
             Anime figure <span className="text-[#FFC93C]">collection</span>
           </h3>
           <p className="text-[#E4DAFF] text-[8px] sm:text-[11.5px] mt-0.5 sm:mt-1 leading-tight line-clamp-1">
-            Limited runs · From $24.99
+            Limited runs · From ৳2,499
           </p>
         </div>
 

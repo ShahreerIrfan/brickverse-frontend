@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Poppins, Inter } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
+import AuthModal from "@/components/AuthModal";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -19,13 +21,22 @@ export const metadata: Metadata = {
     "Anime figures, cartoon collectibles, brick sets and coding kits — shipped from Melbourne in 48 hours.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html
       lang="en"
       className={`${poppins.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#FFF6EE]">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#FFF6EE]">
+        <AuthProvider>
+          {children}
+          <AuthModal />
+        </AuthProvider>
+      </body>
     </html>
   );
 }
