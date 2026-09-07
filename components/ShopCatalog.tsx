@@ -241,7 +241,7 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
     (searchQuery.trim() ? 1 : 0);
 
   return (
-    <div className="max-w-[1580px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+    <div className="max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
       {/* 1. Breadcrumbs */}
       <nav className="flex items-center gap-2 text-xs text-[#736E9B] mb-4 sm:mb-6">
         <Link href="/" className="hover:text-[#FF4D6D] transition-colors font-medium">

@@ -14,7 +14,7 @@ const links = [
 export default function NavLinks() {
   return (
     <div className="bg-white border-b border-[#EAE3F7] hidden lg:block">
-      <div className="max-w-[1580px] mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
         <nav className="flex items-center gap-9">
           {links.map((link) => (
             <Link

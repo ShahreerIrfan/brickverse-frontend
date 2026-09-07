@@ -105,7 +105,7 @@ function LoginForm() {
   return (
     <div className="min-h-screen bg-[#FFF6EE] flex flex-col justify-between p-4">
       {/* Top Header */}
-      <header className="max-w-[1580px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
+      <header className="max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5">
           <Image src="/images/logo-mark.svg" alt="Brickverse" width={36} height={36} />
           <span className="font-[family-name:var(--font-display)] font-extrabold text-xl tracking-tight text-[#171136]">

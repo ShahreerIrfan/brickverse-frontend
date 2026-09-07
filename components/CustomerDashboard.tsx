@@ -88,7 +88,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
     <div className="min-h-screen bg-[#FFF6EE] text-[#171136]">
       {/* Top Navigation Header */}
       <header className="bg-white border-b border-[#EAE3F7] sticky top-0 z-30 shadow-xs">
-        <div className="max-w-[1580px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-2.5">
               <Image src="/images/logo-mark.svg" alt="Brickverse" width={38} height={38} />
@@ -128,7 +128,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
       </header>
 
       {/* Main 2-Column Dashboard Container */}
-      <div className="max-w-[1580px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
           {/* ========================================================================= */}
           {/* LEFT SIDEBAR MENU (Exact Match to Reference Design) */}

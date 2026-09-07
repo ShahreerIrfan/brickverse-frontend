@@ -11,7 +11,7 @@ export default function Navbar() {
 
   return (
     <div className="bg-white border-b border-[#EAE3F7] relative z-40">
-      <div className="max-w-[1580px] mx-auto px-3.5 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex flex-col lg:flex-row items-center gap-2.5 sm:gap-4">
+      <div className="max-w-[1440px] mx-auto px-3.5 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex flex-col lg:flex-row items-center gap-2.5 sm:gap-4">
         
         {/* Top bar on Mobile (Row 1) / Left + Right wrapper on Desktop */}
         <div className="flex items-center justify-between w-full lg:w-auto shrink-0 gap-2">
