@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { IconArrowRight } from "./icons";
 import ProductCard from "./ProductCard";
 import type { ProductSection } from "./productData";
@@ -6,6 +7,18 @@ export default function ProductGrid({ section }: { section: ProductSection }) {
   if (!section || !section.products || section.products.length === 0) {
     return null;
   }
+
+  // Derive target category link
+  let categoryParam = "";
+  if (section.id.includes("anime") || section.id.includes("figure")) {
+    categoryParam = "figure";
+  } else if (section.id.includes("brick")) {
+    categoryParam = "brick";
+  } else if (section.id.includes("code") || section.id.includes("stem")) {
+    categoryParam = "code";
+  }
+
+  const shopUrl = categoryParam ? `/shop?category=${encodeURIComponent(categoryParam)}` : "/shop";
 
   return (
     <section>
@@ -24,15 +37,16 @@ export default function ProductGrid({ section }: { section: ProductSection }) {
             <span className="text-[11px] sm:text-[13px] font-medium text-[#736E9B]">{section.itemCount}</span>
           </div>
         </div>
-        <button
-          className="flex items-center gap-1.5 sm:gap-2 rounded-full border h-9 sm:h-[46px] px-4 sm:px-6 text-[12px] sm:text-sm font-bold"
+        <Link
+          href={shopUrl}
+          className="flex items-center gap-1.5 sm:gap-2 rounded-full border h-9 sm:h-[46px] px-4 sm:px-6 text-[12px] sm:text-sm font-bold hover:opacity-80 transition-opacity"
           style={{ borderColor: section.accent, color: section.accent }}
         >
           View all <IconArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        </button>
+        </Link>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-5">
         {section.products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
