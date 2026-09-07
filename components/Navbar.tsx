@@ -64,10 +64,10 @@ export default function Navbar() {
               <Link
                 href={user.role === "admin" ? "/en/admin" : "/dashboard"}
                 title={`Go to ${user.role === "admin" ? "Admin Dashboard" : "Dashboard"}`}
-                className="flex items-center gap-1.5 bg-[#F6F1FF] hover:bg-[#EFE9FF] border border-[#EAE3F7] rounded-full h-9 px-2.5 cursor-pointer"
+                className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-[#F6F1FF] hover:bg-[#EFE9FF] border border-[#EAE3F7] flex items-center justify-center cursor-pointer transition-transform active:scale-95"
               >
                 <span
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                  className="w-6.5 h-6.5 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0 shadow-xs"
                   style={{ backgroundColor: user.role === "admin" ? "#7B5CFF" : "#FF4D6D" }}
                 >
                   {user.first_name ? user.first_name[0].toUpperCase() : user.email[0].toUpperCase()}
@@ -76,10 +76,10 @@ export default function Navbar() {
             ) : (
               <button
                 onClick={openLoginModal}
-                className="flex items-center gap-1.5 bg-[#171136] hover:bg-[#251c4a] active:scale-95 text-white rounded-full h-9 px-3.5 shadow-sm text-xs font-bold cursor-pointer"
+                aria-label="Sign in"
+                className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-[#171136] hover:bg-[#251c4a] active:scale-95 text-white flex items-center justify-center shadow-xs cursor-pointer"
               >
                 <IconUser className="w-3.5 h-3.5" />
-                <span>Sign in</span>
               </button>
             )}
           </div>
