@@ -56,6 +56,7 @@ import {
   IconPhoto,
   IconArrowLeft,
   IconBell,
+  IconMail,
   IconMoon,
   IconExternalLink,
 } from "./icons";
@@ -592,7 +593,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F5FA] text-[#171136] flex font-[family-name:var(--font-sans)]">
+    <div className="h-screen w-full overflow-hidden bg-[#F7F5FA] text-[#171136] flex font-[family-name:var(--font-sans)]">
       {/* ------------------------------------------------------------- */}
       {/* Toast Notification Banner */}
       {/* ------------------------------------------------------------- */}
@@ -607,10 +608,10 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
       )}
 
       {/* ------------------------------------------------------------- */}
-      {/* LEFT SIDEBAR MENU */}
+      {/* LEFT SIDEBAR MENU (Permanently Sticky / Fixed Height) */}
       {/* ------------------------------------------------------------- */}
       <aside
-        className={`bg-white border-r border-[#EAE3F7] flex flex-col justify-between shrink-0 transition-all duration-300 select-none z-30 sticky top-0 h-screen overflow-y-auto ${
+        className={`h-full bg-white border-r border-[#EAE3F7] flex flex-col justify-between shrink-0 select-none z-30 overflow-y-auto transition-all duration-300 ${
           sidebarCollapsed ? "w-[72px]" : "w-[240px] lg:w-[260px]"
         }`}
       >
@@ -652,7 +653,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                 </p>
               )}
               <button
-                onClick={() => setActiveNav("dashboard")}
+                onClick={() => navigateTo("dashboard")}
                 title="Dashboard"
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl font-bold text-xs sm:text-[13px] transition-all cursor-pointer ${
                   activeNav === "dashboard"
@@ -700,7 +701,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                 {productsMenuOpen && !sidebarCollapsed && (
                   <div className="pl-8 pr-1 py-1 space-y-1">
                     <button
-                      onClick={() => setActiveNav("products-all")}
+                      onClick={() => navigateTo("products-all")}
                       className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
                         activeNav === "products-all"
                           ? "text-[#FF4D6D] font-extrabold bg-[#FFF0F4]"
@@ -711,7 +712,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                       <span>All Products</span>
                     </button>
                     <button
-                      onClick={() => setActiveNav("products-taxonomy")}
+                      onClick={() => navigateTo("products-taxonomy")}
                       className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
                         activeNav === "products-taxonomy"
                           ? "text-[#FF4D6D] font-extrabold bg-[#FFF0F4]"
@@ -751,7 +752,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                 {ordersMenuOpen && !sidebarCollapsed && (
                   <div className="pl-8 pr-1 py-1 space-y-1">
                     <button
-                      onClick={() => setActiveNav("orders-all")}
+                      onClick={() => navigateTo("orders-all")}
                       className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
                         activeNav === "orders-all"
                           ? "text-[#FF4D6D] font-extrabold bg-[#FFF0F4]"
@@ -800,7 +801,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                 {usersMenuOpen && !sidebarCollapsed && (
                   <div className="pl-8 pr-1 py-1 space-y-1">
                     <button
-                      onClick={() => setActiveNav("users-all")}
+                      onClick={() => navigateTo("users-all")}
                       className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
                         activeNav === "users-all"
                           ? "text-[#FF4D6D] font-extrabold bg-[#FFF0F4]"
@@ -817,48 +818,12 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
           </div>
         </div>
 
-        {/* Sidebar Bottom User & Storefront Section */}
-        <div className="p-3 border-t border-[#F0EBF8] space-y-2">
-          <Link
-            href="/"
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-[#171136] hover:bg-[#F6F1FF] transition-all"
-          >
-            <IconStore className="w-4 h-4 text-[#FF4D6D] shrink-0" />
-            {!sidebarCollapsed && <span>View Storefront</span>}
-          </Link>
-
-          <a
-            href="http://127.0.0.1:8000/admin/"
-            target="_blank"
-            rel="noreferrer"
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-[#7B5CFF] hover:bg-[#EFE9FF] transition-all"
-          >
-            <IconShield className="w-4 h-4 shrink-0" />
-            {!sidebarCollapsed && <span>Django Admin ↗</span>}
-          </a>
-
+        {/* Clean Sidebar Footer */}
+        <div className="p-3.5 border-t border-[#F0EBF8] text-center">
           {!sidebarCollapsed && (
-            <div className="p-2.5 rounded-2xl bg-[#F8F6FD] border border-[#EAE3F7] flex items-center justify-between mt-2">
-              <div className="flex items-center gap-2 overflow-hidden">
-                <div className="w-7 h-7 rounded-full bg-[#171136] text-white flex items-center justify-center font-extrabold text-[11px] shrink-0">
-                  {user.first_name ? user.first_name[0] : "A"}
-                </div>
-                <div className="flex flex-col truncate">
-                  <span className="font-bold text-xs truncate text-[#171136]">
-                    {user.first_name || user.email.split("@")[0]}
-                  </span>
-                  <span className="text-[10px] text-[#736E9B] truncate">{user.email}</span>
-                </div>
-              </div>
-
-              <button
-                onClick={logout}
-                title="Sign out"
-                className="text-red-500 hover:text-red-700 p-1 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
-              >
-                <IconLogOut className="w-4 h-4" />
-              </button>
-            </div>
+            <p className="text-[10px] font-bold text-[#A5A0C2] uppercase tracking-wider">
+              Brickverse v2.4 • Admin
+            </p>
           )}
         </div>
       </aside>
@@ -866,7 +831,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
       {/* ------------------------------------------------------------- */}
       {/* MAIN CONTENT AREA */}
       {/* ------------------------------------------------------------- */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      <div className="flex-1 flex flex-col h-full min-w-0 overflow-y-auto">
         {/* Top Header Bar */}
         <header className="bg-white border-b border-[#EAE3F7] sticky top-0 z-20 px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1 max-w-xl">
@@ -895,28 +860,92 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Live Indicator & Time */}
-            <div className="hidden sm:flex items-center gap-2 bg-[#E6FDF4] border border-[#B3F7DC] px-3 py-1 rounded-full text-[11px] font-bold text-[#059669]">
-              <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
-              <span>Live</span>
-              <span className="text-[#065F46] font-mono ml-1 font-semibold">{timeString || "01:34:52 PM"}</span>
-            </div>
-
-            {/* Refresh Button */}
-            <button
-              onClick={fetchData}
-              title="Refresh Data"
-              className={`w-9 h-9 rounded-full bg-[#F8F6FD] hover:bg-[#EFE9FF] flex items-center justify-center text-[#736E9B] hover:text-[#171136] transition-all cursor-pointer ${
-                refreshing ? "animate-spin text-[#FF4D6D]" : ""
-              }`}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* View Storefront Icon Button */}
+            <Link
+              href="/"
+              target="_blank"
+              title="View Storefront"
+              className="w-9 h-9 rounded-full bg-[#F8F6FD] hover:bg-[#EFE9FF] flex items-center justify-center text-[#736E9B] hover:text-[#FF4D6D] transition-all cursor-pointer"
             >
-              <IconRefresh className="w-4 h-4" />
+              <IconExternalLink className="w-4 h-4" />
+            </Link>
+
+            {/* Notification Bell */}
+            <button
+              title="Notifications"
+              onClick={() => showToast("🔔 All systems operational. 0 alerts.")}
+              className="w-9 h-9 rounded-full bg-[#F8F6FD] hover:bg-[#EFE9FF] flex items-center justify-center text-[#736E9B] hover:text-[#171136] transition-all cursor-pointer relative"
+            >
+              <IconBell className="w-4 h-4" />
+              <span className="w-2 h-2 rounded-full bg-[#FF4D6D] absolute top-2 right-2 border-2 border-white" />
             </button>
 
-            {/* Admin Avatar Circle */}
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#FF4D6D] to-[#7B5CFF] text-white flex items-center justify-center font-extrabold text-xs shadow-sm">
-              {user.first_name ? user.first_name[0] : "A"}
+            {/* Messages / Mail */}
+            <button
+              title="Messages"
+              onClick={() => showToast("✉️ No new customer messages.")}
+              className="w-9 h-9 rounded-full bg-[#F8F6FD] hover:bg-[#EFE9FF] flex items-center justify-center text-[#736E9B] hover:text-[#171136] transition-all cursor-pointer"
+            >
+              <IconMail className="w-4 h-4" />
+            </button>
+
+            {/* Theme Toggle Button */}
+            <button
+              title="Toggle Theme"
+              onClick={() => showToast("🌙 Light/Dark theme mode active.")}
+              className="w-9 h-9 rounded-full bg-[#F8F6FD] hover:bg-[#EFE9FF] flex items-center justify-center text-[#736E9B] hover:text-[#171136] transition-all cursor-pointer"
+            >
+              <IconMoon className="w-4 h-4" />
+            </button>
+
+            {/* Vertical Divider */}
+            <div className="h-6 w-px bg-[#EAE3F7] mx-1" />
+
+            {/* Admin Avatar Circle & Profile Dropdown */}
+            <div className="relative" ref={profileDropdownRef}>
+              <button
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                className="w-9 h-9 rounded-full bg-[#FF4D6D] hover:opacity-90 text-white flex items-center justify-center font-extrabold text-sm shadow-md transition-all cursor-pointer ring-2 ring-offset-2 ring-[#FF4D6D]/20"
+                title="Admin Account Profile"
+              >
+                {user.first_name ? user.first_name[0].toUpperCase() : "E"}
+              </button>
+
+              {/* Profile Popover Menu (Matching User Screenshot) */}
+              {profileDropdownOpen && (
+                <div className="absolute right-0 top-12 w-64 bg-white rounded-2xl shadow-2xl border border-[#EAE3F7] p-3 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  {/* User Profile Card */}
+                  <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[#FAF8FD] border border-[#F0EBF8]">
+                    <div className="w-10 h-10 rounded-full bg-[#FF4D6D] text-white flex items-center justify-center font-extrabold text-base shrink-0 shadow-sm">
+                      {user.first_name ? user.first_name[0].toUpperCase() : "E"}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-extrabold text-sm text-[#171136] truncate">
+                        {user.first_name ? `${user.first_name} ${user.last_name || ""}`.trim() : "Eezy Mart"}
+                      </span>
+                      <span className="text-[11px] font-semibold text-[#8A84A6] capitalize truncate">
+                        {user.role || "admin"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="h-px bg-[#F0EBF8] my-2" />
+
+                  {/* Logout Button */}
+                  <button
+                    onClick={() => {
+                      setProfileDropdownOpen(false);
+                      logout();
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
+                  >
+                    <IconLogOut className="w-4 h-4" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -941,20 +970,14 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => {
-                      setProductsMenuOpen(true);
-                      setActiveNav("products-all");
-                    }}
+                    onClick={() => navigateTo("products-all")}
                     className="bg-[#171136] hover:bg-[#251c4a] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
                   >
                     <IconPlus className="w-3.5 h-3.5" />
                     <span>Manage Products</span>
                   </button>
                   <button
-                    onClick={() => {
-                      setOrdersMenuOpen(true);
-                      setActiveNav("orders-all");
-                    }}
+                    onClick={() => navigateTo("orders-all")}
                     className="bg-[#FF4D6D] hover:bg-[#ff3358] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
                   >
                     <span>View Orders</span>
@@ -1514,7 +1537,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                   type="button"
                   onClick={() => {
                     setEditingProduct(null);
-                    setActiveNav("products-all");
+                    navigateTo("products-all");
                   }}
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-[#736E9B] hover:text-[#FF4D6D] transition-colors mb-2 cursor-pointer"
                 >

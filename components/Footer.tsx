@@ -21,7 +21,7 @@ const social = ["f", "in", "ig", "yt"];
 export default function Footer() {
   return (
     <footer className="bg-[#171136]">
-      <div className="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-[100px] py-8 sm:py-14 grid grid-cols-1 lg:grid-cols-[280px_1fr_1fr_1fr_220px] gap-6 sm:gap-10">
+      <div className="max-w-[1580px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14 grid grid-cols-1 lg:grid-cols-[280px_1fr_1fr_1fr_220px] gap-6 sm:gap-10">
         <div>
           <div className="flex items-center gap-2.5">
             <Image src="/images/logo-mark.svg" alt="Brickverse" width={40} height={40} />
@@ -98,7 +98,7 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-[#2A2159]">
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-[100px] py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="max-w-[1580px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-[12.5px] text-[#8880B5]">
             © 2026 Brickverse Pty Ltd. All rights reserved.
           </p>

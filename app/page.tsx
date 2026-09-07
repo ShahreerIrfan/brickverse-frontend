@@ -24,7 +24,7 @@ export default async function Home() {
       <Navbar />
       <NavLinks />
 
-      <main className="max-w-[1440px] w-full mx-auto px-3 sm:px-6 lg:px-[100px] py-4 sm:py-8 flex flex-col gap-4 sm:gap-8">
+      <main className="max-w-[1580px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex flex-col gap-5 sm:gap-10">
         <div className="flex flex-col lg:flex-row gap-6">
           <CategoryRail initialCategories={categories} />
           <div className="flex-1 flex flex-col">
