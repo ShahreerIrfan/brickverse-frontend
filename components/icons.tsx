@@ -533,5 +533,15 @@ export function IconExternalLink({ className, style }: IconProps) {
   );
 }
 
+export function IconFilter({ className, style }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} style={style} fill="none">
+      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export const IconX = IconClose;
+
 
 

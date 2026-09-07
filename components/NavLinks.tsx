@@ -1,13 +1,14 @@
+import Link from "next/link";
 import { IconPhone, IconTruck } from "./icons";
 
 const links = [
-  { label: "Home", active: true },
-  { label: "Shop all" },
-  { label: "Anime figures" },
-  { label: "Cartoon toys" },
-  { label: "Bricks & sets" },
-  { label: "Deals", hot: true },
-  { label: "Blog" },
+  { label: "Home", href: "/" },
+  { label: "Shop all", href: "/shop" },
+  { label: "Anime figures", href: "/shop?category=anime-figures" },
+  { label: "Cartoon toys", href: "/shop?category=cartoon-characters" },
+  { label: "Bricks & sets", href: "/shop?category=bricks-building-sets" },
+  { label: "Deals", href: "/shop?deals=true", hot: true },
+  { label: "Blog", href: "/shop" },
 ];
 
 export default function NavLinks() {
@@ -16,14 +17,10 @@ export default function NavLinks() {
       <div className="max-w-[1580px] mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
         <nav className="flex items-center gap-9">
           {links.map((link) => (
-            <a
+            <Link
               key={link.label}
-              href="#"
-              className={`relative text-sm ${
-                link.active
-                  ? "font-bold text-[#FF4D6D]"
-                  : "font-medium text-[#3B3468] hover:text-[#FF4D6D]"
-              }`}
+              href={link.href}
+              className="relative text-sm font-medium text-[#3B3468] hover:text-[#FF4D6D] transition-colors"
             >
               {link.label}
               {link.hot && (
@@ -31,10 +28,7 @@ export default function NavLinks() {
                   HOT
                 </span>
               )}
-              {link.active && (
-                <span className="absolute -bottom-4 left-0 right-0 h-1 rounded-full bg-[#FF4D6D]" />
-              )}
-            </a>
+            </Link>
           ))}
         </nav>
         <div className="flex items-center gap-6">

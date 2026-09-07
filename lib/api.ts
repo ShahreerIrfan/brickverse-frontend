@@ -347,7 +347,7 @@ export async function getAllProducts(params?: { category?: string; subcategory?:
     if (params?.search) queryParts.push(`search=${encodeURIComponent(params.search)}`);
     if (queryParts.length > 0) url += `?${queryParts.join("&")}`;
 
-    const res = await fetch(url, { cache: "no-store" });
+    const res = await fetch(url, { next: { revalidate: 15 } });
     if (!res.ok) return [];
     return await res.json();
   } catch (error) {

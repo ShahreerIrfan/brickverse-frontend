@@ -31,8 +31,8 @@ export default function BottomNav() {
         </a>
 
         <a
-          href="#"
-          className="relative flex flex-col items-center justify-center gap-1 py-2.5 text-[#736E9B]"
+          href="/shop"
+          className="relative flex flex-col items-center justify-center gap-1 py-2.5 text-[#736E9B] hover:text-[#FF4D6D]"
         >
           <IconStore className="w-[22px] h-[22px]" />
           <span className="text-[10.5px] font-medium">Shop</span>
