@@ -539,8 +539,9 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
     const label = formData.get("label") as string;
     const color = (formData.get("color") as string) || "#FF4D6D";
     const icon_type = formData.get("icon_type") as string;
+    const category_icon = (formData.get("category_icon") as string) || "";
 
-    const res = await createCategory({ id, label, color, icon_type, featured: true });
+    const res = await createCategory({ id, label, color, icon_type, category_icon, categoryIcon: category_icon, featured: true });
     if (res.success) {
       showToast(`✓ Category "${label}" added to taxonomy!`);
       setIsAddCategoryOpen(false);
@@ -2485,8 +2486,21 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                     <option value="toon">Cartoon</option>
                     <option value="brick">Bricks</option>
                     <option value="code">Coding</option>
+                    <option value="robot">Robotics</option>
+                    <option value="model">Model kits</option>
+                    <option value="plush">Plush</option>
+                    <option value="statue">Statue</option>
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="font-bold text-[#171136] block mb-1">Category Icon (SVG Path / Image URL / Name)</label>
+                <input
+                  name="category_icon"
+                  placeholder="e.g. /images/figure-samurai-red.svg or figure"
+                  className="w-full p-2.5 rounded-xl border border-[#EAE3F7] focus:outline-none focus:border-[#FF4D6D]"
+                />
               </div>
 
               <div className="flex justify-end gap-2 pt-2">

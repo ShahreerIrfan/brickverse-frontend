@@ -181,7 +181,7 @@ export default function MobileMenu() {
                     className="w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0"
                     style={{ backgroundColor: `${cat.color}24` }}
                   >
-                    <CategoryGlyph id={cat.id} color={cat.color} />
+                    <CategoryGlyph id={cat.id} color={cat.color} icon={cat.category_icon || cat.categoryIcon || cat.icon_type} />
                   </span>
                   <span className="text-[13.5px] font-medium text-[#3B3468] flex-1">
                     {cat.label}

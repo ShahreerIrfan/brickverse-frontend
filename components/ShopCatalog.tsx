@@ -757,7 +757,7 @@ function FilterSidebarContent({
                       className="w-5 h-5 rounded-md flex items-center justify-center shrink-0"
                       style={{ backgroundColor: `${cat.color}20` }}
                     >
-                      <CategoryGlyph id={cat.id} color={cat.color} />
+                      <CategoryGlyph id={cat.id} color={cat.color} icon={cat.category_icon || cat.categoryIcon || cat.icon_type} />
                     </span>
                     <span className="truncate uppercase text-[12px]">{cat.label}</span>
                   </div>

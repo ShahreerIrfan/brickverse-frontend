@@ -58,9 +58,13 @@ export type Category = {
   label: string;
   color: string;
   icon_type?: string;
+  category_icon?: string;
+  categoryIcon?: string;
+  category_icon_file?: string | null;
   featured?: boolean;
   order?: number;
   subcategories?: SubCategory[];
+  productCount?: number;
 };
 
 export type UserRole = "admin" | "customer";

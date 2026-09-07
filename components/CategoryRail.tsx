@@ -5,9 +5,39 @@ import Link from "next/link";
 import { IconChevronRight, IconGrid, IconArrowRight } from "./icons";
 import { categories as defaultCategories, Category } from "./productData";
 
-export function CategoryGlyph({ id, color }: { id: string; color: string }) {
+export function CategoryGlyph({
+  id,
+  color,
+  icon,
+}: {
+  id: string;
+  color: string;
+  icon?: string;
+}) {
+  const iconSrc = icon || id;
+
+  // 1. If it's an image or SVG file path / URL
+  if (
+    typeof iconSrc === "string" &&
+    (iconSrc.startsWith("/") ||
+      iconSrc.startsWith("http://") ||
+      iconSrc.startsWith("https://") ||
+      iconSrc.startsWith("data:"))
+  ) {
+    return (
+      <img
+        src={iconSrc}
+        alt=""
+        className="w-4 h-4 object-contain shrink-0"
+        onError={(e) => {
+          e.currentTarget.style.display = "none";
+        }}
+      />
+    );
+  }
+
   const common = { fill: color };
-  switch (id) {
+  switch (iconSrc) {
     case "figure":
       return (
         <svg viewBox="0 0 32 32" className="w-4 h-4">
@@ -157,7 +187,7 @@ export default function CategoryRail({ initialCategories }: { initialCategories?
                       }`}
                       style={{ backgroundColor: `${cat.color}24` }}
                     >
-                      <CategoryGlyph id={cat.id} color={cat.color} />
+                      <CategoryGlyph id={cat.id} color={cat.color} icon={cat.category_icon || cat.categoryIcon || cat.icon_type} />
                     </span>
                     <span
                       className={`text-[13.5px] flex-1 ${
@@ -210,7 +240,7 @@ export default function CategoryRail({ initialCategories }: { initialCategories?
                 className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-xs"
                 style={{ backgroundColor: `${activeCategory.color}24` }}
               >
-                <CategoryGlyph id={activeCategory.id} color={activeCategory.color} />
+                <CategoryGlyph id={activeCategory.id} color={activeCategory.color} icon={activeCategory.category_icon || activeCategory.categoryIcon || activeCategory.icon_type} />
               </span>
               <div>
                 <h4 className="font-[family-name:var(--font-display)] font-extrabold text-[15.5px] text-[#171136] leading-tight">
