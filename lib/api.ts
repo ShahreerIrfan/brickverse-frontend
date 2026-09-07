@@ -1,6 +1,35 @@
 import { ProductSection, Category, Product } from "@/components/productData";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+export function getApiBaseUrl(): string {
+  // 1. If explicit production NEXT_PUBLIC_API_URL is configured
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (envUrl && !envUrl.includes("127.0.0.1") && !envUrl.includes("localhost")) {
+    return envUrl.replace(/\/+$/, "");
+  }
+
+  // 2. Client-side browser runtime detection
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    // Production domain detection
+    if (host.includes("brickverse.eezzymart.tech") || host.includes("eezzymart.tech")) {
+      return "https://brickbackend.eezzymart.tech/api";
+    }
+    // Any non-local host in browser
+    if (host && host !== "localhost" && host !== "127.0.0.1") {
+      return "https://brickbackend.eezzymart.tech/api";
+    }
+  }
+
+  // 3. Server-side production fallback
+  if (process.env.NODE_ENV === "production") {
+    return "https://brickbackend.eezzymart.tech/api";
+  }
+
+  // 4. Default for local development
+  return envUrl || "http://127.0.0.1:8000/api";
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 // -------------------------------------------------------------
 // Products App APIs
