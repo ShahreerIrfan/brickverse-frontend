@@ -175,24 +175,15 @@ export default function MobileMenu() {
                 <a
                   href="#"
                   onClick={() => setOpen(false)}
-                  className={`flex items-center gap-3 rounded-[14px] px-3 py-2.5 relative ${
-                    cat.featured ? "bg-[#FFF1F4]" : ""
-                  }`}
+                  className="flex items-center gap-3 rounded-[14px] px-3 py-2.5 hover:bg-[#FAF7FF] transition-colors"
                 >
-                  {cat.featured && (
-                    <span className="absolute left-0 top-2 bottom-2 w-1 rounded-full bg-[#FF4D6D]" />
-                  )}
                   <span
                     className="w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0"
                     style={{ backgroundColor: `${cat.color}24` }}
                   >
                     <CategoryGlyph id={cat.id} color={cat.color} />
                   </span>
-                  <span
-                    className={`text-[13.5px] flex-1 ${
-                      cat.featured ? "font-bold text-[#171136]" : "font-medium text-[#3B3468]"
-                    }`}
-                  >
+                  <span className="text-[13.5px] font-medium text-[#3B3468] flex-1">
                     {cat.label}
                   </span>
                 </a>
