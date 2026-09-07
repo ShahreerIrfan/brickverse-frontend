@@ -12,7 +12,7 @@ export default function PromoColumns() {
   return (
     <div className="grid grid-cols-2 gap-2.5 sm:gap-4 w-full">
       {/* Anime Figure Collection Card */}
-      <div className="relative bg-grad-purple rounded-xl sm:rounded-2xl overflow-hidden p-2.5 sm:p-5 lg:p-6 h-[115px] sm:h-[155px] lg:h-[168px] flex flex-col justify-between">
+      <div className="relative bg-grad-purple rounded-xl sm:rounded-2xl overflow-hidden p-2.5 sm:p-5 lg:p-6 h-[125px] sm:h-[160px] lg:h-[180px] flex flex-col justify-between">
         <div className="absolute -right-6 -top-6 w-[140px] h-[140px] rounded-full bg-white/[0.08] pointer-events-none" />
         <div className="relative z-10 pr-10 sm:pr-20">
           <span className="inline-block bg-white/20 text-white text-[8px] sm:text-[10.5px] font-bold rounded-full px-2 sm:px-3 py-0.5">
@@ -27,24 +27,24 @@ export default function PromoColumns() {
         </div>
 
         <div className="relative z-10 mt-1.5 sm:mt-3">
-          <button className="inline-flex items-center gap-1 sm:gap-1.5 bg-white hover:bg-white/95 text-[#5B22B8] font-bold text-[8.5px] sm:text-[12px] rounded-full h-5 sm:h-7 px-2 sm:px-3.5 shadow-sm active:scale-95 transition-all">
+          <button className="inline-flex items-center gap-1 sm:gap-1.5 bg-white hover:bg-white/95 text-[#5B22B8] font-bold text-[8.5px] sm:text-[12px] rounded-full h-5.5 sm:h-7.5 px-2.5 sm:px-4 shadow-sm active:scale-95 transition-all">
             Shop now <IconArrowRight className="w-2 h-2 sm:w-3 sm:h-3" />
           </button>
         </div>
 
-        <div className="absolute right-0.5 sm:right-2 bottom-0 w-[44px] sm:w-[70px] lg:w-[84px] pointer-events-none">
+        <div className="absolute right-0.5 sm:right-2 bottom-0 w-[48px] sm:w-[75px] lg:w-[90px] pointer-events-none">
           <Image
             src="/images/figure-newarrivals.svg"
             alt="New arrivals figure"
-            width={84}
-            height={150}
+            width={90}
+            height={160}
             className="w-full h-auto drop-shadow-sm"
           />
         </div>
       </div>
 
       {/* Deal of the Week Card */}
-      <div className="relative bg-grad-yellow rounded-xl sm:rounded-2xl overflow-hidden p-2.5 sm:p-5 lg:p-6 h-[115px] sm:h-[155px] lg:h-[168px] flex flex-col justify-between">
+      <div className="relative bg-grad-yellow rounded-xl sm:rounded-2xl overflow-hidden p-2.5 sm:p-5 lg:p-6 h-[125px] sm:h-[160px] lg:h-[180px] flex flex-col justify-between">
         <div className="absolute -right-4 -bottom-10 w-[140px] h-[140px] rounded-full bg-white/25 pointer-events-none" />
         <div className="relative z-10 pr-10 sm:pr-20">
           <span className="inline-block bg-[#171136] text-white text-[8px] sm:text-[10.5px] font-bold rounded-full px-2 sm:px-3 py-0.5">
