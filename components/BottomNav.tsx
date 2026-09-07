@@ -55,7 +55,7 @@ export default function BottomNav() {
               />
             </span>
             <span className="text-[10.5px] font-medium truncate max-w-[70px]">
-              {user?.first_name || user?.email.split("@")[0]}
+              {[user?.first_name, user?.last_name].filter(Boolean).join(" ") || user?.first_name || user?.email?.split("@")[0]}
             </span>
           </a>
         ) : (

@@ -836,7 +836,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
         <header className="bg-white border-b border-[#EAE3F7] sticky top-0 z-20 px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 flex-1 max-w-xl">
             <span className="font-[family-name:var(--font-display)] font-extrabold text-sm sm:text-base text-[#171136] hidden md:inline">
-              Welcome back, <span className="text-[#FF4D6D]">{user.first_name || "Admin"}</span>!
+              Welcome back, <span className="text-[#FF4D6D]">{[user.first_name, user.last_name].filter(Boolean).join(" ") || user.first_name || "Admin"}</span>!
             </span>
 
             {/* Search Bar */}
@@ -909,20 +909,20 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                 className="w-9 h-9 rounded-full bg-[#FF4D6D] hover:opacity-90 text-white flex items-center justify-center font-extrabold text-sm shadow-md transition-all cursor-pointer ring-2 ring-offset-2 ring-[#FF4D6D]/20"
                 title="Admin Account Profile"
               >
-                {user.first_name ? user.first_name[0].toUpperCase() : "E"}
+                {(user.first_name ? user.first_name[0] : (user.email ? user.email[0] : "A")).toUpperCase()}
               </button>
 
-              {/* Profile Popover Menu (Matching User Screenshot) */}
+              {/* Profile Popover Menu */}
               {profileDropdownOpen && (
                 <div className="absolute right-0 top-12 w-64 bg-white rounded-2xl shadow-2xl border border-[#EAE3F7] p-3 z-50 animate-in fade-in zoom-in-95 duration-150">
                   {/* User Profile Card */}
                   <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[#FAF8FD] border border-[#F0EBF8]">
                     <div className="w-10 h-10 rounded-full bg-[#FF4D6D] text-white flex items-center justify-center font-extrabold text-base shrink-0 shadow-sm">
-                      {user.first_name ? user.first_name[0].toUpperCase() : "E"}
+                      {(user.first_name ? user.first_name[0] : (user.email ? user.email[0] : "A")).toUpperCase()}
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span className="font-extrabold text-sm text-[#171136] truncate">
-                        {user.first_name ? `${user.first_name} ${user.last_name || ""}`.trim() : "Eezy Mart"}
+                        {[user.first_name, user.last_name].filter(Boolean).join(" ") || user.email.split("@")[0] || "Admin"}
                       </span>
                       <span className="text-[11px] font-semibold text-[#8A84A6] capitalize truncate">
                         {user.role || "admin"}
@@ -2344,10 +2344,10 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                         <tr key={u.id} className="hover:bg-[#F8F6FD] transition-colors">
                           <td className="py-3.5 flex items-center gap-2.5">
                             <span className="w-8 h-8 rounded-full bg-[#171136] text-white flex items-center justify-center font-bold text-xs shrink-0">
-                              {u.first_name ? u.first_name[0] : u.email[0].toUpperCase()}
+                              {(u.first_name ? u.first_name[0] : (u.email ? u.email[0] : "U")).toUpperCase()}
                             </span>
                             <span className="font-bold text-[#171136]">
-                              {u.first_name ? `${u.first_name} ${u.last_name || ""}` : "User"}
+                              {[u.first_name, u.last_name].filter(Boolean).join(" ") || u.email.split("@")[0] || "User"}
                             </span>
                           </td>
                           <td className="py-3.5 text-[#736E9B] font-medium">{u.email}</td>
@@ -2603,7 +2603,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
             <form onSubmit={handleCreateUser} className="space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="font-bold text-[#171136] block mb-1">First Name</label>
+                  <label className="font-bold text-[#171136] block mb-1">First Name *</label>
                   <input
                     name="first_name"
                     required
@@ -2612,9 +2612,10 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                   />
                 </div>
                 <div>
-                  <label className="font-bold text-[#171136] block mb-1">Last Name</label>
+                  <label className="font-bold text-[#171136] block mb-1">Last Name *</label>
                   <input
                     name="last_name"
+                    required
                     placeholder="Morgan"
                     className="w-full p-2.5 rounded-xl border border-[#EAE3F7] focus:outline-none focus:border-[#FF4D6D]"
                   />

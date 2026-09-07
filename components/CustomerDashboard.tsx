@@ -58,9 +58,8 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
       .finally(() => setLoadingOrders(false));
   }, [user.email]);
 
-  const initials = user.first_name
-    ? `${user.first_name[0]}${user.last_name ? user.last_name[0] : ""}`.toUpperCase()
-    : user.email.slice(0, 2).toUpperCase();
+  const avatarInitial = (user.first_name ? user.first_name[0] : (user.email ? user.email[0] : "U")).toUpperCase();
+  const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ") || user.first_name || user.email.split("@")[0];
 
   const handleSaveAddress = (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,11 +137,11 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
             {/* User Profile Summary Card */}
             <div className="flex items-center gap-3.5 pb-5 border-b border-[#EAE3F7]">
               <div className="w-12 h-12 rounded-full bg-[#FF4D6D] text-white font-extrabold text-base flex items-center justify-center shrink-0 shadow-sm">
-                {initials}
+                {avatarInitial}
               </div>
               <div className="min-w-0 flex-1">
                 <h2 className="font-bold text-sm text-[#171136] truncate">
-                  {user.first_name ? `${user.first_name} ${user.last_name || ""}` : "Collector Member"}
+                  {fullName}
                 </h2>
                 <p className="text-xs text-[#736E9B] truncate">{user.email}</p>
               </div>
@@ -258,7 +257,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
                 {/* 1. Welcome Banner */}
                 <div className="bg-[#FFF1F4] rounded-3xl p-6 sm:p-7 border border-[#FFE0E6] flex flex-col justify-between">
                   <h1 className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-3xl text-[#171136]">
-                    Welcome back, {user.first_name || user.email.split("@")[0]}! 👋
+                    Welcome back, {fullName}! 👋
                   </h1>
                   <p className="text-xs sm:text-sm text-[#736E9B] mt-1 font-medium">
                     Here&apos;s what&apos;s happening with your Brickverse collector account today.

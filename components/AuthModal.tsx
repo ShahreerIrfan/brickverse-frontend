@@ -71,6 +71,10 @@ export default function AuthModal() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!signupFirstName.trim() || !signupLastName.trim()) {
+      setErrorMsg("First name and last name are required.");
+      return;
+    }
     if (!signupEmail || !signupPassword) {
       setErrorMsg("Email and password are required.");
       return;
@@ -257,9 +261,10 @@ export default function AuthModal() {
                 <IconUser className="w-4 h-4 text-[#736E9B] shrink-0" />
                 <input
                   type="text"
+                  required
                   value={signupFirstName}
                   onChange={(e) => setSignupFirstName(e.target.value)}
-                  placeholder="First Name"
+                  placeholder="First Name *"
                   className="w-full bg-transparent outline-none text-sm font-medium text-[#171136] placeholder:text-[#736E9B]/80"
                 />
               </div>
@@ -268,9 +273,10 @@ export default function AuthModal() {
                 <IconUser className="w-4 h-4 text-[#736E9B] shrink-0" />
                 <input
                   type="text"
+                  required
                   value={signupLastName}
                   onChange={(e) => setSignupLastName(e.target.value)}
-                  placeholder="Last Name"
+                  placeholder="Last Name *"
                   className="w-full bg-transparent outline-none text-sm font-medium text-[#171136] placeholder:text-[#736E9B]/80"
                 />
               </div>

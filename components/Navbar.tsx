@@ -82,7 +82,7 @@ export default function Navbar() {
               </span>
               <span className="hidden sm:flex flex-col items-start leading-none text-left">
                 <span className="text-xs font-bold text-[#171136]">
-                  {user.first_name || user.email.split("@")[0]}
+                  {[user.first_name, user.last_name].filter(Boolean).join(" ") || user.first_name || user.email.split("@")[0]}
                 </span>
                 <span
                   className="text-[9.5px] font-bold uppercase mt-0.5 tracking-wider"
