@@ -10,9 +10,9 @@ const timer = [
 
 export default function PromoColumns() {
   return (
-    <div className="grid grid-cols-2 gap-2 sm:gap-4 mt-2 sm:mt-3">
+    <div className="grid grid-cols-2 gap-2.5 sm:gap-4 w-full">
       {/* Anime Figure Collection Card */}
-      <div className="relative bg-grad-purple rounded-xl sm:rounded-2xl overflow-hidden p-2.5 sm:p-5 lg:p-6 min-h-[105px] sm:min-h-[145px] lg:min-h-[160px] flex flex-col justify-between">
+      <div className="relative bg-grad-purple rounded-xl sm:rounded-2xl overflow-hidden p-2.5 sm:p-5 lg:p-6 h-[115px] sm:h-[155px] lg:h-[168px] flex flex-col justify-between">
         <div className="absolute -right-6 -top-6 w-[140px] h-[140px] rounded-full bg-white/[0.08] pointer-events-none" />
         <div className="relative z-10 pr-10 sm:pr-20">
           <span className="inline-block bg-white/20 text-white text-[8px] sm:text-[10.5px] font-bold rounded-full px-2 sm:px-3 py-0.5">
@@ -44,7 +44,7 @@ export default function PromoColumns() {
       </div>
 
       {/* Deal of the Week Card */}
-      <div className="relative bg-grad-yellow rounded-xl sm:rounded-2xl overflow-hidden p-2.5 sm:p-5 lg:p-6 min-h-[105px] sm:min-h-[145px] lg:min-h-[160px] flex flex-col justify-between">
+      <div className="relative bg-grad-yellow rounded-xl sm:rounded-2xl overflow-hidden p-2.5 sm:p-5 lg:p-6 h-[115px] sm:h-[155px] lg:h-[168px] flex flex-col justify-between">
         <div className="absolute -right-4 -bottom-10 w-[140px] h-[140px] rounded-full bg-white/25 pointer-events-none" />
         <div className="relative z-10 pr-10 sm:pr-20">
           <span className="inline-block bg-[#171136] text-white text-[8px] sm:text-[10.5px] font-bold rounded-full px-2 sm:px-3 py-0.5">

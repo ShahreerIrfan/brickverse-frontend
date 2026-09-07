@@ -3,7 +3,7 @@ import { IconArrowRight, IconArrowLeft, IconArrowRightSlim } from "./icons";
 
 export default function Hero() {
   return (
-    <div className="relative flex-1 bg-grad-hero rounded-2xl sm:rounded-[24px] overflow-hidden min-h-[148px] sm:min-h-[220px] lg:min-h-[240px] flex items-center">
+    <div className="relative w-full bg-grad-hero rounded-2xl sm:rounded-[24px] overflow-hidden h-[160px] sm:h-[240px] lg:h-[285px] flex items-center">
       {/* Background ambient shapes */}
       <div className="absolute -right-10 -top-10 w-[240px] h-[240px] rounded-full bg-white/[0.06] pointer-events-none" />
       <div className="absolute left-[120px] bottom-[-60px] w-[200px] h-[200px] rounded-full bg-white/[0.05] pointer-events-none" />
