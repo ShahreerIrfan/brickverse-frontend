@@ -400,10 +400,11 @@ export async function deleteProduct(id: string) {
 
 export async function createCategory(data: any) {
   try {
+    const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
     const res = await fetch(`${API_BASE_URL}/products/categories/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      headers: isFormData ? undefined : { "Content-Type": "application/json" },
+      body: isFormData ? data : JSON.stringify(data),
     });
     const result = await res.json();
     return { success: res.ok, data: result };
@@ -414,10 +415,11 @@ export async function createCategory(data: any) {
 
 export async function updateCategory(id: string, data: any) {
   try {
+    const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
     const res = await fetch(`${API_BASE_URL}/products/categories/${encodeURIComponent(id)}/`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      headers: isFormData ? undefined : { "Content-Type": "application/json" },
+      body: isFormData ? data : JSON.stringify(data),
     });
     const result = await res.json();
     return { success: res.ok, data: result };

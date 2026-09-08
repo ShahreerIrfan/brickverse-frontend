@@ -203,6 +203,10 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
   const [selectedParentCatId, setSelectedParentCatId] = useState("");
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
 
+  // Category Icon File Upload State
+  const [categoryIconFile, setCategoryIconFile] = useState<File | null>(null);
+  const [categoryIconPreviewUrl, setCategoryIconPreviewUrl] = useState<string | null>(null);
+
   // Local File Upload States
   const [primaryFile, setPrimaryFile] = useState<File | null>(null);
   const [primaryPreviewUrl, setPrimaryPreviewUrl] = useState<string | null>(null);
@@ -533,21 +537,61 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
   };
 
   // -------------------------------------------------------------
+  // Category Icon & Modal Handlers
+  // -------------------------------------------------------------
+  const openAddCategoryModal = () => {
+    setCategoryIconFile(null);
+    setCategoryIconPreviewUrl(null);
+    setIsAddCategoryOpen(true);
+  };
+
+  const openEditCategoryModal = (cat: Category) => {
+    setCategoryIconFile(null);
+    setCategoryIconPreviewUrl(cat.category_icon || cat.categoryIcon || null);
+    setEditingCategory(cat);
+  };
+
+  const handleCategoryIconFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setCategoryIconFile(file);
+      setCategoryIconPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const removeCategoryIconFile = () => {
+    setCategoryIconFile(null);
+    setCategoryIconPreviewUrl(null);
+  };
+
+  // -------------------------------------------------------------
   // Category / Subcategory Creation Handlers
   // -------------------------------------------------------------
   const handleCreateCategory = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    const formElement = e.currentTarget;
+    const formData = new FormData(formElement);
     const id = ((formData.get("id") as string) || (formData.get("label") as string).toLowerCase().replace(/\s+/g, "-")).trim();
     const label = formData.get("label") as string;
     const color = (formData.get("color") as string) || "#FF4D6D";
     const icon_type = formData.get("icon_type") as string;
-    const category_icon = (formData.get("category_icon") as string) || "";
 
-    const res = await createCategory({ id, label, color, icon_type, category_icon, categoryIcon: category_icon, featured: true });
+    const data = new FormData();
+    data.append("id", id);
+    data.append("label", label);
+    data.append("color", color);
+    data.append("icon_type", icon_type);
+    data.append("featured", "true");
+    if (categoryIconFile) {
+      data.append("category_icon_file", categoryIconFile);
+    }
+
+    const res = await createCategory(data);
     if (res.success) {
       showToast(`✓ Category "${label}" added to taxonomy!`);
       setIsAddCategoryOpen(false);
+      setCategoryIconFile(null);
+      setCategoryIconPreviewUrl(null);
       fetchData();
     } else {
       alert("Error adding category.");
@@ -557,23 +601,27 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
   const handleUpdateCategory = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!editingCategory) return;
-    const formData = new FormData(e.currentTarget);
+    const formElement = e.currentTarget;
+    const formData = new FormData(formElement);
     const label = formData.get("label") as string;
     const color = (formData.get("color") as string) || "#FF4D6D";
     const icon_type = formData.get("icon_type") as string;
-    const category_icon = (formData.get("category_icon") as string) || "";
 
-    const res = await updateCategory(editingCategory.id, {
-      label,
-      color,
-      icon_type,
-      category_icon,
-      categoryIcon: category_icon,
-    });
+    const data = new FormData();
+    data.append("label", label);
+    data.append("color", color);
+    data.append("icon_type", icon_type);
+    if (categoryIconFile) {
+      data.append("category_icon_file", categoryIconFile);
+    }
+
+    const res = await updateCategory(editingCategory.id, data);
 
     if (res.success) {
       showToast(`✓ Category "${label}" updated successfully!`);
       setEditingCategory(null);
+      setCategoryIconFile(null);
+      setCategoryIconPreviewUrl(null);
       fetchData();
     } else {
       alert("Error updating category.");
@@ -2117,7 +2165,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setIsAddCategoryOpen(true)}
+                    onClick={openAddCategoryModal}
                     className="bg-[#171136] hover:bg-[#251c4a] text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
                   >
                     <IconPlus className="w-4 h-4" />
@@ -2163,7 +2211,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                             {cat.subcategories?.length || 0} subs
                           </span>
                           <button
-                            onClick={() => setEditingCategory(cat)}
+                            onClick={() => openEditCategoryModal(cat)}
                             className="w-7 h-7 rounded-lg bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] flex items-center justify-center transition-colors cursor-pointer"
                             title="Edit Parent Category & Icon"
                           >
@@ -2222,7 +2270,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                       </button>
 
                       <button
-                        onClick={() => setEditingCategory(cat)}
+                        onClick={() => openEditCategoryModal(cat)}
                         className="text-xs font-bold text-[#7B5CFF] hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         <IconEdit className="w-3 h-3" />
@@ -2504,7 +2552,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
       {/* ============================================================= */}
       {isAddCategoryOpen && (
         <div className="fixed inset-0 z-50 bg-[#171136]/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-[family-name:var(--font-display)] font-extrabold text-xl text-[#171136]">
                 Add Parent Category
@@ -2554,7 +2602,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                 </div>
 
                 <div>
-                  <label className="font-bold text-[#171136] block mb-1">Icon Type</label>
+                  <label className="font-bold text-[#171136] block mb-1">Fallback Icon Type</label>
                   <select
                     name="icon_type"
                     className="w-full p-2.5 rounded-xl border border-[#EAE3F7] bg-white focus:outline-none focus:border-[#FF4D6D]"
@@ -2571,16 +2619,68 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                 </div>
               </div>
 
+              {/* Category Icon File Upload Field */}
               <div>
-                <label className="font-bold text-[#171136] block mb-1">Category Icon (SVG Path / Image URL / Name)</label>
-                <input
-                  name="category_icon"
-                  placeholder="e.g. /images/figure-samurai-red.svg or figure"
-                  className="w-full p-2.5 rounded-xl border border-[#EAE3F7] focus:outline-none focus:border-[#FF4D6D]"
-                />
+                <label className="font-bold text-[#171136] block mb-1.5">Category Icon (Upload File)</label>
+                {categoryIconPreviewUrl ? (
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#F8F6FD] border border-[#EAE3F7]">
+                    <div className="w-12 h-12 rounded-xl bg-white border border-[#EAE3F7] p-2 flex items-center justify-center shrink-0 shadow-2xs">
+                      <img
+                        src={categoryIconPreviewUrl}
+                        alt="Icon preview"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-[#171136] text-xs truncate">
+                        {categoryIconFile ? categoryIconFile.name : "Category Icon"}
+                      </p>
+                      <p className="text-[10.5px] text-[#736E9B]">
+                        {categoryIconFile ? `${(categoryIconFile.size / 1024).toFixed(1)} KB` : "Ready"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <label className="px-2.5 py-1.5 rounded-xl bg-white border border-[#EAE3F7] text-[11px] font-bold text-[#7B5CFF] hover:bg-[#F6F1FF] cursor-pointer transition-all">
+                        Change
+                        <input
+                          type="file"
+                          accept="image/*,.svg"
+                          onChange={handleCategoryIconFileChange}
+                          className="hidden"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={removeCategoryIconFile}
+                        className="p-1.5 rounded-xl bg-white border border-[#EAE3F7] text-red-500 hover:bg-red-50 cursor-pointer transition-all"
+                        title="Remove Icon"
+                      >
+                        <IconTrash className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center p-5 rounded-2xl border-2 border-dashed border-[#D9CEEE] hover:border-[#FF4D6D] bg-[#FAF8FE] hover:bg-[#FFF5F7] transition-all cursor-pointer group text-center">
+                    <input
+                      type="file"
+                      accept="image/*,.svg"
+                      onChange={handleCategoryIconFileChange}
+                      className="hidden"
+                    />
+                    <div className="w-9 h-9 rounded-xl bg-[#F0EBF8] group-hover:bg-[#FFE6EC] flex items-center justify-center text-[#7B5CFF] group-hover:text-[#FF4D6D] mb-1.5 transition-colors">
+                      <IconPhoto className="w-5 h-5" />
+                    </div>
+                    <p className="font-bold text-[#171136] text-xs">
+                      Upload Category Icon
+                    </p>
+                    <p className="text-[10.5px] text-[#736E9B] mt-0.5">
+                      Upload SVG, PNG, JPG, or WebP icon file
+                    </p>
+                  </label>
+                )}
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex justify-end gap-2 pt-2 border-t border-[#F0EBF8]">
                 <button
                   type="button"
                   onClick={() => setIsAddCategoryOpen(false)}
@@ -2601,7 +2701,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
       )}
 
       {/* ============================================================= */}
-      {/* MODAL: EDIT PARENT CATEGORY (Includes Category Icon Add/Update) */}
+      {/* MODAL: EDIT PARENT CATEGORY (Includes Category Icon File Upload) */}
       {/* ============================================================= */}
       {editingCategory && (
         <div className="fixed inset-0 z-50 bg-[#171136]/70 backdrop-blur-sm flex items-center justify-center p-4">
@@ -2669,53 +2769,69 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                 </div>
               </div>
 
-              {/* Dynamic Category Icon Field */}
+              {/* Category Icon File Upload Field */}
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="font-bold text-[#171136]">Category Icon (SVG / Image URL / Name)</label>
-                  <span className="text-[10px] text-[#7B5CFF] font-semibold">Dynamic Icon</span>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="font-bold text-[#171136]">Category Icon (Upload File)</label>
+                  <span className="text-[10px] text-[#7B5CFF] font-semibold">Image / SVG</span>
                 </div>
-                <input
-                  name="category_icon"
-                  defaultValue={editingCategory.category_icon || editingCategory.categoryIcon || ""}
-                  placeholder="e.g. /images/figure-samurai-red.svg or https://..."
-                  className="w-full p-2.5 rounded-xl border border-[#EAE3F7] focus:outline-none focus:border-[#FF4D6D] font-mono text-[11px]"
-                />
-                <p className="text-[10.5px] text-[#736E9B] mt-1">
-                  Specify an SVG path (e.g. <code>/images/figure-samurai-red.svg</code>), a custom web image URL, or standard icon identifier name.
-                </p>
 
-                {/* Quick preset suggestions */}
-                <div className="mt-2.5 pt-2 border-t border-[#F0EBF8]">
-                  <p className="text-[10px] font-bold text-[#8A84A6] uppercase mb-1.5">Quick Icon Presets:</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {[
-                      { name: "Samurai (Red)", path: "/images/figure-samurai-red.svg" },
-                      { name: "Mecha (Teal)", path: "/images/figure-mecha-teal.svg" },
-                      { name: "Mage (Purple)", path: "/images/figure-mage-purple.svg" },
-                      { name: "Car (Teal)", path: "/images/bricks-car-teal.svg" },
-                      { name: "Castle (Navy)", path: "/images/bricks-castle-navy.svg" },
-                      { name: "Robot (Purple)", path: "/images/robot-purple.svg" },
-                      { name: "Robot (Teal)", path: "/images/robot-teal.svg" },
-                      { name: "Mascot (Toon)", path: "/images/toon-mascot.svg" },
-                    ].map((preset) => (
+                {categoryIconPreviewUrl ? (
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#F8F6FD] border border-[#EAE3F7]">
+                    <div className="w-12 h-12 rounded-xl bg-white border border-[#EAE3F7] p-2 flex items-center justify-center shrink-0 shadow-2xs">
+                      <img
+                        src={categoryIconPreviewUrl}
+                        alt="Icon preview"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-[#171136] text-xs truncate">
+                        {categoryIconFile ? categoryIconFile.name : (editingCategory.category_icon || editingCategory.categoryIcon || "Active Category Icon")}
+                      </p>
+                      <p className="text-[10.5px] text-[#736E9B]">
+                        {categoryIconFile ? `${(categoryIconFile.size / 1024).toFixed(1)} KB (New upload)` : "Current icon on file"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <label className="px-2.5 py-1.5 rounded-xl bg-white border border-[#EAE3F7] text-[11px] font-bold text-[#7B5CFF] hover:bg-[#F6F1FF] cursor-pointer transition-all">
+                        Replace
+                        <input
+                          type="file"
+                          accept="image/*,.svg"
+                          onChange={handleCategoryIconFileChange}
+                          className="hidden"
+                        />
+                      </label>
                       <button
-                        key={preset.path}
                         type="button"
-                        onClick={(e) => {
-                          const form = (e.currentTarget.closest("form") as HTMLFormElement);
-                          if (form) {
-                            const input = form.elements.namedItem("category_icon") as HTMLInputElement;
-                            if (input) input.value = preset.path;
-                          }
-                        }}
-                        className="px-2 py-1 rounded-lg bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] text-[10px] font-bold border border-[#EAE3F7] transition-all cursor-pointer"
+                        onClick={removeCategoryIconFile}
+                        className="p-1.5 rounded-xl bg-white border border-[#EAE3F7] text-red-500 hover:bg-red-50 cursor-pointer transition-all"
+                        title="Remove Icon"
                       >
-                        {preset.name}
+                        <IconTrash className="w-3.5 h-3.5" />
                       </button>
-                    ))}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center p-5 rounded-2xl border-2 border-dashed border-[#D9CEEE] hover:border-[#FF4D6D] bg-[#FAF8FE] hover:bg-[#FFF5F7] transition-all cursor-pointer group text-center">
+                    <input
+                      type="file"
+                      accept="image/*,.svg"
+                      onChange={handleCategoryIconFileChange}
+                      className="hidden"
+                    />
+                    <div className="w-9 h-9 rounded-xl bg-[#F0EBF8] group-hover:bg-[#FFE6EC] flex items-center justify-center text-[#7B5CFF] group-hover:text-[#FF4D6D] mb-1.5 transition-colors">
+                      <IconPhoto className="w-5 h-5" />
+                    </div>
+                    <p className="font-bold text-[#171136] text-xs">
+                      Upload Category Icon
+                    </p>
+                    <p className="text-[10.5px] text-[#736E9B] mt-0.5">
+                      Upload SVG, PNG, JPG, or WebP to update this category's icon
+                    </p>
+                  </label>
+                )}
               </div>
 
               <div className="flex justify-end gap-2 pt-3 border-t border-[#F0EBF8]">
