@@ -26,23 +26,13 @@ interface CustomerDashboardProps {
   user: User;
 }
 
-type DashboardTab = "account" | "orders" | "wishlist" | "coupons" | "addresses" | "password";
+type DashboardTab = "account" | "orders" | "wishlist" | "coupons" | "password";
 
 export default function CustomerDashboard({ user }: CustomerDashboardProps) {
   const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState<DashboardTab>("account");
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
-
-  // Address state
-  const [shippingAddress, setShippingAddress] = useState({
-    street: "742 Evergreen Terrace",
-    city: "Melbourne",
-    state: "VIC",
-    postalCode: "3000",
-    country: "Australia",
-  });
-  const [addressSaved, setAddressSaved] = useState(false);
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -60,12 +50,6 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
 
   const avatarInitial = (user.first_name ? user.first_name[0] : (user.email ? user.email[0] : "U")).toUpperCase();
   const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ") || user.first_name || user.email.split("@")[0];
-
-  const handleSaveAddress = (e: React.FormEvent) => {
-    e.preventDefault();
-    setAddressSaved(true);
-    setTimeout(() => setAddressSaved(false), 3000);
-  };
 
   const handlePasswordChange = (e: React.FormEvent) => {
     e.preventDefault();
@@ -208,19 +192,6 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
 
               <button
                 type="button"
-                onClick={() => setActiveTab("addresses")}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm transition-all cursor-pointer ${
-                  activeTab === "addresses"
-                    ? "bg-[#FFF1F4] text-[#FF4D6D] font-extrabold"
-                    : "text-[#736E9B] hover:text-[#171136] hover:bg-[#F8F6FD] font-semibold"
-                }`}
-              >
-                <IconPin className="w-4 h-4 shrink-0" />
-                <span>Addresses</span>
-              </button>
-
-              <button
-                type="button"
                 onClick={() => setActiveTab("password")}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm transition-all cursor-pointer ${
                   activeTab === "password"
@@ -300,19 +271,19 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
                     <IconChevronRight className="w-4 h-4 text-[#736E9B]" />
                   </div>
 
-                  {/* Card 3: Addresses */}
+                  {/* Card 3: Coupons */}
                   <div
-                    onClick={() => setActiveTab("addresses")}
-                    className="bg-white rounded-3xl border border-[#EAE3F7] p-5 shadow-xs flex items-center justify-between cursor-pointer hover:border-[#00B4D8]/40 transition-all"
+                    onClick={() => setActiveTab("coupons")}
+                    className="bg-white rounded-3xl border border-[#EAE3F7] p-5 shadow-xs flex items-center justify-between cursor-pointer hover:border-[#FFC93C]/40 transition-all"
                   >
                     <div>
-                      <div className="w-10 h-10 rounded-2xl bg-[#E6F9F5] text-[#00B4D8] flex items-center justify-center mb-3">
-                        <IconPin className="w-5 h-5" />
+                      <div className="w-10 h-10 rounded-2xl bg-[#FFF9E6] text-[#FFC93C] flex items-center justify-center mb-3">
+                        <IconTag className="w-5 h-5" />
                       </div>
                       <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl text-[#171136]">
-                        1
+                        2
                       </span>
-                      <p className="text-xs font-bold text-[#736E9B] mt-0.5">Shipping Address</p>
+                      <p className="text-xs font-bold text-[#736E9B] mt-0.5">My Coupons</p>
                     </div>
                     <IconChevronRight className="w-4 h-4 text-[#736E9B]" />
                   </div>
@@ -352,14 +323,14 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
 
                     <button
                       type="button"
-                      onClick={() => setActiveTab("addresses")}
+                      onClick={() => setActiveTab("coupons")}
                       className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-2xl hover:bg-[#F8F6FD] transition-all group cursor-pointer"
                     >
-                      <div className="w-12 h-12 rounded-full bg-[#E6F9F5] text-[#00B4D8] flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <IconPin className="w-5 h-5" />
+                      <div className="w-12 h-12 rounded-full bg-[#FFF9E6] text-[#FFC93C] flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <IconTag className="w-5 h-5" />
                       </div>
                       <span className="text-xs font-bold text-[#171136] text-center">
-                        Edit Address
+                        My Coupons
                       </span>
                     </button>
 
@@ -368,7 +339,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
                       onClick={() => setActiveTab("wishlist")}
                       className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-2xl hover:bg-[#F8F6FD] transition-all group cursor-pointer"
                     >
-                      <div className="w-12 h-12 rounded-full bg-[#FFF9E6] text-[#FFC93C] flex items-center justify-center group-hover:scale-105 transition-transform">
+                      <div className="w-12 h-12 rounded-full bg-[#FFEAEF] text-[#FF4D6D] flex items-center justify-center group-hover:scale-105 transition-transform">
                         <IconHeart className="w-5 h-5" />
                       </div>
                       <span className="text-xs font-bold text-[#171136] text-center">
@@ -666,101 +637,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
             )}
 
             {/* --------------------------------------------------------------------- */}
-            {/* TAB 5: ADDRESSES */}
-            {/* --------------------------------------------------------------------- */}
-            {activeTab === "addresses" && (
-              <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 sm:p-7 shadow-xs max-w-2xl">
-                <h2 className="font-bold text-lg text-[#171136] mb-1">Shipping Address</h2>
-                <p className="text-xs text-[#736E9B] mb-5">
-                  Manage your default shipping details for 48-hour dispatch
-                </p>
-
-                {addressSaved && (
-                  <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-xl font-bold">
-                    ✓ Shipping address updated successfully!
-                  </div>
-                )}
-
-                <form onSubmit={handleSaveAddress} className="space-y-4 text-xs">
-                  <div>
-                    <label className="block font-bold text-[#171136] mb-1">Street Address</label>
-                    <input
-                      type="text"
-                      required
-                      value={shippingAddress.street}
-                      onChange={(e) =>
-                        setShippingAddress({ ...shippingAddress, street: e.target.value })
-                      }
-                      className="w-full bg-[#F8F6FD] border border-[#EAE3F7] focus:border-[#FF4D6D] focus:bg-white rounded-xl h-11 px-3.5 outline-none text-sm text-[#171136]"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block font-bold text-[#171136] mb-1">City / Suburb</label>
-                      <input
-                        type="text"
-                        required
-                        value={shippingAddress.city}
-                        onChange={(e) =>
-                          setShippingAddress({ ...shippingAddress, city: e.target.value })
-                        }
-                        className="w-full bg-[#F8F6FD] border border-[#EAE3F7] focus:border-[#FF4D6D] focus:bg-white rounded-xl h-11 px-3.5 outline-none text-sm text-[#171136]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-[#171136] mb-1">State</label>
-                      <input
-                        type="text"
-                        required
-                        value={shippingAddress.state}
-                        onChange={(e) =>
-                          setShippingAddress({ ...shippingAddress, state: e.target.value })
-                        }
-                        className="w-full bg-[#F8F6FD] border border-[#EAE3F7] focus:border-[#FF4D6D] focus:bg-white rounded-xl h-11 px-3.5 outline-none text-sm text-[#171136]"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block font-bold text-[#171136] mb-1">Postal Code</label>
-                      <input
-                        type="text"
-                        required
-                        value={shippingAddress.postalCode}
-                        onChange={(e) =>
-                          setShippingAddress({ ...shippingAddress, postalCode: e.target.value })
-                        }
-                        className="w-full bg-[#F8F6FD] border border-[#EAE3F7] focus:border-[#FF4D6D] focus:bg-white rounded-xl h-11 px-3.5 outline-none text-sm text-[#171136]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-[#171136] mb-1">Country</label>
-                      <input
-                        type="text"
-                        required
-                        value={shippingAddress.country}
-                        onChange={(e) =>
-                          setShippingAddress({ ...shippingAddress, country: e.target.value })
-                        }
-                        className="w-full bg-[#F8F6FD] border border-[#EAE3F7] focus:border-[#FF4D6D] focus:bg-white rounded-xl h-11 px-3.5 outline-none text-sm text-[#171136]"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="mt-2 bg-[#FF4D6D] hover:bg-[#ff3358] text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-xl shadow-md shadow-[#FF4D6D]/20 cursor-pointer"
-                  >
-                    Save Address
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {/* --------------------------------------------------------------------- */}
-            {/* TAB 6: CHANGE PASSWORD */}
+            {/* TAB 5: CHANGE PASSWORD */}
             {/* --------------------------------------------------------------------- */}
             {activeTab === "password" && (
               <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 sm:p-7 shadow-xs max-w-lg">
