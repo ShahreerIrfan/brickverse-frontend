@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { User, Category, Product } from "./productData";
+import { CategoryGlyph } from "./CategoryRail";
 import { useAuth } from "@/context/AuthContext";
 import {
   getAdminStats,
@@ -196,6 +197,8 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
   const [submittingProduct, setSubmittingProduct] = useState(false);
   const [deletingProduct, setDeletingProduct] = useState<any | null>(null);
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
   const [isAddSubCategoryOpen, setIsAddSubCategoryOpen] = useState(false);
   const [selectedParentCatId, setSelectedParentCatId] = useState("");
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
@@ -548,6 +551,44 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
       fetchData();
     } else {
       alert("Error adding category.");
+    }
+  };
+
+  const handleUpdateCategory = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingCategory) return;
+    const formData = new FormData(e.currentTarget);
+    const label = formData.get("label") as string;
+    const color = (formData.get("color") as string) || "#FF4D6D";
+    const icon_type = formData.get("icon_type") as string;
+    const category_icon = (formData.get("category_icon") as string) || "";
+
+    const res = await updateCategory(editingCategory.id, {
+      label,
+      color,
+      icon_type,
+      category_icon,
+      categoryIcon: category_icon,
+    });
+
+    if (res.success) {
+      showToast(`✓ Category "${label}" updated successfully!`);
+      setEditingCategory(null);
+      fetchData();
+    } else {
+      alert("Error updating category.");
+    }
+  };
+
+  const handleDeleteCategory = async () => {
+    if (!deletingCategory) return;
+    const res = await deleteCategory(deletingCategory.id);
+    if (res.success) {
+      showToast(`✓ Category "${deletingCategory.label}" deleted.`);
+      setDeletingCategory(null);
+      fetchData();
+    } else {
+      alert("Error deleting category.");
     }
   };
 
@@ -2100,24 +2141,54 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                     className="bg-white rounded-3xl p-5 border border-[#EAE3F7] shadow-xs flex flex-col justify-between hover:shadow-md transition-all"
                   >
                     <div>
-                      {/* Category Header */}
+                      {/* Category Header with Icon & Edit Button */}
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2.5">
                           <span
-                            className="w-3.5 h-3.5 rounded-full"
-                            style={{ backgroundColor: cat.color || "#FF4D6D" }}
-                          />
-                          <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
-                            {cat.label}
-                          </h2>
+                            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-2xs border border-[#EAE3F7]/80"
+                            style={{ backgroundColor: `${cat.color || "#FF4D6D"}20` }}
+                          >
+                            <CategoryGlyph id={cat.id} color={cat.color || "#FF4D6D"} icon={cat.category_icon || cat.categoryIcon || cat.icon_type} />
+                          </span>
+                          <div>
+                            <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136] leading-tight">
+                              {cat.label}
+                            </h2>
+                            <span className="text-[10.5px] text-[#8A84A6] font-mono">{cat.id}</span>
+                          </div>
                         </div>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#F6F1FF] text-[#7B5CFF]">
-                          {cat.subcategories?.length || 0} subcategories
-                        </span>
+
+                        <div className="flex items-center gap-1.5">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#F6F1FF] text-[#7B5CFF]">
+                            {cat.subcategories?.length || 0} subs
+                          </span>
+                          <button
+                            onClick={() => setEditingCategory(cat)}
+                            className="w-7 h-7 rounded-lg bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] flex items-center justify-center transition-colors cursor-pointer"
+                            title="Edit Parent Category & Icon"
+                          >
+                            <IconEdit className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setDeletingCategory(cat)}
+                            className="w-7 h-7 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center transition-colors cursor-pointer"
+                            title="Delete Parent Category"
+                          >
+                            <IconTrash className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
 
+                      {/* Category Icon Path Badge if defined */}
+                      {(cat.category_icon || cat.categoryIcon) && (
+                        <div className="mb-3 px-2.5 py-1 rounded-lg bg-[#FAF8FE] border border-[#EAE3F7] text-[10px] font-mono text-[#736E9B] truncate flex items-center gap-1.5">
+                          <span className="font-bold text-[#171136]">Icon:</span>
+                          <span className="truncate">{cat.category_icon || cat.categoryIcon}</span>
+                        </div>
+                      )}
+
                       {/* Nested Subcategories Pill List */}
-                      <div className="space-y-1.5 mt-3 pt-3 border-t border-[#F0EBF8]">
+                      <div className="space-y-1.5 mt-2 pt-2.5 border-t border-[#F0EBF8]">
                         <p className="text-[11px] font-bold text-[#8A84A6] uppercase tracking-wide mb-1">
                           Subcategories:
                         </p>
@@ -2137,7 +2208,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                       </div>
                     </div>
 
-                    {/* Quick Add Subcategory action button */}
+                    {/* Quick Action Buttons */}
                     <div className="mt-4 pt-3 border-t border-[#F0EBF8] flex items-center justify-between">
                       <button
                         onClick={() => {
@@ -2150,7 +2221,13 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                         <span>Add Subcategory</span>
                       </button>
 
-                      <span className="text-[11px] text-[#8A84A6] font-mono">{cat.id}</span>
+                      <button
+                        onClick={() => setEditingCategory(cat)}
+                        className="text-xs font-bold text-[#7B5CFF] hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <IconEdit className="w-3 h-3" />
+                        <span>Edit Category</span>
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -2519,6 +2596,177 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================= */}
+      {/* MODAL: EDIT PARENT CATEGORY (Includes Category Icon Add/Update) */}
+      {/* ============================================================= */}
+      {editingCategory && (
+        <div className="fixed inset-0 z-50 bg-[#171136]/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="font-[family-name:var(--font-display)] font-extrabold text-xl text-[#171136]">
+                  Edit Parent Category
+                </h3>
+                <p className="text-xs text-[#736E9B] font-mono">ID: {editingCategory.id}</p>
+              </div>
+              <button
+                onClick={() => setEditingCategory(null)}
+                className="w-8 h-8 rounded-full bg-[#F6F1FF] flex items-center justify-center text-[#171136] cursor-pointer"
+              >
+                <IconClose className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateCategory} className="space-y-4 text-xs">
+              <div>
+                <label className="font-bold text-[#171136] block mb-1">Category Label / Name</label>
+                <input
+                  name="label"
+                  required
+                  defaultValue={editingCategory.label}
+                  className="w-full p-2.5 rounded-xl border border-[#EAE3F7] focus:outline-none focus:border-[#FF4D6D] font-medium"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-[#171136] block mb-1">Accent Color</label>
+                  <select
+                    name="color"
+                    defaultValue={editingCategory.color || "#FF4D6D"}
+                    className="w-full p-2.5 rounded-xl border border-[#EAE3F7] bg-white focus:outline-none focus:border-[#FF4D6D]"
+                  >
+                    <option value="#FF4D6D">Pink (#FF4D6D)</option>
+                    <option value="#7B5CFF">Purple (#7B5CFF)</option>
+                    <option value="#13BFC9">Teal / Cyan (#13BFC9)</option>
+                    <option value="#00B4D8">Blue (#00B4D8)</option>
+                    <option value="#FFC93C">Gold (#FFC93C)</option>
+                    <option value="#FF8A5B">Orange (#FF8A5B)</option>
+                    <option value="#10B981">Green (#10B981)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-bold text-[#171136] block mb-1">Fallback Icon Type</label>
+                  <select
+                    name="icon_type"
+                    defaultValue={editingCategory.icon_type || editingCategory.id}
+                    className="w-full p-2.5 rounded-xl border border-[#EAE3F7] bg-white focus:outline-none focus:border-[#FF4D6D]"
+                  >
+                    <option value="figure">Figure</option>
+                    <option value="brick">Bricks</option>
+                    <option value="code">Coding</option>
+                    <option value="toon">Cartoon</option>
+                    <option value="robot">Robotics</option>
+                    <option value="model">Model kits</option>
+                    <option value="plush">Plush</option>
+                    <option value="statue">Statue</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Dynamic Category Icon Field */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-[#171136]">Category Icon (SVG / Image URL / Name)</label>
+                  <span className="text-[10px] text-[#7B5CFF] font-semibold">Dynamic Icon</span>
+                </div>
+                <input
+                  name="category_icon"
+                  defaultValue={editingCategory.category_icon || editingCategory.categoryIcon || ""}
+                  placeholder="e.g. /images/figure-samurai-red.svg or https://..."
+                  className="w-full p-2.5 rounded-xl border border-[#EAE3F7] focus:outline-none focus:border-[#FF4D6D] font-mono text-[11px]"
+                />
+                <p className="text-[10.5px] text-[#736E9B] mt-1">
+                  Specify an SVG path (e.g. <code>/images/figure-samurai-red.svg</code>), a custom web image URL, or standard icon identifier name.
+                </p>
+
+                {/* Quick preset suggestions */}
+                <div className="mt-2.5 pt-2 border-t border-[#F0EBF8]">
+                  <p className="text-[10px] font-bold text-[#8A84A6] uppercase mb-1.5">Quick Icon Presets:</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { name: "Samurai (Red)", path: "/images/figure-samurai-red.svg" },
+                      { name: "Mecha (Teal)", path: "/images/figure-mecha-teal.svg" },
+                      { name: "Mage (Purple)", path: "/images/figure-mage-purple.svg" },
+                      { name: "Car (Teal)", path: "/images/bricks-car-teal.svg" },
+                      { name: "Castle (Navy)", path: "/images/bricks-castle-navy.svg" },
+                      { name: "Robot (Purple)", path: "/images/robot-purple.svg" },
+                      { name: "Robot (Teal)", path: "/images/robot-teal.svg" },
+                      { name: "Mascot (Toon)", path: "/images/toon-mascot.svg" },
+                    ].map((preset) => (
+                      <button
+                        key={preset.path}
+                        type="button"
+                        onClick={(e) => {
+                          const form = (e.currentTarget.closest("form") as HTMLFormElement);
+                          if (form) {
+                            const input = form.elements.namedItem("category_icon") as HTMLInputElement;
+                            if (input) input.value = preset.path;
+                          }
+                        }}
+                        className="px-2 py-1 rounded-lg bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] text-[10px] font-bold border border-[#EAE3F7] transition-all cursor-pointer"
+                      >
+                        {preset.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-[#F0EBF8]">
+                <button
+                  type="button"
+                  onClick={() => setEditingCategory(null)}
+                  className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 font-bold cursor-pointer hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-[#171136] text-white font-bold hover:bg-[#251c4a] shadow-md cursor-pointer transition-all"
+                >
+                  Save Category Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================= */}
+      {/* MODAL: DELETE PARENT CATEGORY CONFIRMATION */}
+      {/* ============================================================= */}
+      {deletingCategory && (
+        <div className="fixed inset-0 z-50 bg-[#171136]/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center">
+            <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-3">
+              <IconTrash className="w-6 h-6" />
+            </div>
+            <h3 className="font-[family-name:var(--font-display)] font-extrabold text-lg text-[#171136] mb-1">
+              Delete Category?
+            </h3>
+            <p className="text-xs text-[#736E9B] mb-5">
+              Are you sure you want to delete category <strong>{deletingCategory.label}</strong> ({deletingCategory.id})?
+            </p>
+            <div className="flex justify-center gap-2 text-xs font-bold">
+              <button
+                onClick={() => setDeletingCategory(null)}
+                className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteCategory}
+                className="px-4 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 cursor-pointer"
+              >
+                Yes, Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
