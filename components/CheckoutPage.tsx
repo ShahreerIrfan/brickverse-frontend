@@ -602,20 +602,20 @@ export default function CheckoutPage() {
                       {/* Thumbnail with Quantity Badge */}
                       <div className="relative shrink-0">
                         <div
-                          className="w-16 h-16 rounded-2xl flex items-center justify-center p-2 overflow-hidden"
+                          className="w-[72px] h-[72px] rounded-2xl flex items-center justify-center p-1.5 overflow-hidden"
                           style={{ backgroundColor: itemBg }}
                         >
                           <Image
                             src={it.image || "/images/figure-samurai-red.svg"}
                             alt={it.name}
-                            width={50}
-                            height={50}
-                            className="object-contain max-h-full max-w-full drop-shadow-sm"
+                            width={64}
+                            height={64}
+                            className="w-full h-full object-contain drop-shadow-sm"
                             unoptimized
                           />
                         </div>
                         {/* Quantity Bubble on Top Left */}
-                        <span className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-[#171136] text-white text-[10px] font-extrabold flex items-center justify-center shadow-xs">
+                        <span className="absolute -top-1.5 -left-1.5 w-5.5 h-5.5 rounded-full bg-[#171136] text-white text-[10.5px] font-extrabold flex items-center justify-center shadow-xs">
                           {it.quantity}
                         </span>
                       </div>
