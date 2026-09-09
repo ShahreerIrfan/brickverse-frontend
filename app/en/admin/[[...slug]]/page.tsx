@@ -22,7 +22,8 @@ export default function AdminRoutePage({ params }: PageProps) {
   // /en/admin/products/taxonomy     -> products-taxonomy
   // /en/admin/orders                -> orders-all
   // /en/admin/users                 -> users-all
-  let initialNav: "dashboard" | "products-all" | "products-form" | "products-taxonomy" | "orders-all" | "users-all" = "dashboard";
+  let initialNav: "dashboard" | "products-all" | "products-form" | "products-taxonomy" | "orders-all" | "orders-single" | "users-all" = "dashboard";
+  let initialOrderId: string | undefined = undefined;
 
   if (slug.length >= 2 && slug[0] === "products") {
     if (slug[1] === "new" || slug[1] === "edit" || slug[1] === "add") {
@@ -35,7 +36,12 @@ export default function AdminRoutePage({ params }: PageProps) {
   } else if (slug.length === 1 && slug[0] === "products") {
     initialNav = "products-all";
   } else if (slug[0] === "orders") {
-    initialNav = "orders-all";
+    if (slug.length >= 2) {
+      initialNav = "orders-single";
+      initialOrderId = slug[1];
+    } else {
+      initialNav = "orders-all";
+    }
   } else if (slug[0] === "users") {
     initialNav = "users-all";
   }
@@ -63,5 +69,5 @@ export default function AdminRoutePage({ params }: PageProps) {
     return null;
   }
 
-  return <AdminDashboard user={user} initialNav={initialNav} />;
+  return <AdminDashboard user={user} initialNav={initialNav} initialOrderId={initialOrderId} />;
 }

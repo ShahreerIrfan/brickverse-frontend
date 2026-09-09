@@ -71,11 +71,12 @@ import {
 interface AdminDashboardProps {
   user: User;
   initialNav?: ActiveNav;
+  initialOrderId?: string;
 }
 
-type ActiveNav = "dashboard" | "products-all" | "products-form" | "products-taxonomy" | "orders-all" | "users-all";
+type ActiveNav = "dashboard" | "products-all" | "products-form" | "products-taxonomy" | "orders-all" | "orders-single" | "users-all";
 
-export default function AdminDashboard({ user, initialNav }: AdminDashboardProps) {
+export default function AdminDashboard({ user, initialNav, initialOrderId }: AdminDashboardProps) {
   const { logout } = useAuth();
 
   // Dynamic user display name & avatar resolution (First Name, Last Name, Avatar initial)
@@ -128,6 +129,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
     "products-form": "/en/admin/products/new",
     "products-taxonomy": "/en/admin/products/taxonomy",
     "orders-all": "/en/admin/orders",
+    "orders-single": "/en/admin/orders",
     "users-all": "/en/admin/users",
   };
 
@@ -164,6 +166,9 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
       } else if (path.includes("/products")) {
         setActiveNav("products-all");
         setProductsMenuOpen(true);
+      } else if (path.includes("/orders/") && path.split("/orders/")[1]) {
+        setActiveNav("orders-single");
+        setOrdersMenuOpen(true);
       } else if (path.includes("/orders")) {
         setActiveNav("orders-all");
         setOrdersMenuOpen(true);
@@ -362,6 +367,21 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Sync initialOrderId from route slug with selectedOrder
+  useEffect(() => {
+    if (initialOrderId && orders.length > 0) {
+      const match = orders.find(
+        (o) =>
+          String(o.id) === String(initialOrderId) ||
+          String(o.order_number).toLowerCase() === String(initialOrderId).toLowerCase() ||
+          String(o.order_number).toLowerCase().includes(String(initialOrderId).toLowerCase())
+      );
+      if (match) {
+        setSelectedOrder(match);
+      }
+    }
+  }, [initialOrderId, orders]);
 
   // Compute live KPI metrics
   const stats = statsData?.stats || {
@@ -1583,7 +1603,10 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                             </td>
                             <td className="py-4 pl-4 text-right">
                               <button
-                                onClick={() => setSelectedOrder(o)}
+                                onClick={() => {
+                                  setSelectedOrder(o);
+                                  navigateTo("orders-single", `/en/admin/orders/${o.id || o.order_number}`);
+                                }}
                                 className="text-xs font-bold text-[#FF4D6D] hover:underline cursor-pointer"
                               >
                                 Details ↗
@@ -2652,13 +2675,19 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                               <td className="py-4 px-5 whitespace-nowrap text-right">
                                 <div className="inline-flex items-center gap-2 justify-end">
                                   <button
-                                    onClick={() => setSelectedOrder(o)}
+                                    onClick={() => {
+                                      setSelectedOrder(o);
+                                      navigateTo("orders-single", `/en/admin/orders/${o.id || o.order_number}`);
+                                    }}
                                     className="px-3.5 py-1.5 bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] font-bold text-xs rounded-xl border border-[#EAE3F7] transition-all cursor-pointer shadow-2xs"
                                   >
                                     View ↗
                                   </button>
                                   <button
-                                    onClick={() => setSelectedOrder(o)}
+                                    onClick={() => {
+                                      setSelectedOrder(o);
+                                      navigateTo("orders-single", `/en/admin/orders/${o.id || o.order_number}`);
+                                    }}
                                     className="p-1.5 bg-[#FFF1F4] hover:bg-[#FFE4EA] text-[#FF4D6D] rounded-xl transition-all cursor-pointer"
                                     title="Order Details"
                                   >
@@ -2676,6 +2705,446 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
               </div>
             </div>
           )}
+
+          {/* ========================================================= */}
+          {/* 4.5) VIEW: ORDERS -> SINGLE ORDER DETAILS (SOLID PAGE) */}
+          {/* ========================================================= */}
+          {activeNav === "orders-single" && (() => {
+            const currentOrder =
+              selectedOrder ||
+              (initialOrderId ? orders.find((o) => String(o.id) === String(initialOrderId) || String(o.order_number) === String(initialOrderId)) : null) ||
+              orders[0];
+
+            if (!currentOrder) {
+              return (
+                <div className="bg-white rounded-3xl border border-[#EAE3F7] p-12 text-center shadow-xs space-y-4">
+                  <p className="font-extrabold text-lg text-[#171136]">Order not found or loading...</p>
+                  <button
+                    onClick={() => navigateTo("orders-all", "/en/admin/orders")}
+                    className="px-5 py-2.5 bg-[#FF4D6D] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer hover:bg-[#ff3358] transition-all"
+                  >
+                    ← Return to All Orders
+                  </button>
+                </div>
+              );
+            }
+
+            const initial = (currentOrder.customer_name?.[0] || currentOrder.customer_email?.[0] || "O").toUpperCase();
+            const dateInfo = formatOrderDate(currentOrder.created_at);
+            const trackingNum = currentOrder.tracking_number || `BV-TRACK-${currentOrder.id ? String(currentOrder.id).slice(0, 5).toUpperCase() : "88219"}`;
+
+            const items = currentOrder.items && currentOrder.items.length > 0 ? currentOrder.items : [
+              {
+                id: "fallback-1",
+                product_name: "Brickverse Custom Order Item",
+                price: currentOrder.total_amount,
+                quantity: 1,
+              }
+            ];
+
+            const subtotal = items.reduce((acc: number, item: any) => acc + (Number(item.price || 0) * (item.quantity || 1)), 0);
+
+            const statusLevels: Record<string, number> = {
+              pending: 1,
+              processing: 2,
+              shipped: 3,
+              delivered: 4,
+              cancelled: 0,
+            };
+            const currentLevel = statusLevels[currentOrder.status] ?? 1;
+
+            return (
+              <div className="space-y-6 animate-in fade-in-50 duration-300">
+                {/* Breadcrumb & Navigation */}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => navigateTo("orders-all", "/en/admin/orders")}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-[#F6F1FF] text-[#7B5CFF] font-bold text-xs rounded-xl border border-[#EAE3F7] transition-all cursor-pointer shadow-2xs"
+                  >
+                    ← Back
+                  </button>
+                  <div className="flex items-center gap-2 text-xs">
+                    <button
+                      onClick={() => navigateTo("orders-all", "/en/admin/orders")}
+                      className="text-[#736E9B] hover:text-[#171136] font-medium cursor-pointer"
+                    >
+                      Orders
+                    </button>
+                    <span className="text-[#8A84A6]">/</span>
+                    <span className="font-extrabold text-[#171136]">#{currentOrder.order_number}</span>
+                  </div>
+                </div>
+
+                {/* Order Header Card */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-3xl border border-[#EAE3F7] p-6 shadow-xs">
+                  <div>
+                    <h1 className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-3xl text-[#171136] tracking-tight">
+                      Order #{currentOrder.order_number}
+                    </h1>
+                    <p className="text-xs sm:text-sm text-[#736E9B] font-medium mt-1">
+                      Placed on {dateInfo.date} {dateInfo.time ? `at ${dateInfo.time}` : ""}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {/* Status Badge */}
+                    <div
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs capitalize ${
+                        currentOrder.status === "delivered"
+                          ? "bg-[#E7F8F0] text-[#2ECC8F]"
+                          : currentOrder.status === "shipped"
+                          ? "bg-[#E3F0FF] text-[#3B82F6]"
+                          : currentOrder.status === "cancelled"
+                          ? "bg-[#FFF1F4] text-[#FF4D6D]"
+                          : "bg-[#FFF4D6] text-[#C08A00]"
+                      }`}
+                    >
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          currentOrder.status === "delivered"
+                            ? "bg-[#2ECC8F]"
+                            : currentOrder.status === "shipped"
+                            ? "bg-[#3B82F6]"
+                            : currentOrder.status === "cancelled"
+                            ? "bg-[#FF4D6D]"
+                            : "bg-[#C08A00]"
+                        }`}
+                      />
+                      {currentOrder.status}
+                    </div>
+
+                    {/* Update Status Dropdown */}
+                    <select
+                      value={currentOrder.status}
+                      onChange={(e) => {
+                        const newSt = e.target.value;
+                        handleUpdateStatus(currentOrder.id, newSt);
+                        setSelectedOrder((prev: any) => ({ ...(prev || currentOrder), status: newSt }));
+                      }}
+                      className="px-4 py-2 bg-[#FF4D6D] hover:bg-[#ff3358] text-white font-bold text-xs rounded-xl transition-all cursor-pointer outline-none shadow-2xs"
+                    >
+                      <option value="pending" className="bg-white text-[#171136]">Status: Pending</option>
+                      <option value="processing" className="bg-white text-[#171136]">Status: Processing</option>
+                      <option value="shipped" className="bg-white text-[#171136]">Status: Shipped</option>
+                      <option value="delivered" className="bg-white text-[#171136]">Status: Delivered</option>
+                      <option value="cancelled" className="bg-white text-[#171136]">Status: Cancelled</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Two Column Layout matching SVG */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                  {/* LEFT COLUMN: Order Info Cards */}
+                  <div className="lg:col-span-5 space-y-6">
+                    {/* Customer Information Card */}
+                    <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 shadow-xs space-y-4">
+                      <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
+                        Customer Information
+                      </h2>
+                      <div className="border-t border-[#F0EBF8] pt-4 flex items-center gap-3.5">
+                        <div
+                          className={`w-11 h-11 rounded-full ${getOrderAvatarBg(
+                            initial
+                          )} font-extrabold flex items-center justify-center text-sm shrink-0 shadow-2xs`}
+                        >
+                          {initial}
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm text-[#171136] leading-tight">
+                            {currentOrder.customer_name || "Guest Customer"}
+                          </p>
+                          <p className="text-xs text-[#736E9B] mt-0.5">{currentOrder.customer_email}</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 text-xs">
+                        <div>
+                          <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block">
+                            PHONE
+                          </span>
+                          <p className="font-semibold text-[#171136] mt-1">
+                            {currentOrder.customer_phone || "—"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block">
+                            SHIPPING ADDRESS
+                          </span>
+                          <p className="font-medium text-[#171136] mt-1 leading-relaxed">
+                            {currentOrder.shipping_address || "Standard Customer Address"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Status & Tracking Card */}
+                    <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 shadow-xs space-y-4">
+                      <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
+                        Status & Tracking
+                      </h2>
+                      <div className="border-t border-[#F0EBF8] pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center text-xs">
+                        <div>
+                          <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
+                            ORDER STATUS
+                          </span>
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold capitalize ${
+                              currentOrder.status === "delivered"
+                                ? "bg-[#E7F8F0] text-[#2ECC8F]"
+                                : currentOrder.status === "shipped"
+                                ? "bg-[#E3F0FF] text-[#3B82F6]"
+                                : currentOrder.status === "cancelled"
+                                ? "bg-[#FFF1F4] text-[#FF4D6D]"
+                                : "bg-[#FFF4D6] text-[#C08A00]"
+                            }`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                currentOrder.status === "delivered"
+                                  ? "bg-[#2ECC8F]"
+                                  : currentOrder.status === "shipped"
+                                  ? "bg-[#3B82F6]"
+                                  : currentOrder.status === "cancelled"
+                                  ? "bg-[#FF4D6D]"
+                                  : "bg-[#C08A00]"
+                              }`}
+                            />
+                            {currentOrder.status}
+                          </span>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
+                            TRACKING NUMBER
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-xs text-[#171136] font-mono">
+                              {trackingNum}
+                            </span>
+                            <button
+                              onClick={() => copyTracking(trackingNum)}
+                              className="px-2.5 py-1 bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] font-bold text-[11px] rounded-lg transition-all cursor-pointer"
+                              title="Copy Tracking Number"
+                            >
+                              {copiedTracking ? "Copied! ✓" : "Copy ↗"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Payment Information Card */}
+                    <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 shadow-xs space-y-4">
+                      <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
+                        Payment Information
+                      </h2>
+                      <div className="border-t border-[#F0EBF8] pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                        <div>
+                          <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
+                            PAYMENT METHOD
+                          </span>
+                          <p className="font-semibold text-[#171136]">
+                            Cash on Delivery / Card
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
+                            PAYMENT STATUS
+                          </span>
+                          <span
+                            className={`inline-block px-3 py-1 rounded-lg text-xs font-bold ${
+                              currentOrder.status === "delivered"
+                                ? "bg-[#E7F8F0] text-[#2ECC8F]"
+                                : "bg-[#FFF4D6] text-[#C08A00]"
+                            }`}
+                          >
+                            {currentOrder.status === "delivered" ? "Paid ✓" : "Pending COD"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* RIGHT COLUMN: Order Items & Summary */}
+                  <div className="lg:col-span-7 space-y-6">
+                    {/* Order Items Card */}
+                    <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 shadow-xs space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
+                          Ordered Items
+                        </h2>
+                        <span className="text-xs font-semibold text-[#736E9B] bg-[#F6F1FF] px-3 py-1 rounded-full border border-[#EAE3F7]">
+                          {items.length} {items.length === 1 ? "item" : "items"}
+                        </span>
+                      </div>
+
+                      <div className="overflow-x-auto border-t border-[#F0EBF8] pt-2">
+                        <table className="w-full text-left text-xs">
+                          <thead>
+                            <tr className="text-[#8A84A6] border-b border-[#F0EBF8]">
+                              <th className="py-3 font-bold text-[10.5px] tracking-wider uppercase">PRODUCT</th>
+                              <th className="py-3 font-bold text-[10.5px] tracking-wider uppercase text-center">QTY</th>
+                              <th className="py-3 font-bold text-[10.5px] tracking-wider uppercase text-right">PRICE</th>
+                              <th className="py-3 font-bold text-[10.5px] tracking-wider uppercase text-right">TOTAL</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-[#F0EBF8]">
+                            {items.map((item: any, idx: number) => {
+                              const itemInitial = (item.product_name?.[0] || "P").toUpperCase();
+                              const itemTotal = Number(item.price || 0) * (item.quantity || 1);
+                              return (
+                                <tr key={idx} className="hover:bg-[#F8F6FD]/60 transition-colors">
+                                  <td className="py-3.5 pr-2">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-10 h-10 rounded-xl bg-[#FFF1F4] text-[#FF4D6D] font-extrabold flex items-center justify-center text-xs shrink-0">
+                                        {itemInitial}
+                                      </div>
+                                      <div>
+                                        <p className="font-bold text-[#171136] text-xs sm:text-sm leading-tight">
+                                          {item.product_name}
+                                        </p>
+                                        <p className="text-[10.5px] text-[#736E9B] mt-0.5">
+                                          SKU: BV-ITEM-{idx + 101}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="py-3.5 px-2 text-center font-bold text-[#171136]">
+                                    ×{item.quantity || 1}
+                                  </td>
+                                  <td className="py-3.5 px-2 text-right font-medium text-[#736E9B]">
+                                    ৳{Number(item.price || 0).toLocaleString()}
+                                  </td>
+                                  <td className="py-3.5 pl-2 text-right font-extrabold text-[#171136] text-sm">
+                                    ৳{itemTotal.toLocaleString()}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="border-t border-[#F0EBF8] pt-4 space-y-2 text-xs text-right">
+                        <div className="flex justify-end gap-8 text-[#736E9B]">
+                          <span>Subtotal</span>
+                          <span className="font-semibold text-[#171136] w-24">৳{subtotal.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-end gap-8 text-[#736E9B]">
+                          <span>Standard Delivery</span>
+                          <span className="font-semibold text-emerald-600 w-24">৳0</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Order Total Card */}
+                    <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <span className="text-[11px] font-bold text-[#8A84A6] uppercase tracking-wider block">
+                          Order Total
+                        </span>
+                        <p className="font-[family-name:var(--font-display)] font-extrabold text-3xl sm:text-4xl text-[#FF4D6D] mt-1">
+                          ৳{Number(currentOrder.total_amount || 0).toLocaleString()}
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => window.print()}
+                        className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#FF4D6D] hover:bg-[#ff3358] text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all cursor-pointer"
+                      >
+                        Download Invoice ↓
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom: Order Activity Timeline Card */}
+                <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 shadow-xs space-y-5">
+                  <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
+                    Order Activity Timeline
+                  </h2>
+                  <div className="border-t border-[#F0EBF8] pt-5 grid grid-cols-1 md:grid-cols-4 gap-5 text-xs">
+                    {/* Step 1: Placed */}
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[#FFF1F4] text-[#FF4D6D] flex items-center justify-center shrink-0 font-bold">
+                        ✓
+                      </div>
+                      <div>
+                        <p className="font-bold text-[#171136]">Order Placed</p>
+                        <p className="text-[11px] text-[#736E9B] mt-0.5">
+                          Order #{currentOrder.order_number} confirmed.
+                        </p>
+                        <p className="text-[10px] text-[#8A84A6] font-medium mt-1">{dateInfo.date}</p>
+                      </div>
+                    </div>
+
+                    {/* Step 2: Processing */}
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold ${
+                          currentLevel >= 2
+                            ? "bg-[#FFF4D6] text-[#C08A00]"
+                            : "bg-gray-100 text-gray-400"
+                        }`}
+                      >
+                        {currentLevel >= 2 ? "✓" : "2"}
+                      </div>
+                      <div>
+                        <p className={`font-bold ${currentLevel >= 2 ? "text-[#171136]" : "text-gray-400"}`}>
+                          Processing
+                        </p>
+                        <p className="text-[11px] text-[#736E9B] mt-0.5">
+                          Picking and packing at warehouse.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Step 3: Shipped */}
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold ${
+                          currentLevel >= 3
+                            ? "bg-[#E3F0FF] text-[#3B82F6]"
+                            : "bg-gray-100 text-gray-400"
+                        }`}
+                      >
+                        {currentLevel >= 3 ? "✓" : "3"}
+                      </div>
+                      <div>
+                        <p className={`font-bold ${currentLevel >= 3 ? "text-[#171136]" : "text-gray-400"}`}>
+                          Order Shipped
+                        </p>
+                        <p className="text-[11px] text-[#736E9B] mt-0.5 font-mono">
+                          {trackingNum}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Step 4: Delivered */}
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold ${
+                          currentLevel >= 4
+                            ? "bg-[#E7F8F0] text-[#2ECC8F]"
+                            : "bg-gray-100 text-gray-400"
+                        }`}
+                      >
+                        {currentLevel >= 4 ? "✓" : "4"}
+                      </div>
+                      <div>
+                        <p className={`font-bold ${currentLevel >= 4 ? "text-[#171136]" : "text-gray-400"}`}>
+                          Delivered
+                        </p>
+                        <p className="text-[11px] text-[#736E9B] mt-0.5">
+                          Delivered to shipping address.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* ========================================================= */}
           {/* 5) VIEW: USERS -> ALL USERS */}
@@ -3350,436 +3819,6 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
           </div>
         </div>
       )}
-
-      {/* ============================================================= */}
-      {/* MODAL: ORDER SINGLE DETAILS & INVOICE */}
-      {/* ============================================================= */}
-      {selectedOrder && (() => {
-        const initial = (selectedOrder.customer_name?.[0] || selectedOrder.customer_email?.[0] || "O").toUpperCase();
-        const dateInfo = formatOrderDate(selectedOrder.created_at);
-        const trackingNum = selectedOrder.tracking_number || `BV-TRACK-${selectedOrder.id ? String(selectedOrder.id).slice(0, 5).toUpperCase() : "88219"}`;
-        
-        // Calculate items subtotal
-        const items = selectedOrder.items && selectedOrder.items.length > 0 ? selectedOrder.items : [
-          {
-            id: "fallback-1",
-            product_name: "Brickverse Custom Order Item",
-            price: selectedOrder.total_amount,
-            quantity: 1,
-          }
-        ];
-        
-        const subtotal = items.reduce((acc: number, item: any) => acc + (Number(item.price || 0) * (item.quantity || 1)), 0);
-
-        // Timeline status active logic
-        const statusLevels: Record<string, number> = {
-          pending: 1,
-          processing: 2,
-          shipped: 3,
-          delivered: 4,
-          cancelled: 0,
-        };
-        const currentLevel = statusLevels[selectedOrder.status] ?? 1;
-
-        return (
-          <div className="fixed inset-0 z-50 bg-[#171136]/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-            <div className="bg-[#F6F2FC] rounded-3xl max-w-5xl w-full max-h-[94vh] overflow-y-auto border border-[#EAE3F7] p-5 sm:p-8 shadow-2xl space-y-6 relative text-[#171136] animate-in zoom-in-95">
-              {/* Top Navigation & Breadcrumb */}
-              <div className="flex items-center justify-between gap-4 pb-2">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setSelectedOrder(null)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] font-bold text-xs rounded-xl border border-[#EAE3F7] transition-all cursor-pointer shadow-2xs"
-                  >
-                    ← Back
-                  </button>
-                  <div className="hidden sm:flex items-center gap-2 text-xs">
-                    <span className="text-[#736E9B]">Orders</span>
-                    <span className="text-[#8A84A6]">/</span>
-                    <span className="font-bold text-[#171136]">#{selectedOrder.order_number}</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setSelectedOrder(null)}
-                  className="w-8 h-8 rounded-full bg-white hover:bg-[#FFE4EA] text-[#736E9B] hover:text-[#FF4D6D] border border-[#EAE3F7] flex items-center justify-center transition-colors cursor-pointer"
-                  title="Close"
-                >
-                  <IconClose className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Order Header Section */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-2xl border border-[#EAE3F7] p-5 shadow-2xs">
-                <div>
-                  <h2 className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-3xl text-[#171136] tracking-tight">
-                    Order #{selectedOrder.order_number}
-                  </h2>
-                  <p className="text-xs sm:text-sm text-[#736E9B] font-medium mt-1">
-                    Placed on {dateInfo.date} {dateInfo.time ? `at ${dateInfo.time}` : ""}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3 flex-wrap">
-                  {/* Status Badge */}
-                  <div
-                    className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-bold text-xs capitalize ${
-                      selectedOrder.status === "delivered"
-                        ? "bg-[#E7F8F0] text-[#2ECC8F]"
-                        : selectedOrder.status === "shipped"
-                        ? "bg-[#E3F0FF] text-[#3B82F6]"
-                        : selectedOrder.status === "cancelled"
-                        ? "bg-[#FFF1F4] text-[#FF4D6D]"
-                        : "bg-[#FFF4D6] text-[#C08A00]"
-                    }`}
-                  >
-                    <span
-                      className={`w-2 h-2 rounded-full ${
-                        selectedOrder.status === "delivered"
-                          ? "bg-[#2ECC8F]"
-                          : selectedOrder.status === "shipped"
-                          ? "bg-[#3B82F6]"
-                          : selectedOrder.status === "cancelled"
-                          ? "bg-[#FF4D6D]"
-                          : "bg-[#C08A00]"
-                      }`}
-                    />
-                    {selectedOrder.status}
-                  </div>
-
-                  {/* Update Status Dropdown */}
-                  <select
-                    value={selectedOrder.status}
-                    onChange={(e) => {
-                      const newSt = e.target.value;
-                      handleUpdateStatus(selectedOrder.id, newSt);
-                      setSelectedOrder((prev: any) => ({ ...prev, status: newSt }));
-                    }}
-                    className="px-3.5 py-1.5 bg-[#FF4D6D] hover:bg-[#ff3358] text-white font-bold text-xs rounded-xl transition-all cursor-pointer outline-none shadow-2xs"
-                  >
-                    <option value="pending" className="bg-white text-[#171136]">Status: Pending</option>
-                    <option value="processing" className="bg-white text-[#171136]">Status: Processing</option>
-                    <option value="shipped" className="bg-white text-[#171136]">Status: Shipped</option>
-                    <option value="delivered" className="bg-white text-[#171136]">Status: Delivered</option>
-                    <option value="cancelled" className="bg-white text-[#171136]">Status: Cancelled</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Two Column Layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* LEFT COLUMN: Order Info */}
-                <div className="lg:col-span-5 space-y-5">
-                  {/* Customer Information Card */}
-                  <div className="bg-white rounded-[22px] border border-[#EAE3F7] p-5 shadow-xs space-y-4">
-                    <h3 className="font-[family-name:var(--font-display)] font-extrabold text-sm text-[#171136]">
-                      Customer Information
-                    </h3>
-                    <div className="border-t border-[#F0EBF8] pt-3 flex items-center gap-3">
-                      <div
-                        className={`w-11 h-11 rounded-full ${getOrderAvatarBg(
-                          initial
-                        )} font-extrabold flex items-center justify-center text-sm shrink-0 shadow-2xs`}
-                      >
-                        {initial}
-                      </div>
-                      <div>
-                        <p className="font-bold text-sm text-[#171136] leading-tight">
-                          {selectedOrder.customer_name || "Guest Customer"}
-                        </p>
-                        <p className="text-xs text-[#736E9B] mt-0.5">{selectedOrder.customer_email}</p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs">
-                      <div>
-                        <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block">
-                          PHONE
-                        </span>
-                        <p className="font-semibold text-[#171136] mt-0.5">
-                          {selectedOrder.customer_phone || "—"}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block">
-                          SHIPPING ADDRESS
-                        </span>
-                        <p className="font-medium text-[#171136] mt-0.5 leading-relaxed">
-                          {selectedOrder.shipping_address || "Standard Customer Address"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Status & Tracking Card */}
-                  <div className="bg-white rounded-[22px] border border-[#EAE3F7] p-5 shadow-xs space-y-4">
-                    <h3 className="font-[family-name:var(--font-display)] font-extrabold text-sm text-[#171136]">
-                      Status & Tracking
-                    </h3>
-                    <div className="border-t border-[#F0EBF8] pt-3 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center text-xs">
-                      <div>
-                        <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
-                          ORDER STATUS
-                        </span>
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold capitalize ${
-                            selectedOrder.status === "delivered"
-                              ? "bg-[#E7F8F0] text-[#2ECC8F]"
-                              : selectedOrder.status === "shipped"
-                              ? "bg-[#E3F0FF] text-[#3B82F6]"
-                              : selectedOrder.status === "cancelled"
-                              ? "bg-[#FFF1F4] text-[#FF4D6D]"
-                              : "bg-[#FFF4D6] text-[#C08A00]"
-                          }`}
-                        >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              selectedOrder.status === "delivered"
-                                ? "bg-[#2ECC8F]"
-                                : selectedOrder.status === "shipped"
-                                ? "bg-[#3B82F6]"
-                                : selectedOrder.status === "cancelled"
-                                ? "bg-[#FF4D6D]"
-                                : "bg-[#C08A00]"
-                            }`}
-                          />
-                          {selectedOrder.status}
-                        </span>
-                      </div>
-
-                      <div>
-                        <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
-                          TRACKING NUMBER
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-xs text-[#171136] font-mono">
-                            {trackingNum}
-                          </span>
-                          <button
-                            onClick={() => copyTracking(trackingNum)}
-                            className="px-2 py-0.5 bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] font-bold text-[10.5px] rounded-lg transition-all cursor-pointer"
-                            title="Copy Tracking Number"
-                          >
-                            {copiedTracking ? "Copied! ✓" : "Copy ↗"}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Payment Information Card */}
-                  <div className="bg-white rounded-[22px] border border-[#EAE3F7] p-5 shadow-xs space-y-4">
-                    <h3 className="font-[family-name:var(--font-display)] font-extrabold text-sm text-[#171136]">
-                      Payment Information
-                    </h3>
-                    <div className="border-t border-[#F0EBF8] pt-3 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                      <div>
-                        <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
-                          PAYMENT METHOD
-                        </span>
-                        <p className="font-semibold text-[#171136]">
-                          Cash on Delivery / Card
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
-                          PAYMENT STATUS
-                        </span>
-                        <span
-                          className={`inline-block px-2.5 py-0.5 rounded-lg text-[10.5px] font-bold ${
-                            selectedOrder.status === "delivered"
-                              ? "bg-[#E7F8F0] text-[#2ECC8F]"
-                              : "bg-[#FFF4D6] text-[#C08A00]"
-                          }`}
-                        >
-                          {selectedOrder.status === "delivered" ? "Paid ✓" : "Pending COD"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* RIGHT COLUMN: Order Items & Summary */}
-                <div className="lg:col-span-7 space-y-5">
-                  {/* Order Items Card */}
-                  <div className="bg-white rounded-[22px] border border-[#EAE3F7] p-5 shadow-xs space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-[family-name:var(--font-display)] font-extrabold text-sm text-[#171136]">
-                        Ordered Items
-                      </h3>
-                      <span className="text-xs font-semibold text-[#736E9B]">
-                        {items.length} {items.length === 1 ? "item" : "items"}
-                      </span>
-                    </div>
-
-                    <div className="overflow-x-auto border-t border-[#F0EBF8] pt-2">
-                      <table className="w-full text-left text-xs">
-                        <thead>
-                          <tr className="text-[#8A84A6] border-b border-[#F0EBF8]">
-                            <th className="py-2.5 font-bold text-[10.5px] tracking-wider uppercase">PRODUCT</th>
-                            <th className="py-2.5 font-bold text-[10.5px] tracking-wider uppercase text-center">QTY</th>
-                            <th className="py-2.5 font-bold text-[10.5px] tracking-wider uppercase text-right">PRICE</th>
-                            <th className="py-2.5 font-bold text-[10.5px] tracking-wider uppercase text-right">TOTAL</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#F0EBF8]">
-                          {items.map((item: any, idx: number) => {
-                            const itemInitial = (item.product_name?.[0] || "P").toUpperCase();
-                            const itemTotal = Number(item.price || 0) * (item.quantity || 1);
-                            return (
-                              <tr key={idx} className="hover:bg-[#F8F6FD]/60 transition-colors">
-                                <td className="py-3 pr-2">
-                                  <div className="flex items-center gap-2.5">
-                                    <div className="w-9 h-9 rounded-xl bg-[#FFF1F4] text-[#FF4D6D] font-extrabold flex items-center justify-center text-xs shrink-0">
-                                      {itemInitial}
-                                    </div>
-                                    <div>
-                                      <p className="font-bold text-[#171136] text-xs leading-tight">
-                                        {item.product_name}
-                                      </p>
-                                      <p className="text-[10px] text-[#736E9B] mt-0.5">
-                                        SKU: BV-ITEM-{idx + 101}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="py-3 px-2 text-center font-semibold text-[#171136]">
-                                  ×{item.quantity || 1}
-                                </td>
-                                <td className="py-3 px-2 text-right font-medium text-[#736E9B]">
-                                  ৳{Number(item.price || 0).toLocaleString()}
-                                </td>
-                                <td className="py-3 pl-2 text-right font-extrabold text-[#171136]">
-                                  ৳{itemTotal.toLocaleString()}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    <div className="border-t border-[#F0EBF8] pt-3 space-y-1.5 text-xs text-right">
-                      <div className="flex justify-end gap-6 text-[#736E9B]">
-                        <span>Subtotal</span>
-                        <span className="font-semibold text-[#171136] w-20">৳{subtotal.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-end gap-6 text-[#736E9B]">
-                        <span>Standard Delivery</span>
-                        <span className="font-semibold text-emerald-600 w-20">৳0</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Order Total Card */}
-                  <div className="bg-white rounded-[22px] border border-[#EAE3F7] p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <span className="text-[10.5px] font-bold text-[#8A84A6] uppercase tracking-wider block">
-                        Order Total
-                      </span>
-                      <p className="font-[family-name:var(--font-display)] font-extrabold text-3xl text-[#FF4D6D] mt-0.5">
-                        ৳{Number(selectedOrder.total_amount || 0).toLocaleString()}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => window.print()}
-                      className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#FF4D6D] hover:bg-[#ff3358] text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
-                    >
-                      Download Invoice ↓
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom: Order Activity Timeline */}
-              <div className="bg-white rounded-[22px] border border-[#EAE3F7] p-5 shadow-xs space-y-4">
-                <h3 className="font-[family-name:var(--font-display)] font-extrabold text-sm text-[#171136]">
-                  Order Activity Timeline
-                </h3>
-                <div className="border-t border-[#F0EBF8] pt-4 grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
-                  {/* Step 1: Placed */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#FFF1F4] text-[#FF4D6D] flex items-center justify-center shrink-0 font-bold">
-                      ✓
-                    </div>
-                    <div>
-                      <p className="font-bold text-[#171136]">Order Placed</p>
-                      <p className="text-[11px] text-[#736E9B] mt-0.5">
-                        Order #{selectedOrder.order_number} confirmed.
-                      </p>
-                      <p className="text-[10px] text-[#8A84A6] font-medium mt-1">{dateInfo.date}</p>
-                    </div>
-                  </div>
-
-                  {/* Step 2: Processing */}
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold ${
-                        currentLevel >= 2
-                          ? "bg-[#FFF4D6] text-[#C08A00]"
-                          : "bg-gray-100 text-gray-400"
-                      }`}
-                    >
-                      {currentLevel >= 2 ? "✓" : "2"}
-                    </div>
-                    <div>
-                      <p className={`font-bold ${currentLevel >= 2 ? "text-[#171136]" : "text-gray-400"}`}>
-                        Processing
-                      </p>
-                      <p className="text-[11px] text-[#736E9B] mt-0.5">
-                        Picking and packing at warehouse.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Step 3: Shipped */}
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold ${
-                        currentLevel >= 3
-                          ? "bg-[#E3F0FF] text-[#3B82F6]"
-                          : "bg-gray-100 text-gray-400"
-                      }`}
-                    >
-                      {currentLevel >= 3 ? "✓" : "3"}
-                    </div>
-                    <div>
-                      <p className={`font-bold ${currentLevel >= 3 ? "text-[#171136]" : "text-gray-400"}`}>
-                        Order Shipped
-                      </p>
-                      <p className="text-[11px] text-[#736E9B] mt-0.5 font-mono">
-                        {trackingNum}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Step 4: Delivered */}
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-bold ${
-                        currentLevel >= 4
-                          ? "bg-[#E7F8F0] text-[#2ECC8F]"
-                          : "bg-gray-100 text-gray-400"
-                      }`}
-                    >
-                      {currentLevel >= 4 ? "✓" : "4"}
-                    </div>
-                    <div>
-                      <p className={`font-bold ${currentLevel >= 4 ? "text-[#171136]" : "text-gray-400"}`}>
-                        Delivered
-                      </p>
-                      <p className="text-[11px] text-[#736E9B] mt-0.5">
-                        Delivered to shipping address.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
     </div>
   );
 }
