@@ -180,8 +180,7 @@ export default function CartPage() {
   const discountRate = appliedCoupon ? appliedCoupon.discountPercent / 100 : 0;
   const discountAmount = subtotal * discountRate;
   const discountedSubtotal = Math.max(0, subtotal - discountAmount);
-  const shippingCost = isFreeDeliveryUnlocked || subtotal === 0 ? 0 : 60;
-  const estimatedTotal = discountedSubtotal + (discountedSubtotal > 0 ? shippingCost : 0);
+  const estimatedTotal = discountedSubtotal;
 
   const progressPercent = Math.min(100, Math.round((subtotal / freeDeliveryThreshold) * 100));
 
@@ -547,13 +546,6 @@ export default function CartPage() {
                   <span className="font-bold font-mono">-{formatPrice(discountAmount)}</span>
                 </div>
               )}
-
-              <div className="flex items-center justify-between">
-                <span>Estimated shipping</span>
-                <span className="font-bold text-[#2ECC8F]">
-                  {shippingCost === 0 ? "Free" : formatPrice(shippingCost)}
-                </span>
-              </div>
             </div>
 
             <hr className="border-[#EAE3F7]" />
