@@ -183,8 +183,7 @@ export default function CartPage() {
   const discountAmount = subtotal * discountRate;
   const discountedSubtotal = Math.max(0, subtotal - discountAmount);
   const shippingCost = isFreeDeliveryUnlocked || subtotal === 0 ? 0 : 60;
-  const estimatedTax = discountedSubtotal * 0.1; // 10% standard tax estimate
-  const estimatedTotal = discountedSubtotal + (discountedSubtotal > 0 ? shippingCost : 0) + (discountedSubtotal > 0 ? estimatedTax : 0);
+  const estimatedTotal = discountedSubtotal + (discountedSubtotal > 0 ? shippingCost : 0);
 
   const progressPercent = Math.min(100, Math.round((subtotal / freeDeliveryThreshold) * 100));
 
@@ -401,10 +400,6 @@ export default function CartPage() {
                 >
                   Clear all items
                 </button>
-                <div className="flex items-center gap-2">
-                  <IconSparkles className="w-3.5 h-3.5 text-[#FF4D6D]" />
-                  <span>Free returns within 30 days</span>
-                </div>
               </div>
             </div>
           )}
@@ -559,13 +554,6 @@ export default function CartPage() {
                 <span>Estimated shipping</span>
                 <span className="font-bold text-[#2ECC8F]">
                   {shippingCost === 0 ? "Free" : formatPrice(shippingCost)}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span>Estimated tax (10%)</span>
-                <span className="font-bold text-[#3B3468] font-mono">
-                  {formatPrice(estimatedTax)}
                 </span>
               </div>
             </div>
