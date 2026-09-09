@@ -515,34 +515,31 @@ export default function CartPage() {
               )}
             </div>
 
-            {/* Free Delivery Tracker Bar */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs font-medium text-[#3B3468]">
-                <IconTruck className="w-4 h-4 text-[#FF4D6D] shrink-0" />
-                {isFreeDeliveryUnlocked ? (
-                  <span className="text-[#00B074] font-bold">
-                    Free delivery unlocked
-                  </span>
-                ) : (
-                  <span>
-                    Add <strong className="text-[#FF4D6D] font-extrabold">{formatPrice(freeDeliveryRemaining)}</strong> more for FREE delivery
-                  </span>
-                )}
-              </div>
+            {/* Free Delivery Tracker Bar (Only shown when not yet unlocked) */}
+            {!isFreeDeliveryUnlocked && freeDeliveryRemaining > 0 && (
+              <>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-medium text-[#3B3468]">
+                    <IconTruck className="w-4 h-4 text-[#FF4D6D] shrink-0" />
+                    <span>
+                      Add <strong className="text-[#FF4D6D] font-extrabold">{formatPrice(freeDeliveryRemaining)}</strong> more for FREE delivery
+                    </span>
+                  </div>
 
-              {/* Gradient Progress Bar */}
-              <div className="w-full bg-[#F0EBFA] h-2.5 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500 ease-out"
-                  style={{
-                    width: `${progressPercent}%`,
-                    background: "linear-gradient(90deg, #FF9F43 0%, #FFC93C 100%)",
-                  }}
-                />
-              </div>
-            </div>
-
-            <hr className="border-[#EAE3F7]" />
+                  {/* Gradient Progress Bar */}
+                  <div className="w-full bg-[#F0EBFA] h-2.5 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500 ease-out"
+                      style={{
+                        width: `${progressPercent}%`,
+                        background: "linear-gradient(90deg, #FF9F43 0%, #FFC93C 100%)",
+                      }}
+                    />
+                  </div>
+                </div>
+                <hr className="border-[#EAE3F7]" />
+              </>
+            )}
 
             {/* Cost Breakdown */}
             <div className="space-y-2.5 text-xs sm:text-[13.5px] text-[#736E9B]">
