@@ -115,19 +115,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(CART_STORAGE_KEY);
-      if (stored) {
+      if (stored !== null) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           setItems(parsed);
         } else {
-          setItems(INITIAL_DEMO_ITEMS);
+          setItems([]);
         }
       } else {
         setItems(INITIAL_DEMO_ITEMS);
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(INITIAL_DEMO_ITEMS));
       }
     } catch (e) {
       console.warn("Failed to load cart from storage", e);
-      setItems(INITIAL_DEMO_ITEMS);
+      setItems([]);
     } finally {
       setIsInitialized(true);
     }
@@ -232,6 +233,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clearCart = () => {
     setItems([]);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify([]));
+      } catch (e) {
+        console.warn("Failed to clear cart storage", e);
+      }
+    }
   };
 
   return (
