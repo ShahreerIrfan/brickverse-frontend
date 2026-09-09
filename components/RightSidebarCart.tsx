@@ -305,14 +305,14 @@ export default function RightSidebarCart() {
 
             {/* Secondary Link */}
             <div className="text-center pt-0.5">
-              <button
-                type="button"
+              <Link
+                href="/cart"
                 onClick={closeCart}
                 className="text-xs font-bold text-[#736E9B] hover:text-[#171136] inline-flex items-center gap-1 transition-colors cursor-pointer"
               >
                 <span>View Full Cart</span>
                 <IconChevronRight className="w-3 h-3" />
-              </button>
+              </Link>
             </div>
 
             {/* Encrypted Security Note */}

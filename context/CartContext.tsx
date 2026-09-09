@@ -6,10 +6,12 @@ import type { Product } from "@/components/productData";
 export interface CartItem {
   id: string;
   name: string;
+  subtitle?: string;
   price: number;
   originalPrice?: number;
   priceFormatted: string;
   image: string;
+  cardBg?: string;
   quantity: number;
   seller?: string;
   category?: string;
@@ -40,7 +42,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const CART_STORAGE_KEY = "brickverse_shopping_cart";
-const FREE_DELIVERY_THRESHOLD = 500; // ৳500
+const FREE_DELIVERY_THRESHOLD = 500; // ৳500 / $60 threshold
 
 export function parsePrice(priceVal: string | number | undefined): number {
   if (typeof priceVal === "number") return priceVal;
@@ -57,29 +59,48 @@ export function formatPrice(amount: number): string {
   })}`;
 }
 
-// Initial items matching the design demonstration
+// Initial items matching the brickverse-cart.svg design demonstration
 const INITIAL_DEMO_ITEMS: CartItem[] = [
   {
-    id: "demo-item-1",
-    name: "Live Rui 2.5 Kg - 3.5 Kg (Culture)",
-    price: 335.0,
-    priceFormatted: "৳335.00",
+    id: "demo-neo-samurai",
+    name: "Neo Samurai",
+    subtitle: "Ronin edition · 1/7 scale · Crimson dusk",
+    price: 34.99,
+    originalPrice: 46.0,
+    priceFormatted: "৳34.99",
     image: "/images/figure-samurai-red.svg",
+    cardBg: "#FFEAF0",
     quantity: 1,
-    seller: "Eezy Mart Official",
-    category: "Fresh Catch",
-    slug: "live-rui",
+    seller: "Brickverse Official",
+    category: "Anime figures",
+    slug: "neo-samurai",
   },
   {
-    id: "demo-item-2",
-    name: "Bagda Prawn (60-85 Pcs)",
-    price: 700.0,
-    priceFormatted: "৳700.00",
-    image: "/images/figure-mecha-teal.svg",
+    id: "demo-galaxy-station",
+    name: "Galaxy Station",
+    subtitle: "1,240 pieces · Bricks & sets",
+    price: 79.99,
+    originalPrice: 99.0,
+    priceFormatted: "৳79.99",
+    image: "/images/bricks-castle-navy.svg",
+    cardBg: "#E4F7F8",
     quantity: 1,
-    seller: "Eezy Mart Official",
-    category: "Fresh Catch",
-    slug: "bagda-prawn",
+    seller: "Brickverse Official",
+    category: "Bricks & sets",
+    slug: "galaxy-station",
+  },
+  {
+    id: "demo-robo-coder",
+    name: "Robo Coder",
+    subtitle: "Starter robot · block coding kit",
+    price: 16.0,
+    priceFormatted: "৳16.00",
+    image: "/images/robot-gold.svg",
+    cardBg: "#FFF4DA",
+    quantity: 1,
+    seller: "Brickverse Official",
+    category: "Coding kits",
+    slug: "robo-coder",
   },
 ];
 
@@ -147,12 +168,31 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addToCart = (product: Product | any, quantity = 1, openDrawer = true) => {
     const rawPrice = product.discountedPrice || product.price || product.regularPrice || 0;
     const numPrice = parsePrice(rawPrice);
+    const rawOriginalPrice = product.originalPrice || product.regularPrice;
+    const numOriginalPrice = rawOriginalPrice ? parsePrice(rawOriginalPrice) : undefined;
     const id = String(product.id || product.slug || Date.now());
     const name = product.name || "Collector Product";
+    const subtitle = product.subtitle || product.series || undefined;
     const image = product.image || "/images/figure-samurai-red.svg";
+    const cardBg = product.cardBg || undefined;
     const seller = product.seller || product.brand || "Brickverse Official";
     const category = product.category || "General";
     const slug = product.slug || product.id;
+
+    const newItem: CartItem = {
+      id,
+      name,
+      subtitle,
+      price: numPrice,
+      originalPrice: numOriginalPrice && numOriginalPrice > numPrice ? numOriginalPrice : undefined,
+      priceFormatted: formatPrice(numPrice),
+      image,
+      cardBg,
+      quantity,
+      seller,
+      category,
+      slug,
+    };
 
     setItems((prevItems) => {
       const existingIndex = prevItems.findIndex((item) => item.id === id);
@@ -164,33 +204,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         };
         return updated;
       } else {
-        const newItem: CartItem = {
-          id,
-          name,
-          price: numPrice,
-          priceFormatted: formatPrice(numPrice),
-          image,
-          quantity,
-          seller,
-          category,
-          slug,
-        };
         return [...prevItems, newItem];
       }
     });
 
-    const addedItem: CartItem = {
-      id,
-      name,
-      price: numPrice,
-      priceFormatted: formatPrice(numPrice),
-      image,
-      quantity,
-      seller,
-      category,
-      slug,
-    };
-    setLastAddedItem(addedItem);
+    setLastAddedItem(newItem);
     setShowAddedToast(true);
 
     if (openDrawer) {
