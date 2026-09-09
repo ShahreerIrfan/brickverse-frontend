@@ -420,66 +420,6 @@ export default function ThankYouPage() {
                 </div>
               </div>
             </div>
-
-            {/* --- Card 3: What happens next (Matches brickverse-thankyou.svg) --- */}
-            <div className="bg-white rounded-3xl sm:rounded-[22px] border border-[#EAE3F7] p-5 sm:p-7 shadow-[0_8px_30px_rgba(23,17,54,0.06)]">
-              <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base sm:text-lg text-[#171136] mb-5">
-                What happens next
-              </h2>
-
-              <div className="space-y-4 relative">
-                {/* Step 1: Order Confirmed (Completed) */}
-                <div className="flex items-start gap-4 relative">
-                  <div className="flex flex-col items-center">
-                    <div className="w-5.5 h-5.5 rounded-full bg-[#2ECC8F] flex items-center justify-center text-white shrink-0 shadow-xs z-10">
-                      <IconCheck className="w-3 h-3 stroke-[3]" />
-                    </div>
-                    <div className="w-0.5 h-9 bg-[#2ECC8F] mt-1" />
-                  </div>
-                  <div className="pt-0.5">
-                    <h3 className="font-bold text-sm text-[#171136]">
-                      Order confirmed
-                    </h3>
-                    <p className="text-xs text-[#736E9B] mt-0.5">
-                      We&apos;ve received your order and payment method.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Step 2: Preparing your items (In Progress) */}
-                <div className="flex items-start gap-4 relative">
-                  <div className="flex flex-col items-center">
-                    <div className="w-5.5 h-5.5 rounded-full bg-white border-2 border-[#7B5CFF] flex items-center justify-center shrink-0 z-10">
-                      <div className="w-2 h-2 rounded-full bg-[#7B5CFF] animate-pulse" />
-                    </div>
-                    <div className="w-0.5 h-9 bg-[#EAE3F7] mt-1" />
-                  </div>
-                  <div className="pt-0.5">
-                    <h3 className="font-bold text-sm text-[#171136]">
-                      Preparing your items
-                    </h3>
-                    <p className="text-xs text-[#736E9B] mt-0.5">
-                      Our team is picking and packing your order now.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Step 3: On its way (Upcoming) */}
-                <div className="flex items-start gap-4 relative">
-                  <div className="flex flex-col items-center">
-                    <div className="w-5.5 h-5.5 rounded-full bg-white border-2 border-[#736E9B] shrink-0 z-10" />
-                  </div>
-                  <div className="pt-0.5">
-                    <h3 className="font-bold text-sm text-[#171136]">
-                      On its way
-                    </h3>
-                    <p className="text-xs text-[#736E9B] mt-0.5">
-                      You&apos;ll get a tracking link once it ships.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* ===================================================================== */}
