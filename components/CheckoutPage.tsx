@@ -13,6 +13,7 @@ import {
   IconPhone,
   IconChevronRight,
   IconChevronDown,
+  IconSearch,
   IconCash,
   IconShield,
   IconReturn,
@@ -23,20 +24,71 @@ import {
   IconSparkles,
 } from "./icons";
 
-const CITIES = [
-  "Dhaka",
-  "Chittagong",
-  "Sylhet",
-  "Rajshahi",
-  "Khulna",
+// All 64 Districts of Bangladesh in alphabetical order
+const BANGLADESH_DISTRICTS = [
+  "Bagerhat",
+  "Bandarban",
+  "Barguna",
   "Barishal",
-  "Rangpur",
-  "Mymensingh",
-  "Gazipur",
-  "Narayanganj",
-  "Cumilla",
-  "Bogra",
+  "Bhola",
+  "Bogura",
+  "Brahmanbaria",
+  "Chandpur",
+  "Chattogram",
+  "Chuadanga",
   "Cox's Bazar",
+  "Cumilla",
+  "Dhaka",
+  "Dinajpur",
+  "Faridpur",
+  "Feni",
+  "Gaibandha",
+  "Gazipur",
+  "Gopalganj",
+  "Habiganj",
+  "Jamalpur",
+  "Jashore",
+  "Jhalokathi",
+  "Jhenaidah",
+  "Joypurhat",
+  "Khagrachhari",
+  "Khulna",
+  "Kishoreganj",
+  "Kurigram",
+  "Kushtia",
+  "Lakshmipur",
+  "Lalmonirhat",
+  "Madaripur",
+  "Magura",
+  "Manikganj",
+  "Meherpur",
+  "Moulvibazar",
+  "Munshiganj",
+  "Mymensingh",
+  "Naogaon",
+  "Narail",
+  "Narayanganj",
+  "Narsingdi",
+  "Natore",
+  "Netrokona",
+  "Nilphamari",
+  "Noakhali",
+  "Pabna",
+  "Panchagarh",
+  "Patuakhali",
+  "Pirojpur",
+  "Rajbari",
+  "Rajshahi",
+  "Rangamati",
+  "Rangpur",
+  "Satkhira",
+  "Shariatpur",
+  "Sherpur",
+  "Sirajganj",
+  "Sunamganj",
+  "Sylhet",
+  "Tangail",
+  "Thakurgaon",
 ];
 
 const AVAILABLE_COUPONS = [
@@ -53,9 +105,37 @@ export default function CheckoutPage() {
   const [firstName, setFirstName] = useState(user?.first_name || "Tanvir");
   const [lastName, setLastName] = useState(user?.last_name || "Ahmed");
   const [phone, setPhone] = useState(user?.phone || "+880 1712-345678");
-  const [city, setCity] = useState("Dhaka");
+  const [district, setDistrict] = useState("Dhaka");
+  const [districtSearch, setDistrictSearch] = useState("");
+  const [isDistrictDropdownOpen, setIsDistrictDropdownOpen] = useState(false);
   const [address, setAddress] = useState("House 12, Road 4, Sector 7, Uttara");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const districtDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  // Close district dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (districtDropdownRef.current && !districtDropdownRef.current.contains(event.target as Node)) {
+        setIsDistrictDropdownOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsDistrictDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  // Filtered districts based on search
+  const filteredDistricts = BANGLADESH_DISTRICTS.filter((d) =>
+    d.toLowerCase().includes(districtSearch.toLowerCase().trim())
+  );
 
   // Coupon State
   const [couponInput, setCouponInput] = useState("");
@@ -132,9 +212,10 @@ export default function CheckoutPage() {
       customer_name: `${firstName} ${lastName}`.trim(),
       customer_phone: phone,
       customer_email: user?.email || "guest@brickverse.com",
-      city,
+      city: district,
+      district: district,
       address,
-      shipping_address: `${address}, ${city}`,
+      shipping_address: `${address}, ${district}`,
       total_amount: totalAmount,
       items: items.map((it) => ({
         name: it.name,
@@ -320,27 +401,91 @@ export default function CheckoutPage() {
                 )}
               </div>
 
-              {/* City Dropdown */}
-              <div className="space-y-1.5">
+              {/* District Searchable Dropdown */}
+              <div className="space-y-1.5 relative" ref={districtDropdownRef}>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[#736E9B]">
-                  City
+                  District
                 </label>
-                <div className="relative flex items-center">
-                  <select
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="w-full bg-white border border-[#EAE3F7] rounded-xl px-4 py-3 text-sm font-semibold text-[#171136] outline-none focus:border-[#FF4D6D] appearance-none transition-colors shadow-2xs cursor-pointer"
-                  >
-                    {CITIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="absolute right-4 pointer-events-none text-[#736E9B]">
-                    <IconChevronDown className="w-4 h-4" />
+                
+                {/* Selector Box */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDistrictDropdownOpen((prev) => !prev);
+                    setDistrictSearch("");
+                  }}
+                  className={`w-full bg-white border ${
+                    isDistrictDropdownOpen ? "border-[#FF4D6D] ring-2 ring-[#FF4D6D]/10" : "border-[#EAE3F7]"
+                  } rounded-xl px-4 py-3 text-sm font-semibold text-[#171136] flex items-center justify-between shadow-2xs hover:border-[#FF4D6D] transition-all cursor-pointer text-left`}
+                >
+                  <span className={district ? "text-[#171136]" : "text-[#736E9B]"}>
+                    {district || "Select District"}
                   </span>
-                </div>
+                  <IconChevronDown
+                    className={`w-4 h-4 text-[#736E9B] transition-transform duration-200 ${
+                      isDistrictDropdownOpen ? "rotate-180 text-[#FF4D6D]" : ""
+                    }`}
+                  />
+                </button>
+
+                {/* Searchable Dropdown Popup */}
+                {isDistrictDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-[#EAE3F7] rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150 flex flex-col">
+                    {/* Top Search Input Option (First option in dropdown) */}
+                    <div className="p-2.5 bg-[#FAF7FD] border-b border-[#EAE3F7] relative flex items-center">
+                      <IconSearch className="w-4 h-4 text-[#736E9B] absolute left-5 pointer-events-none" />
+                      <input
+                        type="text"
+                        autoFocus
+                        value={districtSearch}
+                        onChange={(e) => setDistrictSearch(e.target.value)}
+                        placeholder="Search district..."
+                        className="w-full bg-white border border-[#EAE3F7] focus:border-[#FF4D6D] rounded-xl pl-9 pr-8 py-2 text-xs font-semibold text-[#171136] outline-none placeholder:text-[#9C96BE] shadow-2xs"
+                      />
+                      {districtSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setDistrictSearch("")}
+                          className="absolute right-5 text-[#736E9B] hover:text-[#D2455C] p-0.5 cursor-pointer"
+                        >
+                          <IconClose className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Filtered Districts Scrollable List */}
+                    <div className="max-h-60 overflow-y-auto divide-y divide-[#FAF7FD] p-1.5">
+                      {filteredDistricts.length === 0 ? (
+                        <div className="py-6 text-center text-xs text-[#736E9B]">
+                          No district found for &ldquo;<strong>{districtSearch}</strong>&rdquo;
+                        </div>
+                      ) : (
+                        filteredDistricts.map((d) => {
+                          const isSelected = district === d;
+                          return (
+                            <button
+                              key={d}
+                              type="button"
+                              onClick={() => {
+                                setDistrict(d);
+                                setIsDistrictDropdownOpen(false);
+                                setDistrictSearch("");
+                              }}
+                              className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-between transition-colors cursor-pointer text-left ${
+                                isSelected
+                                  ? "bg-[#FFEAF0] text-[#FF4D6D] font-bold"
+                                  : "text-[#171136] hover:bg-[#F6F1FF] hover:text-[#FF4D6D]"
+                              }`}
+                            >
+                              <span>{d}</span>
+                              {isSelected && <IconCheck className="w-4 h-4 text-[#FF4D6D]" />}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Full Address Textarea */}
