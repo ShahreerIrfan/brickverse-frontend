@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useCart, formatPrice } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -16,6 +17,7 @@ import {
 } from "./icons";
 
 export default function RightSidebarCart() {
+  const router = useRouter();
   const {
     items,
     isCartOpen,
@@ -71,12 +73,8 @@ export default function RightSidebarCart() {
   }, [isCartOpen]);
 
   const handleCheckoutClick = () => {
-    if (!isAuthenticated) {
-      closeCart();
-      openLoginModal();
-    } else {
-      alert("Redirecting to secure Brickverse Checkout...");
-    }
+    closeCart();
+    router.push("/checkout");
   };
 
   const deliveryProgressPercent = Math.min(

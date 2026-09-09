@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useCart, formatPrice } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -104,6 +105,7 @@ const AVAILABLE_COUPONS = [
 ];
 
 export default function CartPage() {
+  const router = useRouter();
   const {
     items,
     totalItems,
@@ -171,11 +173,7 @@ export default function CartPage() {
   };
 
   const handleCheckout = () => {
-    if (!isAuthenticated) {
-      openLoginModal();
-    } else {
-      alert("Redirecting to Brickverse Secure Checkout...");
-    }
+    router.push("/checkout");
   };
 
   // Calculations
