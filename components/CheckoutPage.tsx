@@ -229,7 +229,32 @@ export default function CheckoutPage() {
 
     if (res.success && res.order) {
       setOrderSuccess(res.order);
+      try {
+        sessionStorage.setItem(
+          "last_placed_order",
+          JSON.stringify({
+            ...res.order,
+            subtotal,
+            discount_amount: discountAmount,
+            discount_code: appliedCoupon?.code,
+            shipping_cost: shippingCost,
+            items: items.map((it) => ({
+              id: it.id,
+              name: it.name,
+              subtitle: it.subtitle,
+              price: it.price,
+              quantity: it.quantity,
+              image: it.image,
+              cardBg: it.cardBg,
+            })),
+          })
+        );
+      } catch (e) {
+        console.warn("Could not save placed order to sessionStorage", e);
+      }
       clearCart();
+      const orderNum = res.order.order_number || res.order.id || "BV-10482";
+      router.push(`/thank-you?order_number=${encodeURIComponent(orderNum)}`);
     } else {
       alert(res.error || "Failed to place order. Please try again.");
     }
