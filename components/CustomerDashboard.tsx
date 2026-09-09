@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { User } from "./productData";
 import { useAuth } from "@/context/AuthContext";
 import { getCustomerOrders, trackOrder } from "@/lib/api";
@@ -25,18 +26,29 @@ import {
 
 interface CustomerDashboardProps {
   user: User;
+  initialTab?: "account" | "orders" | "orders-single" | "track" | "wishlist" | "coupons" | "password";
+  initialOrderParam?: string;
 }
 
-type DashboardTab = "account" | "orders" | "track" | "wishlist" | "coupons" | "password";
+type DashboardTab = "account" | "orders" | "orders-single" | "track" | "wishlist" | "coupons" | "password";
 
-export default function CustomerDashboard({ user }: CustomerDashboardProps) {
+export default function CustomerDashboard({
+  user,
+  initialTab = "account",
+  initialOrderParam,
+}: CustomerDashboardProps) {
+  const router = useRouter();
   const { logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<DashboardTab>("account");
+  const [activeTab, setActiveTab] = useState<DashboardTab>(initialTab);
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
 
+  // Single Order View state
+  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [singleOrderLoading, setSingleOrderLoading] = useState(false);
+
   // Tracking state
-  const [searchOrderNumber, setSearchOrderNumber] = useState("");
+  const [searchOrderNumber, setSearchOrderNumber] = useState(initialOrderParam || "");
   const [trackedOrder, setTrackedOrder] = useState<any | null>(null);
   const [trackingLoading, setTrackingLoading] = useState(false);
   const [trackingError, setTrackingError] = useState("");
@@ -48,19 +60,56 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordMsg, setPasswordMsg] = useState("");
 
+  // Navigation helper that updates both activeTab and browser URL cleanly
+  const navigateToTab = (tab: DashboardTab, orderParam?: string) => {
+    setActiveTab(tab);
+    let targetPath = "/dashboard";
+    if (tab === "orders") targetPath = "/dashboard/orders";
+    else if (tab === "orders-single" && orderParam) targetPath = `/dashboard/orders/${orderParam}`;
+    else if (tab === "track") targetPath = orderParam ? `/dashboard/track-order/${orderParam}` : "/dashboard/track-order";
+    else if (tab === "wishlist") targetPath = "/dashboard/wishlist";
+    else if (tab === "coupons") targetPath = "/dashboard/coupons";
+    else if (tab === "password") targetPath = "/dashboard/password";
+
+    if (typeof window !== "undefined") {
+      window.history.pushState({}, "", targetPath);
+    }
+  };
+
+  // Load customer orders on mount
   useEffect(() => {
     getCustomerOrders(user.email)
       .then((data) => {
         if (Array.isArray(data)) {
           setOrders(data);
-          // If orders exist, pre-select the most recent order for tracking
-          if (data.length > 0 && !searchOrderNumber) {
-            setSearchOrderNumber(data[0].order_number);
+
+          // If on single order view, find the selected order
+          if (initialTab === "orders-single" && initialOrderParam) {
+            const found = data.find(
+              (o) =>
+                o.order_number?.toLowerCase() === initialOrderParam.toLowerCase() ||
+                String(o.id) === String(initialOrderParam)
+            );
+            if (found) {
+              setSelectedOrder(found);
+            } else {
+              // Fallback track order API to get full order details
+              trackOrder(initialOrderParam).then((res) => {
+                if (res && !res.error) setSelectedOrder(res);
+              });
+            }
+          }
+
+          // If on track view with order param
+          if (initialTab === "track" && initialOrderParam) {
+            handleTrackOrder(initialOrderParam);
+          } else if (initialTab === "track" && data.length > 0 && !searchOrderNumber) {
+            handleTrackOrder(data[0].order_number);
           }
         }
       })
       .finally(() => setLoadingOrders(false));
-  }, [user.email]);
+  }, [user.email, initialTab, initialOrderParam]);
 
   const handleTrackOrder = async (orderNumToTrack?: string) => {
     const target = (orderNumToTrack || searchOrderNumber || "").trim();
@@ -89,8 +138,13 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
 
   const selectAndTrackOrder = (orderNumber: string) => {
     setSearchOrderNumber(orderNumber);
-    setActiveTab("track");
+    navigateToTab("track", orderNumber);
     handleTrackOrder(orderNumber);
+  };
+
+  const selectAndOpenSingleOrder = (order: any) => {
+    setSelectedOrder(order);
+    navigateToTab("orders-single", order.order_number || String(order.id));
   };
 
   const copyToClipboard = (text: string) => {
@@ -168,7 +222,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
           {/* ========================================================================= */}
-          {/* LEFT SIDEBAR MENU (Exact Match to Reference Design) */}
+          {/* LEFT SIDEBAR MENU (Strictly 5 Standard Tabs - No Extra Track Order Menu) */}
           {/* ========================================================================= */}
           <aside className="lg:col-span-1 bg-white rounded-3xl border border-[#EAE3F7] p-5 shadow-xs">
             {/* User Profile Summary Card */}
@@ -188,7 +242,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
             <nav className="flex flex-col gap-1.5 pt-4">
               <button
                 type="button"
-                onClick={() => setActiveTab("account")}
+                onClick={() => navigateToTab("account")}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm transition-all cursor-pointer ${
                   activeTab === "account"
                     ? "bg-[#FFF1F4] text-[#FF4D6D] font-extrabold"
@@ -201,9 +255,9 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
 
               <button
                 type="button"
-                onClick={() => setActiveTab("orders")}
+                onClick={() => navigateToTab("orders")}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm transition-all cursor-pointer ${
-                  activeTab === "orders"
+                  activeTab === "orders" || activeTab === "orders-single" || activeTab === "track"
                     ? "bg-[#FFF1F4] text-[#FF4D6D] font-extrabold"
                     : "text-[#736E9B] hover:text-[#171136] hover:bg-[#F8F6FD] font-semibold"
                 }`}
@@ -219,28 +273,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
 
               <button
                 type="button"
-                onClick={() => {
-                  setActiveTab("track");
-                  if (orders.length > 0 && !trackedOrder) {
-                    handleTrackOrder(orders[0].order_number);
-                  }
-                }}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm transition-all cursor-pointer ${
-                  activeTab === "track"
-                    ? "bg-[#FFF1F4] text-[#FF4D6D] font-extrabold"
-                    : "text-[#736E9B] hover:text-[#171136] hover:bg-[#F8F6FD] font-semibold"
-                }`}
-              >
-                <IconTruck className="w-4 h-4 shrink-0" />
-                <span>Track Order</span>
-                <span className="ml-auto text-[10px] font-bold bg-[#7B5CFF] text-white px-2 py-0.5 rounded-full">
-                  Live
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab("wishlist")}
+                onClick={() => navigateToTab("wishlist")}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm transition-all cursor-pointer ${
                   activeTab === "wishlist"
                     ? "bg-[#FFF1F4] text-[#FF4D6D] font-extrabold"
@@ -253,7 +286,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
 
               <button
                 type="button"
-                onClick={() => setActiveTab("coupons")}
+                onClick={() => navigateToTab("coupons")}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm transition-all cursor-pointer ${
                   activeTab === "coupons"
                     ? "bg-[#FFF1F4] text-[#FF4D6D] font-extrabold"
@@ -266,7 +299,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
 
               <button
                 type="button"
-                onClick={() => setActiveTab("password")}
+                onClick={() => navigateToTab("password")}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm transition-all cursor-pointer ${
                   activeTab === "password"
                     ? "bg-[#FFF1F4] text-[#FF4D6D] font-extrabold"
@@ -295,7 +328,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
           {/* ========================================================================= */}
           <main className="lg:col-span-3 flex flex-col gap-6">
             {/* --------------------------------------------------------------------- */}
-            {/* TAB 1: MY ACCOUNT (Overview matching reference layout) */}
+            {/* TAB 1: MY ACCOUNT (Overview) */}
             {/* --------------------------------------------------------------------- */}
             {activeTab === "account" && (
               <div className="flex flex-col gap-6">
@@ -313,7 +346,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {/* Card 1: Orders */}
                   <div
-                    onClick={() => setActiveTab("orders")}
+                    onClick={() => navigateToTab("orders")}
                     className="bg-white rounded-3xl border border-[#EAE3F7] p-5 shadow-xs flex items-center justify-between cursor-pointer hover:border-[#FF4D6D]/40 transition-all"
                   >
                     <div>
@@ -330,7 +363,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
 
                   {/* Card 2: Wishlist */}
                   <div
-                    onClick={() => setActiveTab("wishlist")}
+                    onClick={() => navigateToTab("wishlist")}
                     className="bg-white rounded-3xl border border-[#EAE3F7] p-5 shadow-xs flex items-center justify-between cursor-pointer hover:border-[#7B5CFF]/40 transition-all"
                   >
                     <div>
@@ -347,7 +380,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
 
                   {/* Card 3: Coupons */}
                   <div
-                    onClick={() => setActiveTab("coupons")}
+                    onClick={() => navigateToTab("coupons")}
                     className="bg-white rounded-3xl border border-[#EAE3F7] p-5 shadow-xs flex items-center justify-between cursor-pointer hover:border-[#FFC93C]/40 transition-all"
                   >
                     <div>
@@ -384,7 +417,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
 
                     <button
                       type="button"
-                      onClick={() => setActiveTab("orders")}
+                      onClick={() => navigateToTab("orders")}
                       className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-2xl hover:bg-[#F8F6FD] transition-all group cursor-pointer"
                     >
                       <div className="w-12 h-12 rounded-full bg-[#EFE9FF] text-[#7B5CFF] flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -397,25 +430,20 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
 
                     <button
                       type="button"
-                      onClick={() => {
-                        setActiveTab("track");
-                        if (orders.length > 0 && !trackedOrder) {
-                          handleTrackOrder(orders[0].order_number);
-                        }
-                      }}
+                      onClick={() => navigateToTab("coupons")}
                       className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-2xl hover:bg-[#F8F6FD] transition-all group cursor-pointer"
                     >
-                      <div className="w-12 h-12 rounded-full bg-[#E6F9F0] text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <IconTruck className="w-5 h-5" />
+                      <div className="w-12 h-12 rounded-full bg-[#FFF9E6] text-[#FFC93C] flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <IconTag className="w-5 h-5" />
                       </div>
                       <span className="text-xs font-bold text-[#171136] text-center">
-                        Track Order
+                        My Coupons
                       </span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setActiveTab("wishlist")}
+                      onClick={() => navigateToTab("wishlist")}
                       className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-2xl hover:bg-[#F8F6FD] transition-all group cursor-pointer"
                     >
                       <div className="w-12 h-12 rounded-full bg-[#FFEAEF] text-[#FF4D6D] flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -434,7 +462,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
                     <h3 className="font-bold text-sm sm:text-base text-[#171136]">Recent Orders</h3>
                     <button
                       type="button"
-                      onClick={() => setActiveTab("orders")}
+                      onClick={() => navigateToTab("orders")}
                       className="text-xs font-bold text-[#FF4D6D] hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       View All →
@@ -459,7 +487,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
                         <div
                           key={order.id}
                           className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[#F8F6FD] rounded-xl px-2 transition-colors cursor-pointer"
-                          onClick={() => setActiveTab("orders")}
+                          onClick={() => selectAndOpenSingleOrder(order)}
                         >
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-2xl bg-[#F8F6FD] border border-[#EAE3F7] flex items-center justify-center text-[#736E9B] shrink-0">
@@ -499,7 +527,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
             )}
 
             {/* --------------------------------------------------------------------- */}
-            {/* TAB 2: ORDERS (Full History) */}
+            {/* TAB 2: ORDERS (Full History List) */}
             {/* --------------------------------------------------------------------- */}
             {activeTab === "orders" && (
               <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 sm:p-7 shadow-xs">
@@ -528,7 +556,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
                     {orders.map((order) => (
                       <div
                         key={order.id}
-                        className="rounded-2xl border border-[#EAE3F7] p-4 sm:p-5 bg-[#F8F6FD]/40"
+                        className="rounded-2xl border border-[#EAE3F7] p-4 sm:p-5 bg-[#F8F6FD]/40 hover:border-[#FF4D6D]/30 transition-all"
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#EAE3F7] pb-3 mb-3">
                           <div>
@@ -548,7 +576,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
                             </div>
                             <p className="text-[11px] text-[#736E9B] mt-0.5">
                               Placed on {new Date(order.created_at).toLocaleDateString()} · Carrier:{" "}
-                              {order.carrier || "Australia Post"}
+                              {order.carrier || "Australia Post / Pathao"}
                             </p>
                           </div>
 
@@ -564,7 +592,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
                           </div>
                         </div>
 
-                        {/* Items */}
+                        {/* Items Preview */}
                         <div className="space-y-1.5 text-xs">
                           {order.items && order.items.length > 0 ? (
                             order.items.map((item: any) => (
@@ -585,14 +613,22 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
                           )}
                         </div>
 
-                        <div className="mt-3 pt-2 border-t border-[#EAE3F7] text-[11px] text-[#736E9B] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                          <span className="truncate">📍 {order.shipping_address}</span>
+                        {/* Bottom Actions Card: Address + View Details + Track Package */}
+                        <div className="mt-3 pt-2.5 border-t border-[#EAE3F7] text-[11px] text-[#736E9B] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <span className="truncate max-w-sm">📍 {order.shipping_address}</span>
                           <div className="flex items-center gap-2 self-end sm:self-auto">
-                            <span className="text-emerald-600 font-bold">✓ 48h Dispatched</span>
+                            <button
+                              type="button"
+                              onClick={() => selectAndOpenSingleOrder(order)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#F8F6FD] text-[#171136] font-bold text-xs rounded-xl border border-[#EAE3F7] transition-all cursor-pointer shadow-2xs"
+                            >
+                              View Details 📄
+                            </button>
+
                             <button
                               type="button"
                               onClick={() => selectAndTrackOrder(order.order_number)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFF1F4] hover:bg-[#FFE0E6] text-[#FF4D6D] font-bold text-xs rounded-xl border border-[#FF4D6D]/20 transition-all cursor-pointer shadow-2xs"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFF1F4] hover:bg-[#FFE0E6] text-[#FF4D6D] font-bold text-xs rounded-xl border border-[#FF4D6D]/25 transition-all cursor-pointer shadow-2xs"
                             >
                               <IconTruck className="w-3.5 h-3.5" />
                               Track Package
@@ -607,10 +643,198 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
             )}
 
             {/* --------------------------------------------------------------------- */}
-            {/* TAB: TRACK ORDER (Interactive Live Tracking System) */}
+            {/* TAB 3: SOLID SINGLE ORDER DETAILS PAGE (/dashboard/orders/[orderNum]) */}
+            {/* --------------------------------------------------------------------- */}
+            {activeTab === "orders-single" && (
+              <div className="flex flex-col gap-6">
+                {/* Back to Orders Bar */}
+                <div className="flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => navigateToTab("orders")}
+                    className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#736E9B] hover:text-[#171136] bg-white px-4 py-2 rounded-2xl border border-[#EAE3F7] transition-all cursor-pointer shadow-2xs"
+                  >
+                    ← Back to Order History
+                  </button>
+
+                  {selectedOrder && (
+                    <button
+                      type="button"
+                      onClick={() => selectAndTrackOrder(selectedOrder.order_number)}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FFF1F4] hover:bg-[#FFE0E6] text-[#FF4D6D] font-bold text-xs sm:text-sm rounded-2xl border border-[#FF4D6D]/25 transition-all cursor-pointer shadow-xs"
+                    >
+                      <IconTruck className="w-4 h-4" />
+                      Track Live GPS 🚚
+                    </button>
+                  )}
+                </div>
+
+                {selectedOrder ? (
+                  <div className="space-y-6">
+                    {/* Header Card */}
+                    <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 sm:p-7 shadow-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#EAE3F7]">
+                        <div>
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <h2 className="font-[family-name:var(--font-display)] font-extrabold text-2xl text-[#171136]">
+                              Order #{selectedOrder.order_number}
+                            </h2>
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wide ${
+                                selectedOrder.status === "delivered"
+                                  ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                                  : selectedOrder.status === "shipped"
+                                  ? "bg-blue-100 text-blue-800 border border-blue-300"
+                                  : selectedOrder.status === "processing"
+                                  ? "bg-purple-100 text-purple-800 border border-purple-300"
+                                  : selectedOrder.status === "cancelled"
+                                  ? "bg-red-100 text-red-800 border border-red-300"
+                                  : "bg-amber-100 text-amber-800 border border-amber-300"
+                              }`}
+                            >
+                              ● {selectedOrder.status}
+                            </span>
+                          </div>
+                          <p className="text-xs text-[#736E9B] mt-1">
+                            Placed on {new Date(selectedOrder.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => window.print()}
+                            className="text-xs font-bold text-[#171136] bg-[#F8F6FD] hover:bg-[#EFE9FF] px-4 py-2 rounded-xl border border-[#EAE3F7] transition-all cursor-pointer"
+                          >
+                            🖨️ Print Invoice
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* 3 Top Summary Cards */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                        {/* 1. Recipient & Shipping */}
+                        <div className="p-4 rounded-2xl bg-[#F8F6FD] border border-[#EAE3F7]">
+                          <div className="flex items-center gap-2 mb-2 text-[#7B5CFF] font-bold text-xs">
+                            <IconPin className="w-4 h-4" />
+                            <span>Shipping Address</span>
+                          </div>
+                          <p className="font-extrabold text-sm text-[#171136]">{selectedOrder.customer_name}</p>
+                          <p className="text-xs text-[#736E9B] mt-1 leading-relaxed">{selectedOrder.shipping_address}</p>
+                          {selectedOrder.customer_phone && <p className="text-xs text-[#736E9B] mt-1">📞 {selectedOrder.customer_phone}</p>}
+                          <p className="text-xs text-[#736E9B]">✉️ {selectedOrder.customer_email}</p>
+                        </div>
+
+                        {/* 2. Carrier & Tracking */}
+                        <div className="p-4 rounded-2xl bg-[#FFF6EE] border border-[#FFE3CC]">
+                          <div className="flex items-center gap-2 mb-2 text-[#FF4D6D] font-bold text-xs">
+                            <IconTruck className="w-4 h-4" />
+                            <span>Carrier & Delivery</span>
+                          </div>
+                          <p className="font-extrabold text-sm text-[#171136]">
+                            {selectedOrder.carrier || "Pathao Express / Standard"}
+                          </p>
+                          <p className="text-xs text-[#736E9B] mt-1">
+                            Tracking: <strong className="text-[#171136]">{selectedOrder.tracking_number || "Auto-assigned on dispatch"}</strong>
+                          </p>
+                          <span className="inline-block mt-2 text-[10.5px] font-extrabold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300">
+                            ✓ 48h Safe Transit
+                          </span>
+                        </div>
+
+                        {/* 3. Payment & Total */}
+                        <div className="p-4 rounded-2xl bg-[#F0FDF4] border border-[#BBF7D0]">
+                          <div className="flex items-center gap-2 mb-2 text-emerald-700 font-bold text-xs">
+                            <IconShield className="w-4 h-4" />
+                            <span>Payment Summary</span>
+                          </div>
+                          <p className="text-xs text-[#736E9B]">Payment Method: <strong>Cash on Delivery / Online</strong></p>
+                          <div className="mt-2 pt-2 border-t border-[#BBF7D0]">
+                            <span className="text-xs font-bold text-[#736E9B]">Grand Total</span>
+                            <p className="font-[family-name:var(--font-display)] font-extrabold text-xl text-[#171136]">
+                              ৳{selectedOrder.total_amount}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Ordered Items Table */}
+                    <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 sm:p-7 shadow-xs">
+                      <h3 className="font-bold text-base text-[#171136] mb-4 flex items-center gap-2">
+                        <IconBag className="w-5 h-5 text-[#FF4D6D]" />
+                        Purchased Items ({selectedOrder.items?.length || 1})
+                      </h3>
+
+                      <div className="divide-y divide-[#EAE3F7]">
+                        {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                          selectedOrder.items.map((item: any) => (
+                            <div key={item.id} className="py-4 flex items-center justify-between gap-4">
+                              <div className="flex items-center gap-3.5">
+                                <div className="w-12 h-12 rounded-2xl bg-[#F8F6FD] border border-[#EAE3F7] flex items-center justify-center text-xl shrink-0">
+                                  🧱
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-sm text-[#171136]">{item.product_name}</h4>
+                                  <p className="text-xs text-[#736E9B] mt-0.5">
+                                    Qty: <strong className="text-[#171136]">{item.quantity}</strong> · Unit Price: ৳{item.price}
+                                  </p>
+                                </div>
+                              </div>
+                              <span className="font-extrabold text-sm sm:text-base text-[#171136]">
+                                ৳{(parseFloat(item.price) * item.quantity).toFixed(2)}
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="py-4 text-xs text-[#736E9B]">
+                            Brickverse Collector Edition Kit
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-6 pt-4 border-t border-[#EAE3F7] flex flex-col gap-2 max-w-xs ml-auto text-xs">
+                        <div className="flex items-center justify-between text-[#736E9B]">
+                          <span>Items Subtotal:</span>
+                          <span className="font-bold text-[#171136]">৳{selectedOrder.total_amount}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-[#736E9B]">
+                          <span>Shipping & Handling:</span>
+                          <span className="font-bold text-emerald-600">Free Collector Delivery</span>
+                        </div>
+                        <div className="flex items-center justify-between pt-2 border-t border-[#EAE3F7] text-sm">
+                          <span className="font-extrabold text-[#171136]">Final Amount:</span>
+                          <span className="font-[family-name:var(--font-display)] font-extrabold text-lg text-[#FF4D6D]">
+                            ৳{selectedOrder.total_amount}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-3xl border border-[#EAE3F7] p-10 text-center shadow-xs">
+                    <p className="text-xs text-[#736E9B]">Loading order details...</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* --------------------------------------------------------------------- */}
+            {/* TAB 4: TRACK ORDER PAGE (/dashboard/track-order) */}
             {/* --------------------------------------------------------------------- */}
             {activeTab === "track" && (
               <div className="flex flex-col gap-6">
+                {/* Back to Orders Bar */}
+                <div className="flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => navigateToTab("orders")}
+                    className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#736E9B] hover:text-[#171136] bg-white px-4 py-2 rounded-2xl border border-[#EAE3F7] transition-all cursor-pointer shadow-2xs"
+                  >
+                    ← Back to Order History
+                  </button>
+                </div>
+
                 {/* 1. Track Search Header Card */}
                 <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 sm:p-7 shadow-xs">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -737,7 +961,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
                             <p className="text-[10px] sm:text-[11px] font-bold text-[#736E9B] uppercase tracking-wider">Carrier & Tracking</p>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <span className="text-xs sm:text-sm font-extrabold text-[#171136]">
-                                {trackedOrder.carrier || "Australia Post / Express"}
+                                {trackedOrder.carrier || "Australia Post / Pathao Express"}
                               </span>
                               {trackedOrder.tracking_number && (
                                 <span className="text-xs font-mono font-bold text-[#7B5CFF]">
@@ -973,7 +1197,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
             )}
 
             {/* --------------------------------------------------------------------- */}
-            {/* TAB 3: WISHLIST */}
+            {/* TAB 5: WISHLIST */}
             {/* --------------------------------------------------------------------- */}
             {activeTab === "wishlist" && (
               <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 sm:p-7 shadow-xs">
@@ -1035,7 +1259,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
             )}
 
             {/* --------------------------------------------------------------------- */}
-            {/* TAB 4: MY COUPONS */}
+            {/* TAB 6: MY COUPONS */}
             {/* --------------------------------------------------------------------- */}
             {activeTab === "coupons" && (
               <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 sm:p-7 shadow-xs">
@@ -1092,7 +1316,7 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
             )}
 
             {/* --------------------------------------------------------------------- */}
-            {/* TAB 5: CHANGE PASSWORD */}
+            {/* TAB 7: CHANGE PASSWORD */}
             {/* --------------------------------------------------------------------- */}
             {activeTab === "password" && (
               <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 sm:p-7 shadow-xs max-w-lg">
