@@ -102,15 +102,24 @@ export default function CheckoutPage() {
   const { user, isAuthenticated } = useAuth();
 
   // Form State
-  const [firstName, setFirstName] = useState(user?.first_name || "Tanvir");
-  const [lastName, setLastName] = useState(user?.last_name || "Ahmed");
-  const [phone, setPhone] = useState(user?.phone || "+880 1712-345678");
+  const [firstName, setFirstName] = useState(user?.first_name || "");
+  const [lastName, setLastName] = useState(user?.last_name || "");
+  const [phone, setPhone] = useState(user?.phone || "");
   const [district, setDistrict] = useState("Dhaka");
   const [districtSearch, setDistrictSearch] = useState("");
   const [isDistrictDropdownOpen, setIsDistrictDropdownOpen] = useState(false);
-  const [address, setAddress] = useState("House 12, Road 4, Sector 7, Uttara");
+  const [address, setAddress] = useState("");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const districtDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  // Sync with user profile once loaded
+  useEffect(() => {
+    if (user) {
+      if (user.first_name && !firstName) setFirstName(user.first_name);
+      if (user.last_name && !lastName) setLastName(user.last_name);
+      if (user.phone && !phone) setPhone(user.phone);
+    }
+  }, [user]);
 
   // Close district dropdown on click outside
   useEffect(() => {

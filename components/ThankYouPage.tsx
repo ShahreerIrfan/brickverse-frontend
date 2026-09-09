@@ -53,8 +53,8 @@ interface OrderDetails {
 // Default demonstration items matching brickverse-thankyou.svg
 const DEFAULT_DEMO_ORDER: OrderDetails = {
   order_number: "#BV-10482",
-  customer_name: "Tanvir Ahmed",
-  customer_email: "tanvir.ahmed@example.com",
+  customer_name: "Valued Customer",
+  customer_email: "customer@brickverse.com",
   customer_phone: "+880 1712-345678",
   district: "Dhaka",
   shipping_address: "House 12, Road 4, Uttara, Dhaka, Bangladesh",

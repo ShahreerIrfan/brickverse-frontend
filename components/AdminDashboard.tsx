@@ -78,6 +78,23 @@ type ActiveNav = "dashboard" | "products-all" | "products-form" | "products-taxo
 export default function AdminDashboard({ user, initialNav }: AdminDashboardProps) {
   const { logout } = useAuth();
 
+  // Dynamic user display name & avatar resolution (First Name, Last Name, Avatar initial)
+  const userFullName =
+    [user?.first_name, user?.last_name].filter(Boolean).join(" ").trim() ||
+    user?.first_name?.trim() ||
+    (user?.email ? user.email.split("@")[0] : "Admin");
+
+  const userFirstName =
+    user?.first_name?.trim() ||
+    (userFullName ? userFullName.split(" ")[0] : "Admin");
+
+  const avatarInitial = (
+    user?.first_name?.trim()?.[0] ||
+    user?.last_name?.trim()?.[0] ||
+    user?.email?.trim()?.[0] ||
+    "A"
+  ).toUpperCase();
+
   // Navigation State - initialized from prop or URL
   const [activeNav, setActiveNav] = useState<ActiveNav>(initialNav || "dashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -933,12 +950,12 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
           <div className="bg-[#241D54] rounded-2xl p-3 flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-9 h-9 rounded-full bg-[#FF4D6D] text-white flex items-center justify-center font-extrabold text-sm shrink-0">
-                {(user.first_name ? user.first_name[0] : (user.email ? user.email[0] : "T")).toUpperCase()}
+                {avatarInitial}
               </div>
               {!sidebarCollapsed && (
                 <div className="flex flex-col min-w-0">
                   <span className="font-bold text-xs text-white truncate">
-                    {[user.first_name, user.last_name].filter(Boolean).join(" ") || user.first_name || "Tanvir Ahmed"}
+                    {userFullName}
                   </span>
                   <span className="text-[11px] font-medium text-[#A79FD1] truncate">
                     Store admin
@@ -1017,11 +1034,11 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                 className="flex items-center gap-2.5 p-1 sm:pr-3 rounded-full hover:bg-[#F6F1FF] border border-transparent hover:border-[#EAE3F7] transition-all cursor-pointer"
               >
                 <div className="w-8 h-8 rounded-full bg-[#EFE9FF] text-[#7B5CFF] flex items-center justify-center font-extrabold text-xs shrink-0">
-                  {(user.first_name ? user.first_name[0] : (user.email ? user.email[0] : "T")).toUpperCase()}
+                  {avatarInitial}
                 </div>
                 <div className="hidden sm:flex flex-col text-left">
                   <span className="font-bold text-xs text-[#171136] leading-tight truncate">
-                    {[user.first_name, user.last_name].filter(Boolean).join(" ") || user.first_name || "Tanvir Ahmed"}
+                    {userFullName}
                   </span>
                   <span className="text-[10px] font-medium text-[#736E9B] leading-tight">
                     Store admin
@@ -1034,7 +1051,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                 <div className="absolute right-0 top-12 w-56 bg-white rounded-2xl shadow-2xl border border-[#EAE3F7] p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
                   <div className="p-2 border-b border-[#F0EBF8] mb-1.5">
                     <p className="font-bold text-xs text-[#171136]">
-                      {[user.first_name, user.last_name].filter(Boolean).join(" ") || "Tanvir Ahmed"}
+                      {userFullName}
                     </p>
                     <p className="text-[10.5px] text-[#736E9B] truncate">{user.email}</p>
                   </div>
@@ -1076,7 +1093,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                     Dashboard
                   </h1>
                   <p className="text-xs sm:text-[13.5px] text-[#736E9B] mt-0.5">
-                    Welcome back, {[user.first_name, user.last_name].filter(Boolean).join(" ") || user.first_name || "Tanvir"}. Here&apos;s what&apos;s happening with your store today.
+                    Welcome back, {userFirstName}. Here&apos;s what&apos;s happening with your store today.
                   </p>
                 </div>
 
