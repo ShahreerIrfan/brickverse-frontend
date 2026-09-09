@@ -262,7 +262,7 @@ export default function CheckoutPage() {
         console.warn("Could not save placed order to sessionStorage", e);
       }
       clearCart();
-      const orderNum = res.order.order_number || res.order.id || "BV-10482";
+      const orderNum = res.order.order_number || res.order.id || "KS-10482";
       router.push(`/thank-you?order_number=${encodeURIComponent(orderNum)}`);
     } else {
       alert(res.error || "Failed to place order. Please try again.");

@@ -605,7 +605,7 @@ export async function createOrder(orderData: {
       success: true,
       order: {
         id: Date.now(),
-        order_number: `BV-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        order_number: `KS-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
         ...orderData,
         status: "pending",
         created_at: new Date().toISOString(),

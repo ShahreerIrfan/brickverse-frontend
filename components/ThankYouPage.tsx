@@ -52,9 +52,9 @@ interface OrderDetails {
 
 // Default demonstration items matching brickverse-thankyou.svg
 const DEFAULT_DEMO_ORDER: OrderDetails = {
-  order_number: "#BV-10482",
+  order_number: "#KS-10482",
   customer_name: "Valued Customer",
-  customer_email: "customer@brickverse.com",
+  customer_email: "customer@kawaiisubete.com",
   customer_phone: "+880 1712-345678",
   district: "Dhaka",
   shipping_address: "House 12, Road 4, Uttara, Dhaka, Bangladesh",
@@ -122,9 +122,9 @@ export default function ThankYouPage() {
           }));
 
           setOrder({
-            order_number: parsed.order_number || `#BV-${Math.floor(10000 + Math.random() * 90000)}`,
+            order_number: parsed.order_number || `#KS-${Math.floor(10000 + Math.random() * 90000)}`,
             customer_name: parsed.customer_name || (parsed.first_name ? `${parsed.first_name} ${parsed.last_name || ""}`.trim() : "Valued Customer"),
-            customer_email: parsed.customer_email || user?.email || "customer@brickverse.com",
+            customer_email: parsed.customer_email || user?.email || "customer@kawaiisubete.com",
             customer_phone: parsed.customer_phone || "+880 1XXX-XXXXXX",
             district: parsed.district || parsed.city || "Dhaka",
             shipping_address: parsed.shipping_address || (parsed.address ? `${parsed.address}, ${parsed.district || "Dhaka"}, Bangladesh` : "House 12, Road 4, Uttara, Dhaka"),

@@ -868,7 +868,7 @@ export default function CustomerDashboard({
                         type="text"
                         value={searchOrderNumber}
                         onChange={(e) => setSearchOrderNumber(e.target.value)}
-                        placeholder="Enter Order Number (e.g. #BV-1001 or BV-1001)..."
+                        placeholder="Enter Order Number (e.g. #KS-1001 or KS-1001)..."
                         className="w-full bg-[#F8F6FD] border border-[#EAE3F7] focus:border-[#FF4D6D] focus:bg-white rounded-2xl h-12 pl-11 pr-4 outline-none text-sm text-[#171136] transition-all font-medium"
                       />
                       <IconSearch className="w-5 h-5 text-[#736E9B] absolute left-3.5 top-3.5 pointer-events-none" />

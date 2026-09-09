@@ -263,10 +263,10 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
 
   const generateRandomSku = (baseName?: string) => {
     const prefix = baseName
-      ? baseName.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6) || "BV"
-      : "BV";
+      ? baseName.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6) || "KS"
+      : "KS";
     const rand = Math.floor(10000 + Math.random() * 90000);
-    return `BV-${prefix}-${rand}`;
+    return `KS-${prefix}-${rand}`;
   };
 
   const calculatedDiscountPercent = useMemo(() => {
@@ -473,7 +473,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
     setFormCategory(prod.category || categories[0]?.id || "figures");
     setFormName(prod.name || "");
     setFormSlug(prod.slug || prod.id || "");
-    setFormSku(prod.sku || `BV-${prod.id.toUpperCase().slice(0, 6)}`);
+    setFormSku(prod.sku || `KS-${prod.id.toUpperCase().slice(0, 6)}`);
     setFormRegularPrice(prod.regularPrice?.replace("৳", "") || prod.originalPrice?.replace("৳", "") || "46.00");
     setFormDiscountedPrice(prod.discountedPrice?.replace("৳", "") || prod.price?.replace("৳", "") || "34.99");
     setFormTradePrice(prod.tradePrice?.replace("৳", "") || "28.00");
@@ -1549,12 +1549,12 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
                     </thead>
                     <tbody className="divide-y divide-[#F5F1FB]">
                       {(orders.length > 0 ? orders.slice(0, 6) : [
-                        { id: 10482, order_number: "BV-10482", customer_name: "Priya Menon", status: "delivered", total_amount: "94.98", created_at: "2026-09-08", items_preview: "Neo Samurai + 1 more" },
-                        { id: 10481, order_number: "BV-10481", customer_name: "Daniel Cho", status: "processing", total_amount: "79.99", created_at: "2026-09-08", items_preview: "Galaxy Station" },
-                        { id: 10480, order_number: "BV-10480", customer_name: "Fahim Rahman", status: "shipped", total_amount: "89.00", created_at: "2026-09-07", items_preview: "Robo Coder" },
-                        { id: 10479, order_number: "BV-10479", customer_name: "Ayesha Khan", status: "delivered", total_amount: "146.50", created_at: "2026-09-07", items_preview: "Sky Ninja + 2 more" },
-                        { id: 10478, order_number: "BV-10478", customer_name: "Marcus Webb", status: "cancelled", total_amount: "49.99", created_at: "2026-09-06", items_preview: "Circuit Lab" },
-                        { id: 10477, order_number: "BV-10477", customer_name: "Nadia Islam", status: "delivered", total_amount: "18.00", created_at: "2026-09-06", items_preview: "Ronin Base" },
+                        { id: 10482, order_number: "KS-10482", customer_name: "Priya Menon", status: "delivered", total_amount: "94.98", created_at: "2026-09-08", items_preview: "Neo Samurai + 1 more" },
+                        { id: 10481, order_number: "KS-10481", customer_name: "Daniel Cho", status: "processing", total_amount: "79.99", created_at: "2026-09-08", items_preview: "Galaxy Station" },
+                        { id: 10480, order_number: "KS-10480", customer_name: "Fahim Rahman", status: "shipped", total_amount: "89.00", created_at: "2026-09-07", items_preview: "Robo Coder" },
+                        { id: 10479, order_number: "KS-10479", customer_name: "Ayesha Khan", status: "delivered", total_amount: "146.50", created_at: "2026-09-07", items_preview: "Sky Ninja + 2 more" },
+                        { id: 10478, order_number: "KS-10478", customer_name: "Marcus Webb", status: "cancelled", total_amount: "49.99", created_at: "2026-09-06", items_preview: "Circuit Lab" },
+                        { id: 10477, order_number: "KS-10477", customer_name: "Nadia Islam", status: "delivered", total_amount: "18.00", created_at: "2026-09-06", items_preview: "Ronin Base" },
                       ]).map((o: any) => {
                         const statusColorsMap: Record<string, { bg: string; text: string; dot: string; label: string }> = {
                           delivered: { bg: "#E7F8F0", text: "#2ECC8F", dot: "#2ECC8F", label: "Delivered" },
@@ -1568,7 +1568,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
                           <tr key={o.id} className="hover:bg-[#F9F7FD] transition-colors">
                             <td className="py-4 pr-4">
                               <span className="font-[family-name:var(--font-display)] font-extrabold text-[12.5px] text-[#FF4D6D]">
-                                #{o.order_number || `BV-${o.id}`}
+                                #{o.order_number || `KS-${o.id}`}
                               </span>
                             </td>
                             <td className="py-4 px-4">
@@ -1954,7 +1954,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
                         value={formSku}
                         onChange={(e) => setFormSku(e.target.value)}
                         required
-                        placeholder="e.g. BV-KINGO-8492"
+                        placeholder="e.g. KS-KINGO-8492"
                         className="w-full px-4 py-3 rounded-2xl border border-[#EAE3F7] bg-[#FAF8FD] focus:bg-white font-mono text-xs font-bold text-[#171136] focus:outline-none focus:border-[#FF4D6D] transition-all"
                       />
                     </div>
@@ -2731,7 +2731,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
 
             const initial = (currentOrder.customer_name?.[0] || currentOrder.customer_email?.[0] || "O").toUpperCase();
             const dateInfo = formatOrderDate(currentOrder.created_at);
-            const trackingNum = currentOrder.tracking_number || `BV-TRACK-${currentOrder.id ? String(currentOrder.id).slice(0, 5).toUpperCase() : "88219"}`;
+            const trackingNum = currentOrder.tracking_number || `KS-TRACK-${currentOrder.id ? String(currentOrder.id).slice(0, 5).toUpperCase() : "88219"}`;
 
             const items = currentOrder.items && currentOrder.items.length > 0 ? currentOrder.items : [
               {
@@ -3004,7 +3004,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
                                           {item.product_name}
                                         </p>
                                         <p className="text-[10.5px] text-[#736E9B] mt-0.5">
-                                          SKU: BV-ITEM-{idx + 101}
+                                          SKU: KS-ITEM-{idx + 101}
                                         </p>
                                       </div>
                                     </div>
