@@ -15,6 +15,7 @@ import {
 import { CategoryGlyph } from "./CategoryRail";
 import { categories } from "./productData";
 import { useAuth } from "@/context/AuthContext";
+import { getApiBaseUrl } from "@/lib/api";
 
 const navLinks = [
   { label: "Home", active: true },
@@ -125,7 +126,7 @@ export default function MobileMenu() {
                 <div className="flex items-center justify-between pt-1">
                   {user.role === "admin" ? (
                     <a
-                      href={(process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/?$/, "") : "https://brickbackend.eezzymart.tech") + "/admin/"}
+                      href={getApiBaseUrl().replace(/\/api\/?$/, "") + "/admin/"}
                       target="_blank"
                       rel="noreferrer"
                       className="font-bold text-[#7B5CFF] hover:underline flex items-center gap-1"

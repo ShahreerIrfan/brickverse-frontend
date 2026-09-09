@@ -1,42 +1,47 @@
 import { ProductSection, Category, Product } from "@/components/productData";
 
 export function getApiBaseUrl(): string {
-  // 1. If explicit production NEXT_PUBLIC_API_URL is configured
+  // 1. Client-side browser runtime dynamic detection
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host.includes("kawaiisubete.com")) {
+      return "https://api.kawaiisubete.com/api";
+    }
+    if (host.includes("brickverse.eezzymart.tech") || host.includes("eezzymart.tech")) {
+      return "https://brickbackend.eezzymart.tech/api";
+    }
+    if (host === "localhost" || host === "127.0.0.1") {
+      return process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+    }
+    if (process.env.NEXT_PUBLIC_API_URL) {
+      return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "");
+    }
+    return "https://api.kawaiisubete.com/api";
+  }
+
+  // 2. Explicit NEXT_PUBLIC_API_URL environment variable
   const envUrl = process.env.NEXT_PUBLIC_API_URL;
   if (envUrl && !envUrl.includes("127.0.0.1") && !envUrl.includes("localhost")) {
     return envUrl.replace(/\/+$/, "");
   }
 
-  // 2. Client-side browser runtime detection
-  if (typeof window !== "undefined") {
-    const host = window.location.hostname;
-    // Production domain detection
-    if (host.includes("brickverse.eezzymart.tech") || host.includes("eezzymart.tech")) {
-      return "https://brickbackend.eezzymart.tech/api";
-    }
-    // Any non-local host in browser
-    if (host && host !== "localhost" && host !== "127.0.0.1") {
-      return "https://brickbackend.eezzymart.tech/api";
-    }
-  }
-
   // 3. Server-side production fallback
   if (process.env.NODE_ENV === "production") {
-    return "https://brickbackend.eezzymart.tech/api";
+    return "https://api.kawaiisubete.com/api";
   }
 
   // 4. Default for local development
   return envUrl || "http://127.0.0.1:8000/api";
 }
 
-const API_BASE_URL = getApiBaseUrl();
+const getApi = () => getApiBaseUrl();
 
 // -------------------------------------------------------------
 // Products App APIs
 // -------------------------------------------------------------
 export async function getProductSections(): Promise<ProductSection[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/sections/`, {
+    const res = await fetch(`${getApiBaseUrl()}/sections/`, {
       next: { revalidate: 30 },
     });
     if (!res.ok) return [];
@@ -50,7 +55,7 @@ export async function getProductSections(): Promise<ProductSection[]> {
 
 export async function getCategories(): Promise<Category[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/categories/`, {
+    const res = await fetch(`${getApiBaseUrl()}/categories/`, {
       next: { revalidate: 30 },
     });
     if (!res.ok) return [];
@@ -65,8 +70,8 @@ export async function getCategories(): Promise<Category[]> {
 export async function getSubCategories(categoryId?: string) {
   try {
     const url = categoryId
-      ? `${API_BASE_URL}/subcategories/?category=${encodeURIComponent(categoryId)}`
-      : `${API_BASE_URL}/subcategories/`;
+      ? `${getApiBaseUrl()}/subcategories/?category=${encodeURIComponent(categoryId)}`
+      : `${getApiBaseUrl()}/subcategories/`;
     const res = await fetch(url, { next: { revalidate: 30 } });
     if (!res.ok) return [];
     return await res.json();
@@ -84,7 +89,7 @@ export async function registerCustomer(data: {
   phone?: string;
 }) {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/register/`, {
+    const res = await fetch(`${getApiBaseUrl()}/auth/register/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -103,7 +108,7 @@ export async function registerCustomer(data: {
 
 export async function loginUser(email: string, password: string) {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/login/`, {
+    const res = await fetch(`${getApiBaseUrl()}/auth/login/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -122,7 +127,7 @@ export async function loginUser(email: string, password: string) {
 
 export async function logoutUser() {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/logout/`, {
+    const res = await fetch(`${getApiBaseUrl()}/auth/logout/`, {
       method: "POST",
     });
     return await res.json();
@@ -133,7 +138,7 @@ export async function logoutUser() {
 
 export async function getCurrentUser() {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/me/`);
+    const res = await fetch(`${getApiBaseUrl()}/auth/me/`);
     if (!res.ok) return { authenticated: false, user: null };
     return await res.json();
   } catch (error) {
@@ -143,7 +148,7 @@ export async function getCurrentUser() {
 
 export async function searchProducts(query: string) {
   try {
-    const res = await fetch(`${API_BASE_URL}/products/?search=${encodeURIComponent(query)}`);
+    const res = await fetch(`${getApiBaseUrl()}/products/?search=${encodeURIComponent(query)}`);
     if (!res.ok) return [];
     return await res.json();
   } catch (error) {
@@ -154,7 +159,7 @@ export async function searchProducts(query: string) {
 
 export async function getProductById(id: string): Promise<Product | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/products/${encodeURIComponent(id)}/`, {
+    const res = await fetch(`${getApiBaseUrl()}/products/${encodeURIComponent(id)}/`, {
       next: { revalidate: 30 },
     });
     if (res.ok) {
@@ -169,8 +174,8 @@ export async function getProductById(id: string): Promise<Product | null> {
 export async function getRelatedProducts(category?: string, excludeId?: string): Promise<Product[]> {
   try {
     const url = category
-      ? `${API_BASE_URL}/products/?category=${encodeURIComponent(category)}`
-      : `${API_BASE_URL}/products/`;
+      ? `${getApiBaseUrl()}/products/?category=${encodeURIComponent(category)}`
+      : `${getApiBaseUrl()}/products/`;
     const res = await fetch(url, { next: { revalidate: 60 } });
     if (res.ok) {
       const data = await res.json();
@@ -189,7 +194,7 @@ export async function getRelatedProducts(category?: string, excludeId?: string):
 // -------------------------------------------------------------
 export async function getPromotions() {
   try {
-    const res = await fetch(`${API_BASE_URL}/promotions/all/`, {
+    const res = await fetch(`${getApiBaseUrl()}/promotions/all/`, {
       next: { revalidate: 30 },
     });
     if (!res.ok) return null;
@@ -205,7 +210,7 @@ export async function getPromotions() {
 // -------------------------------------------------------------
 export async function getTrustPerks() {
   try {
-    const res = await fetch(`${API_BASE_URL}/orders/trust-perks/`, {
+    const res = await fetch(`${getApiBaseUrl()}/orders/trust-perks/`, {
       next: { revalidate: 60 },
     });
     if (!res.ok) return null;
@@ -218,7 +223,7 @@ export async function getTrustPerks() {
 
 export async function getCart(sessionId: string) {
   try {
-    const res = await fetch(`${API_BASE_URL}/orders/cart/?session_id=${sessionId}`);
+    const res = await fetch(`${getApiBaseUrl()}/orders/cart/?session_id=${sessionId}`);
     if (!res.ok) return null;
     return await res.json();
   } catch (error) {
@@ -228,7 +233,7 @@ export async function getCart(sessionId: string) {
 
 export async function addToCart(sessionId: string, productId: string, quantity = 1) {
   try {
-    const res = await fetch(`${API_BASE_URL}/orders/cart/`, {
+    const res = await fetch(`${getApiBaseUrl()}/orders/cart/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ session_id: sessionId, productId, quantity }),
@@ -241,7 +246,7 @@ export async function addToCart(sessionId: string, productId: string, quantity =
 
 export async function toggleWishlist(sessionId: string, productId: string) {
   try {
-    const res = await fetch(`${API_BASE_URL}/orders/wishlist/`, {
+    const res = await fetch(`${getApiBaseUrl()}/orders/wishlist/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ session_id: sessionId, productId }),
@@ -254,7 +259,7 @@ export async function toggleWishlist(sessionId: string, productId: string) {
 
 export async function trackOrder(orderNumber: string, email?: string) {
   try {
-    let url = `${API_BASE_URL}/orders/track/?order_number=${encodeURIComponent(orderNumber)}`;
+    let url = `${getApiBaseUrl()}/orders/track/?order_number=${encodeURIComponent(orderNumber)}`;
     if (email) url += `&email=${encodeURIComponent(email)}`;
     const res = await fetch(url);
     if (!res.ok) return { error: "Order not found" };
@@ -269,7 +274,7 @@ export async function trackOrder(orderNumber: string, email?: string) {
 // -------------------------------------------------------------
 export async function subscribeNewsletter(email: string, source = "footer_banner") {
   try {
-    const res = await fetch(`${API_BASE_URL}/newsletter/subscribe/`, {
+    const res = await fetch(`${getApiBaseUrl()}/newsletter/subscribe/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, source }),
@@ -286,7 +291,7 @@ export async function subscribeNewsletter(email: string, source = "footer_banner
 
 export async function getNavLinks() {
   try {
-    const res = await fetch(`${API_BASE_URL}/marketing/nav-links/`, {
+    const res = await fetch(`${getApiBaseUrl()}/marketing/nav-links/`, {
       next: { revalidate: 60 },
     });
     if (!res.ok) return null;
@@ -299,8 +304,8 @@ export async function getNavLinks() {
 export async function getCustomerOrders(email?: string) {
   try {
     const url = email
-      ? `${API_BASE_URL}/orders/list/?email=${encodeURIComponent(email)}`
-      : `${API_BASE_URL}/orders/list/`;
+      ? `${getApiBaseUrl()}/orders/list/?email=${encodeURIComponent(email)}`
+      : `${getApiBaseUrl()}/orders/list/`;
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) return [];
     return await res.json();
@@ -316,7 +321,7 @@ export async function getAllOrders() {
 
 export async function updateOrderStatus(orderId: number | string, status: string, trackingNumber?: string) {
   try {
-    const res = await fetch(`${API_BASE_URL}/orders/${orderId}/`, {
+    const res = await fetch(`${getApiBaseUrl()}/orders/${orderId}/`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status, ...(trackingNumber ? { tracking_number: trackingNumber } : {}) }),
@@ -329,7 +334,7 @@ export async function updateOrderStatus(orderId: number | string, status: string
 
 export async function deleteOrder(orderId: number | string) {
   try {
-    const res = await fetch(`${API_BASE_URL}/orders/${orderId}/`, {
+    const res = await fetch(`${getApiBaseUrl()}/orders/${orderId}/`, {
       method: "DELETE",
     });
     return { success: res.ok };
@@ -340,7 +345,7 @@ export async function deleteOrder(orderId: number | string) {
 
 export async function getAllProducts(params?: { category?: string; subcategory?: string; search?: string }) {
   try {
-    let url = `${API_BASE_URL}/products/`;
+    let url = `${getApiBaseUrl()}/products/`;
     const queryParts = [];
     if (params?.category) queryParts.push(`category=${encodeURIComponent(params.category)}`);
     if (params?.subcategory) queryParts.push(`subcategory=${encodeURIComponent(params.subcategory)}`);
@@ -359,7 +364,7 @@ export async function getAllProducts(params?: { category?: string; subcategory?:
 export async function createProduct(productData: any) {
   try {
     const isFormData = typeof FormData !== "undefined" && productData instanceof FormData;
-    const res = await fetch(`${API_BASE_URL}/products/`, {
+    const res = await fetch(`${getApiBaseUrl()}/products/`, {
       method: "POST",
       headers: isFormData ? undefined : { "Content-Type": "application/json" },
       body: isFormData ? productData : JSON.stringify(productData),
@@ -374,7 +379,7 @@ export async function createProduct(productData: any) {
 export async function updateProduct(id: string, productData: any) {
   try {
     const isFormData = typeof FormData !== "undefined" && productData instanceof FormData;
-    const res = await fetch(`${API_BASE_URL}/products/${encodeURIComponent(id)}/`, {
+    const res = await fetch(`${getApiBaseUrl()}/products/${encodeURIComponent(id)}/`, {
       method: "PATCH",
       headers: isFormData ? undefined : { "Content-Type": "application/json" },
       body: isFormData ? productData : JSON.stringify(productData),
@@ -389,7 +394,7 @@ export async function updateProduct(id: string, productData: any) {
 
 export async function deleteProduct(id: string) {
   try {
-    const res = await fetch(`${API_BASE_URL}/products/${encodeURIComponent(id)}/`, {
+    const res = await fetch(`${getApiBaseUrl()}/products/${encodeURIComponent(id)}/`, {
       method: "DELETE",
     });
     return { success: res.ok };
@@ -401,7 +406,7 @@ export async function deleteProduct(id: string) {
 export async function createCategory(data: any) {
   try {
     const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
-    const res = await fetch(`${API_BASE_URL}/products/categories/`, {
+    const res = await fetch(`${getApiBaseUrl()}/products/categories/`, {
       method: "POST",
       headers: isFormData ? undefined : { "Content-Type": "application/json" },
       body: isFormData ? data : JSON.stringify(data),
@@ -416,7 +421,7 @@ export async function createCategory(data: any) {
 export async function updateCategory(id: string, data: any) {
   try {
     const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
-    const res = await fetch(`${API_BASE_URL}/products/categories/${encodeURIComponent(id)}/`, {
+    const res = await fetch(`${getApiBaseUrl()}/products/categories/${encodeURIComponent(id)}/`, {
       method: "PATCH",
       headers: isFormData ? undefined : { "Content-Type": "application/json" },
       body: isFormData ? data : JSON.stringify(data),
@@ -430,7 +435,7 @@ export async function updateCategory(id: string, data: any) {
 
 export async function deleteCategory(id: string) {
   try {
-    const res = await fetch(`${API_BASE_URL}/products/categories/${encodeURIComponent(id)}/`, {
+    const res = await fetch(`${getApiBaseUrl()}/products/categories/${encodeURIComponent(id)}/`, {
       method: "DELETE",
     });
     return { success: res.ok };
@@ -441,7 +446,7 @@ export async function deleteCategory(id: string) {
 
 export async function createSubCategory(data: any) {
   try {
-    const res = await fetch(`${API_BASE_URL}/products/subcategories/`, {
+    const res = await fetch(`${getApiBaseUrl()}/products/subcategories/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -455,7 +460,7 @@ export async function createSubCategory(data: any) {
 
 export async function updateSubCategory(id: string, data: any) {
   try {
-    const res = await fetch(`${API_BASE_URL}/products/subcategories/${encodeURIComponent(id)}/`, {
+    const res = await fetch(`${getApiBaseUrl()}/products/subcategories/${encodeURIComponent(id)}/`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -469,7 +474,7 @@ export async function updateSubCategory(id: string, data: any) {
 
 export async function deleteSubCategory(id: string) {
   try {
-    const res = await fetch(`${API_BASE_URL}/products/subcategories/${encodeURIComponent(id)}/`, {
+    const res = await fetch(`${getApiBaseUrl()}/products/subcategories/${encodeURIComponent(id)}/`, {
       method: "DELETE",
     });
     return { success: res.ok };
@@ -480,7 +485,7 @@ export async function deleteSubCategory(id: string) {
 
 export async function getAllUsers(role?: string, search?: string) {
   try {
-    let url = `${API_BASE_URL}/auth/all/`;
+    let url = `${getApiBaseUrl()}/auth/all/`;
     const params = [];
     if (role && role !== "all") params.push(`role=${encodeURIComponent(role)}`);
     if (search) params.push(`search=${encodeURIComponent(search)}`);
@@ -497,7 +502,7 @@ export async function getAllUsers(role?: string, search?: string) {
 
 export async function updateUserRole(userId: number | string, role: string) {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/${userId}/`, {
+    const res = await fetch(`${getApiBaseUrl()}/auth/${userId}/`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ role }),
@@ -510,7 +515,7 @@ export async function updateUserRole(userId: number | string, role: string) {
 
 export async function createUser(userData: any) {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/all/`, {
+    const res = await fetch(`${getApiBaseUrl()}/auth/all/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData),
@@ -523,7 +528,7 @@ export async function createUser(userData: any) {
 
 export async function deleteUser(userId: number | string) {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/${userId}/`, {
+    const res = await fetch(`${getApiBaseUrl()}/auth/${userId}/`, {
       method: "DELETE",
     });
     return { success: res.ok };
@@ -534,7 +539,7 @@ export async function deleteUser(userId: number | string) {
 
 export async function getAdminStats() {
   try {
-    const res = await fetch(`${API_BASE_URL}/orders/admin-stats/`, { cache: "no-store" });
+    const res = await fetch(`${getApiBaseUrl()}/orders/admin-stats/`, { cache: "no-store" });
     if (!res.ok) return null;
     return await res.json();
   } catch (error) {
@@ -545,7 +550,7 @@ export async function getAdminStats() {
 
 export async function getAllCustomers() {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/customers/`, { cache: "no-store" });
+    const res = await fetch(`${getApiBaseUrl()}/auth/customers/`, { cache: "no-store" });
     if (!res.ok) return [];
     return await res.json();
   } catch (error) {
@@ -556,7 +561,7 @@ export async function getAllCustomers() {
 
 export async function getStoreInfo() {
   try {
-    const res = await fetch(`${API_BASE_URL}/marketing/store-info/`, {
+    const res = await fetch(`${getApiBaseUrl()}/marketing/store-info/`, {
       next: { revalidate: 60 },
     });
     if (!res.ok) return null;
@@ -583,7 +588,7 @@ export async function createOrder(orderData: {
   }>;
 }) {
   try {
-    const res = await fetch(`${API_BASE_URL}/orders/list/`, {
+    const res = await fetch(`${getApiBaseUrl()}/orders/list/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(orderData),
