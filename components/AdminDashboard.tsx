@@ -277,6 +277,54 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  const formatOrderDate = (dateStr?: string) => {
+    if (!dateStr) return { date: "—", time: "" };
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return { date: dateStr, time: "" };
+      const date = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+      const time = d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+      return { date, time };
+    } catch {
+      return { date: dateStr, time: "" };
+    }
+  };
+
+  const formatOrderRelativeTime = (dateStr?: string) => {
+    if (!dateStr) return "";
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return "";
+      const diffSecs = Math.floor((Date.now() - d.getTime()) / 1000);
+      if (diffSecs < 0) return "Just now";
+      if (diffSecs < 60) return "Just now";
+      if (diffSecs < 3600) return `${Math.floor(diffSecs / 60)} min ago`;
+      if (diffSecs < 86400) {
+        const hours = Math.floor(diffSecs / 3600);
+        return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+      }
+      if (diffSecs < 604800) {
+        const days = Math.floor(diffSecs / 86400);
+        return `${days} day${days > 1 ? "s" : ""} ago`;
+      }
+      return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    } catch {
+      return "";
+    }
+  };
+
+  const getOrderAvatarBg = (initial: string) => {
+    const charCode = initial.charCodeAt(0) || 0;
+    const colors = [
+      "bg-[#EFE9FF] text-[#7B5CFF]",
+      "bg-[#FFF1F4] text-[#FF4D6D]",
+      "bg-[#E3F0FF] text-[#3B82F6]",
+      "bg-[#E7F8F0] text-[#2ECC8F]",
+      "bg-[#FFF4D6] text-[#C08A00]",
+    ];
+    return colors[charCode % colors.length];
+  };
+
   // Fetch all live backend data
   const fetchData = async () => {
     setRefreshing(true);
@@ -2389,89 +2437,229 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
                 </div>
               </div>
 
+              {/* KPI Summary Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Total Orders Card */}
+                <div className="bg-white rounded-[18px] border border-[#EAE3F7] p-4 flex items-center gap-3.5 shadow-2xs">
+                  <div className="w-11 h-11 rounded-[13px] bg-[#FFF1F4] flex items-center justify-center shrink-0">
+                    <IconBag className="w-5 h-5 text-[#FF4D6D]" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-[#736E9B]">Total Orders</p>
+                    <p className="font-[family-name:var(--font-display)] font-extrabold text-2xl text-[#171136]">
+                      {orders.length}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Processing Card */}
+                <div className="bg-white rounded-[18px] border border-[#EAE3F7] p-4 flex items-center gap-3.5 shadow-2xs">
+                  <div className="w-11 h-11 rounded-[13px] bg-[#FFF4D6] flex items-center justify-center shrink-0">
+                    <IconRefresh className="w-5 h-5 text-[#C08A00]" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-[#736E9B]">Processing</p>
+                    <p className="font-[family-name:var(--font-display)] font-extrabold text-2xl text-[#171136]">
+                      {orders.filter((o) => o.status === "processing").length}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Shipped Card */}
+                <div className="bg-white rounded-[18px] border border-[#EAE3F7] p-4 flex items-center gap-3.5 shadow-2xs">
+                  <div className="w-11 h-11 rounded-[13px] bg-[#E3F0FF] flex items-center justify-center shrink-0">
+                    <IconTruck className="w-5 h-5 text-[#3B82F6]" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-[#736E9B]">Shipped</p>
+                    <p className="font-[family-name:var(--font-display)] font-extrabold text-2xl text-[#171136]">
+                      {orders.filter((o) => o.status === "shipped").length}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Delivered Card */}
+                <div className="bg-white rounded-[18px] border border-[#EAE3F7] p-4 flex items-center gap-3.5 shadow-2xs">
+                  <div className="w-11 h-11 rounded-[13px] bg-[#E7F8F0] flex items-center justify-center shrink-0">
+                    <IconCheck className="w-5 h-5 text-[#2ECC8F]" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-[#736E9B]">Delivered</p>
+                    <p className="font-[family-name:var(--font-display)] font-extrabold text-2xl text-[#171136]">
+                      {orders.filter((o) => o.status === "delivered").length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Status Filter Tabs */}
               <div className="flex border-b border-[#EAE3F7] gap-2 overflow-x-auto whitespace-nowrap">
-                {["all", "pending", "processing", "shipped", "delivered"].map((st) => (
+                {[
+                  { id: "all", label: `All Orders (${orders.length})` },
+                  { id: "pending", label: "Pending" },
+                  { id: "processing", label: "Processing" },
+                  { id: "shipped", label: "Shipped" },
+                  { id: "delivered", label: "Delivered" },
+                  { id: "cancelled", label: "Cancelled" },
+                ].map((st) => (
                   <button
-                    key={st}
-                    onClick={() => setOrderStatusFilter(st)}
+                    key={st.id}
+                    onClick={() => setOrderStatusFilter(st.id)}
                     className={`pb-3 px-4 font-bold text-xs sm:text-sm border-b-2 transition-all capitalize cursor-pointer ${
-                      orderStatusFilter === st
+                      orderStatusFilter === st.id
                         ? "border-[#FF4D6D] text-[#FF4D6D]"
                         : "border-transparent text-[#736E9B] hover:text-[#171136]"
                     }`}
                   >
-                    {st === "all" ? `All Orders (${orders.length})` : st}
+                    {st.label}
                   </button>
                 ))}
               </div>
 
               {/* Orders Data Table */}
-              <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 shadow-xs overflow-hidden">
+              <div className="bg-white rounded-[22px] border border-[#EAE3F7] shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-[#EAE3F7] text-[#8A84A6]">
-                        <th className="pb-3 font-semibold">Order #</th>
-                        <th className="pb-3 font-semibold">Customer Details</th>
-                        <th className="pb-3 font-semibold">Items Count</th>
-                        <th className="pb-3 font-semibold">Total</th>
-                        <th className="pb-3 font-semibold">Fulfillment Status</th>
-                        <th className="pb-3 font-semibold">Tracking</th>
-                        <th className="pb-3 font-semibold text-right">Invoice & Details</th>
+                      <tr className="border-b border-[#EAE3F7] text-[#8A84A6] bg-[#FDFBFF]">
+                        <th className="py-4 px-5 font-bold tracking-wider text-[10.5px]">ORDER</th>
+                        <th className="py-4 px-5 font-bold tracking-wider text-[10.5px]">CUSTOMER</th>
+                        <th className="py-4 px-5 font-bold tracking-wider text-[10.5px]">ITEMS</th>
+                        <th className="py-4 px-5 font-bold tracking-wider text-[10.5px]">DATE</th>
+                        <th className="py-4 px-5 font-bold tracking-wider text-[10.5px]">STATUS</th>
+                        <th className="py-4 px-5 font-bold tracking-wider text-[10.5px]">TOTAL</th>
+                        <th className="py-4 px-5 font-bold tracking-wider text-[10.5px] text-right">ACTIONS</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#F0EBF8]">
-                      {filteredOrders.map((o) => (
-                        <tr key={o.id} className="hover:bg-[#F8F6FD] transition-colors">
-                          <td className="py-3.5 font-extrabold text-[#171136]">{o.order_number}</td>
-                          <td className="py-3.5">
-                            <p className="font-bold text-[#171136]">{o.customer_name}</p>
-                            <p className="text-[11px] text-[#736E9B]">{o.customer_email}</p>
-                            {o.customer_phone && (
-                              <p className="text-[10px] text-[#8A84A6]">{o.customer_phone}</p>
-                            )}
-                          </td>
-                          <td className="py-3.5">
-                            <span className="font-semibold text-[#171136]">
-                              {o.items?.length || 1} items
-                            </span>
-                          </td>
-                          <td className="py-3.5 font-extrabold text-[#171136] text-sm">
-                            ৳{o.total_amount}
-                          </td>
-                          <td className="py-3.5">
-                            <select
-                              value={o.status}
-                              onChange={(e) => handleUpdateStatus(o.id, e.target.value)}
-                              className={`px-2.5 py-1 rounded-xl text-xs font-bold cursor-pointer border ${
-                                o.status === "delivered"
-                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                  : o.status === "shipped"
-                                  ? "bg-blue-50 text-blue-700 border-blue-200"
-                                  : "bg-amber-50 text-amber-700 border-amber-200"
-                              }`}
-                            >
-                              <option value="pending">Pending</option>
-                              <option value="processing">Processing</option>
-                              <option value="shipped">Shipped</option>
-                              <option value="delivered">Delivered</option>
-                              <option value="cancelled">Cancelled</option>
-                            </select>
-                          </td>
-                          <td className="py-3.5 text-[11px] text-[#736E9B]">
-                            {o.tracking_number || "—"}
-                          </td>
-                          <td className="py-3.5 text-right">
-                            <button
-                              onClick={() => setSelectedOrder(o)}
-                              className="px-3 py-1.5 bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] font-bold rounded-xl transition-all cursor-pointer"
-                            >
-                              View Invoice ↗
-                            </button>
+                      {filteredOrders.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="py-12 text-center text-sm text-[#736E9B]">
+                            No orders found matching your filter.
                           </td>
                         </tr>
-                      ))}
+                      ) : (
+                        filteredOrders.map((o) => {
+                          const initial = (o.customer_name?.[0] || o.customer_email?.[0] || "O").toUpperCase();
+                          const dateInfo = formatOrderDate(o.created_at);
+                          const relTime = formatOrderRelativeTime(o.created_at);
+
+                          return (
+                            <tr key={o.id} className="hover:bg-[#F8F6FD] transition-colors">
+                              {/* ORDER */}
+                              <td className="py-4 px-5 whitespace-nowrap">
+                                <p className="font-[family-name:var(--font-display)] font-extrabold text-sm text-[#171136]">
+                                  {o.order_number}
+                                </p>
+                                {relTime && (
+                                  <p className="text-[10px] text-[#8A84A6] font-medium mt-0.5">{relTime}</p>
+                                )}
+                              </td>
+
+                              {/* CUSTOMER */}
+                              <td className="py-4 px-5 whitespace-nowrap">
+                                <div className="flex items-center gap-3">
+                                  <div
+                                    className={`w-9 h-9 rounded-full ${getOrderAvatarBg(
+                                      initial
+                                    )} font-extrabold flex items-center justify-center text-xs shrink-0 shadow-2xs`}
+                                  >
+                                    {initial}
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-[#171136] text-sm leading-snug">
+                                      {o.customer_name || "Guest Customer"}
+                                    </p>
+                                    <p className="text-[11px] text-[#736E9B]">{o.customer_email}</p>
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* ITEMS */}
+                              <td className="py-4 px-5 whitespace-nowrap">
+                                <span className="font-semibold text-[#171136] text-xs">
+                                  {o.items?.length || 1} {o.items?.length === 1 ? "item" : "items"}
+                                </span>
+                              </td>
+
+                              {/* DATE */}
+                              <td className="py-4 px-5 whitespace-nowrap">
+                                <p className="font-medium text-[#171136] text-xs">{dateInfo.date}</p>
+                                {dateInfo.time && (
+                                  <p className="text-[10px] text-[#8A84A6] mt-0.5">{dateInfo.time}</p>
+                                )}
+                              </td>
+
+                              {/* STATUS */}
+                              <td className="py-4 px-5 whitespace-nowrap">
+                                <div className="relative inline-flex items-center">
+                                  <select
+                                    value={o.status}
+                                    onChange={(e) => handleUpdateStatus(o.id, e.target.value)}
+                                    className={`appearance-none pl-6 pr-6 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all border outline-none ${
+                                      o.status === "delivered"
+                                        ? "bg-[#E7F8F0] text-[#2ECC8F] border-[#2ECC8F]/30"
+                                        : o.status === "shipped"
+                                        ? "bg-[#E3F0FF] text-[#3B82F6] border-[#3B82F6]/30"
+                                        : o.status === "cancelled"
+                                        ? "bg-[#FFF1F4] text-[#FF4D6D] border-[#FF4D6D]/30"
+                                        : "bg-[#FFF4D6] text-[#C08A00] border-[#C08A00]/30"
+                                    }`}
+                                  >
+                                    <option value="pending" className="bg-white text-[#171136]">Pending</option>
+                                    <option value="processing" className="bg-white text-[#171136]">Processing</option>
+                                    <option value="shipped" className="bg-white text-[#171136]">Shipped</option>
+                                    <option value="delivered" className="bg-white text-[#171136]">Delivered</option>
+                                    <option value="cancelled" className="bg-white text-[#171136]">Cancelled</option>
+                                  </select>
+                                  <span
+                                    className={`absolute left-2.5 w-2 h-2 rounded-full pointer-events-none ${
+                                      o.status === "delivered"
+                                        ? "bg-[#2ECC8F]"
+                                        : o.status === "shipped"
+                                        ? "bg-[#3B82F6]"
+                                        : o.status === "cancelled"
+                                        ? "bg-[#FF4D6D]"
+                                        : "bg-[#C08A00]"
+                                    }`}
+                                  />
+                                  <span className="absolute right-2 pointer-events-none text-[8px] opacity-60">▼</span>
+                                </div>
+                              </td>
+
+                              {/* TOTAL */}
+                              <td className="py-4 px-5 whitespace-nowrap">
+                                <span
+                                  className={`font-extrabold font-[family-name:var(--font-display)] text-sm text-[#171136] ${
+                                    o.status === "cancelled" ? "opacity-40 line-through" : ""
+                                  }`}
+                                >
+                                  ৳{Number(o.total_amount || 0).toLocaleString()}
+                                </span>
+                              </td>
+
+                              {/* ACTIONS */}
+                              <td className="py-4 px-5 whitespace-nowrap text-right">
+                                <div className="inline-flex items-center gap-2 justify-end">
+                                  <button
+                                    onClick={() => setSelectedOrder(o)}
+                                    className="px-3.5 py-1.5 bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] font-bold text-xs rounded-xl border border-[#EAE3F7] transition-all cursor-pointer shadow-2xs"
+                                  >
+                                    View ↗
+                                  </button>
+                                  <button
+                                    onClick={() => setSelectedOrder(o)}
+                                    className="p-1.5 bg-[#FFF1F4] hover:bg-[#FFE4EA] text-[#FF4D6D] rounded-xl transition-all cursor-pointer"
+                                    title="Order Details"
+                                  >
+                                    <IconDots className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
