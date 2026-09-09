@@ -447,6 +447,304 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
     });
   }, [usersList, userRoleFilter, searchGlobal]);
 
+  // Hover state for interactive 7-day Sales Overview chart
+  const [hoveredChartPoint, setHoveredChartPoint] = useState<number | null>(null);
+
+  // Dynamic 7-day Sales Overview trend calculation
+  const salesOverview = useMemo(() => {
+    if (
+      statsData?.sales_overview &&
+      Array.isArray(statsData.sales_overview) &&
+      statsData.sales_overview.length > 0
+    ) {
+      return statsData.sales_overview;
+    }
+
+    // Client-side fallback if backend stats data is loading or offline
+    const daysArr = [];
+    const weekdaysShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const today = new Date();
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const dayName = weekdaysShort[d.getDay()];
+      const dateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      const dYMD = d.toISOString().split("T")[0];
+
+      const dayOrders = orders.filter((o) => {
+        if (!o.created_at) return false;
+        try {
+          return new Date(o.created_at).toISOString().split("T")[0] === dYMD;
+        } catch {
+          return false;
+        }
+      });
+      const dayRev = dayOrders.reduce((acc, o) => acc + Number(o.total_amount || 0), 0);
+
+      daysArr.push({
+        day: dayName,
+        date: dateStr,
+        revenue: dayRev,
+        last_week_revenue: Math.max(0, Math.round(dayRev * 0.85)),
+        orders_count: dayOrders.length,
+        is_today: i === 0,
+      });
+    }
+    return daysArr;
+  }, [statsData?.sales_overview, orders]);
+
+  // Dynamic SVG Chart Coordinates & Scaling
+  const chartMetrics = useMemo(() => {
+    if (!salesOverview || salesOverview.length === 0) {
+      return {
+        yMax: 24000,
+        gridLabels: ["0k", "6k", "12k", "18k", "24k"],
+        points: [],
+        pointsLast: [],
+        areaPath: "",
+        thisWeekPath: "",
+        lastWeekPath: "",
+        activePoint: null,
+      };
+    }
+
+    const maxRev = Math.max(
+      ...salesOverview.map((d: any) => Number(d.revenue || 0)),
+      ...salesOverview.map((d: any) => Number(d.last_week_revenue || 0)),
+      100
+    );
+
+    // Compute pleasant scale steps (0k, 6k, 12k, 18k, 24k etc.)
+    const rawStep = maxRev / 4;
+    let step = Math.ceil(rawStep / 100) * 100;
+    if (step < 500) step = 500;
+    else if (step < 2000) step = Math.ceil(step / 500) * 500;
+    else step = Math.ceil(step / 1000) * 1000;
+
+    const yMax = step * 4;
+
+    const formatK = (val: number) => {
+      if (val === 0) return "0k";
+      if (val >= 1000) {
+        const k = val / 1000;
+        return k % 1 === 0 ? `${k}k` : `${k.toFixed(1)}k`;
+      }
+      return `${val}`;
+    };
+
+    const gridLabels = [
+      formatK(0),
+      formatK(step),
+      formatK(step * 2),
+      formatK(step * 3),
+      formatK(yMax),
+    ];
+
+    const xBase = 30;
+    const xStep = 100;
+    const yBaseline = 190;
+    const yTop = 22;
+    const ySpan = yBaseline - yTop; // 168px
+
+    const points = salesOverview.map((item: any, i: number) => {
+      const x = xBase + i * xStep;
+      const rev = Number(item.revenue || 0);
+      const ratio = yMax > 0 ? Math.min(1, Math.max(0, rev / yMax)) : 0;
+      const y = yBaseline - ratio * ySpan;
+      return {
+        ...item,
+        x,
+        y: Math.round(y * 10) / 10,
+        idx: i,
+      };
+    });
+
+    const pointsLast = salesOverview.map((item: any, i: number) => {
+      const x = xBase + i * xStep;
+      const rev = Number(item.last_week_revenue || 0);
+      const ratio = yMax > 0 ? Math.min(1, Math.max(0, rev / yMax)) : 0;
+      const y = yBaseline - ratio * ySpan;
+      return {
+        x,
+        y: Math.round(y * 10) / 10,
+      };
+    });
+
+    const thisWeekPath =
+      points.length > 0
+        ? `M ${points.map((p: any) => `${p.x} ${p.y}`).join(" L ")}`
+        : "";
+
+    const lastWeekPath =
+      pointsLast.length > 0
+        ? `M ${pointsLast.map((p: any) => `${p.x} ${p.y}`).join(" L ")}`
+        : "";
+
+    const areaPath =
+      points.length > 0
+        ? `M ${points[0].x} ${points[0].y} L ${points.map((p: any) => `${p.x} ${p.y}`).join(" L ")} L ${points[points.length - 1].x} ${yBaseline} L ${points[0].x} ${yBaseline} Z`
+        : "";
+
+    const activeIdx =
+      hoveredChartPoint !== null
+        ? hoveredChartPoint
+        : points.findIndex((p: any) => p.is_today) >= 0
+        ? points.findIndex((p: any) => p.is_today)
+        : points.length - 1;
+
+    const activePoint = points[activeIdx] || points[points.length - 1] || null;
+
+    return {
+      yMax,
+      gridLabels,
+      points,
+      pointsLast,
+      areaPath,
+      thisWeekPath,
+      lastWeekPath,
+      activePoint,
+      activeIdx,
+    };
+  }, [salesOverview, hoveredChartPoint]);
+
+  // Dynamic Top Selling Products calculation
+  const dynamicTopSelling = useMemo(() => {
+    if (
+      statsData?.top_selling_products &&
+      Array.isArray(statsData.top_selling_products) &&
+      statsData.top_selling_products.length > 0
+    ) {
+      return statsData.top_selling_products;
+    }
+
+    // Client-side fallback aggregation
+    const soldMap = new Map<
+      string,
+      { name: string; category: string; soldCount: number; revenue: number; image: string; bg: string }
+    >();
+    const bgColors = ["#FFEAF0", "#E4F7F8", "#FFF4DA", "#EFE9FF", "#E7F8F0"];
+
+    orders.forEach((o) => {
+      if (Array.isArray(o.items)) {
+        o.items.forEach((item: any) => {
+          const name = item.product_name || item.name || "Collector Item";
+          const qty = Number(item.quantity || 1);
+          const price = Number(item.price || 0);
+          const existing = soldMap.get(name) || {
+            name,
+            category: "Anime figures",
+            soldCount: 0,
+            revenue: 0,
+            image: item.image || "/images/figure-samurai-red.svg",
+            bg: bgColors[soldMap.size % bgColors.length],
+          };
+          existing.soldCount += qty;
+          existing.revenue += price * qty;
+          soldMap.set(name, existing);
+        });
+      }
+    });
+
+    let result = Array.from(soldMap.values()).map((p, idx) => ({
+      id: `top-${idx}`,
+      name: p.name,
+      category: p.category,
+      sold: `${p.soldCount} sold`,
+      sold_count: p.soldCount,
+      revenue: `৳${p.revenue.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`,
+      revenue_num: p.revenue,
+      percent: 85,
+      image: p.image,
+      bg: p.bg,
+    }));
+
+    if (result.length < 4 && products.length > 0) {
+      const existingNames = new Set(result.map((r) => r.name.toLowerCase()));
+      const extra = products
+        .filter((p) => !existingNames.has(p.name.toLowerCase()))
+        .slice(0, 4 - result.length);
+
+      extra.forEach((p, idx) => {
+        const priceNum =
+          typeof p.price === "number"
+            ? p.price
+            : parseFloat(String(p.price).replace(/[^0-9.]/g, "") || "49.99");
+        result.push({
+          id: p.id,
+          name: p.name,
+          category: p.category || "Anime figures",
+          sold: `${p.stock || 45} in stock`,
+          sold_count: p.stock || 45,
+          revenue: `৳${priceNum.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`,
+          revenue_num: priceNum,
+          percent: 50 + idx * 12,
+          image: p.image || "/images/figure-samurai-red.svg",
+          bg: bgColors[(result.length + idx) % bgColors.length],
+        });
+      });
+    }
+
+    if (result.length === 0) {
+      result = [
+        {
+          id: "1",
+          name: "Neo Samurai",
+          category: "Anime figures",
+          sold: "312 sold",
+          sold_count: 312,
+          revenue: "৳10,918",
+          revenue_num: 10918,
+          percent: 92,
+          bg: "#FFEAF0",
+          image: "/images/figure-samurai-red.svg",
+        },
+        {
+          id: "2",
+          name: "Galaxy Station",
+          category: "Bricks & sets",
+          sold: "248 sold",
+          sold_count: 248,
+          revenue: "৳19,837",
+          revenue_num: 19837,
+          percent: 74,
+          bg: "#E4F7F8",
+          image: "/images/bricks-stack-sunny.svg",
+        },
+        {
+          id: "3",
+          name: "Robo Coder",
+          category: "Coding kits",
+          sold: "190 sold",
+          sold_count: 190,
+          revenue: "৳16,910",
+          revenue_num: 16910,
+          percent: 58,
+          bg: "#FFF4DA",
+          image: "/images/robot-yellow.svg",
+        },
+        {
+          id: "4",
+          name: "Sky Ninja",
+          category: "Anime figures",
+          sold: "164 sold",
+          sold_count: 164,
+          revenue: "৳4,838",
+          revenue_num: 4838,
+          percent: 45,
+          bg: "#EFE9FF",
+          image: "/images/figure-ninja-gold.svg",
+        },
+      ];
+    }
+
+    const maxSold = Math.max(...result.map((r) => r.sold_count || 1), 1);
+    return result.slice(0, 4).map((item) => ({
+      ...item,
+      percent: Math.min(100, Math.max(15, Math.round(((item.sold_count || 1) / maxSold) * 100))),
+    }));
+  }, [statsData?.top_selling_products, orders, products]);
+
   // -------------------------------------------------------------
   // Product Navigation & Form Handlers
   // -------------------------------------------------------------
@@ -1329,86 +1627,156 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
 
                         {/* Horizontal Grid lines */}
                         <line x1="25" y1="190" x2="630" y2="190" stroke="#F0EBFA" strokeWidth="1.2" />
-                        <text x="16" y="194" fontFamily="inherit" fontSize="10" fontWeight="500" fill="#736E9B" textAnchor="end">0k</text>
+                        <text x="16" y="194" fontFamily="inherit" fontSize="10" fontWeight="500" fill="#736E9B" textAnchor="end">
+                          {chartMetrics.gridLabels[0]}
+                        </text>
 
                         <line x1="25" y1="148" x2="630" y2="148" stroke="#F0EBFA" strokeWidth="1.2" />
-                        <text x="16" y="152" fontFamily="inherit" fontSize="10" fontWeight="500" fill="#736E9B" textAnchor="end">6k</text>
+                        <text x="16" y="152" fontFamily="inherit" fontSize="10" fontWeight="500" fill="#736E9B" textAnchor="end">
+                          {chartMetrics.gridLabels[1]}
+                        </text>
 
                         <line x1="25" y1="106" x2="630" y2="106" stroke="#F0EBFA" strokeWidth="1.2" />
-                        <text x="16" y="110" fontFamily="inherit" fontSize="10" fontWeight="500" fill="#736E9B" textAnchor="end">12k</text>
+                        <text x="16" y="110" fontFamily="inherit" fontSize="10" fontWeight="500" fill="#736E9B" textAnchor="end">
+                          {chartMetrics.gridLabels[2]}
+                        </text>
 
                         <line x1="25" y1="64" x2="630" y2="64" stroke="#F0EBFA" strokeWidth="1.2" />
-                        <text x="16" y="68" fontFamily="inherit" fontSize="10" fontWeight="500" fill="#736E9B" textAnchor="end">18k</text>
+                        <text x="16" y="68" fontFamily="inherit" fontSize="10" fontWeight="500" fill="#736E9B" textAnchor="end">
+                          {chartMetrics.gridLabels[3]}
+                        </text>
 
                         <line x1="25" y1="22" x2="630" y2="22" stroke="#F0EBFA" strokeWidth="1.2" />
-                        <text x="16" y="26" fontFamily="inherit" fontSize="10" fontWeight="500" fill="#736E9B" textAnchor="end">24k</text>
+                        <text x="16" y="26" fontFamily="inherit" fontSize="10" fontWeight="500" fill="#736E9B" textAnchor="end">
+                          {chartMetrics.gridLabels[4]}
+                        </text>
 
                         {/* Gradient Area Fill */}
-                        <path
-                          d="M 30 120 L 130 92 L 230 106 L 330 65 L 430 78 L 530 40 L 630 70 L 630 190 L 30 190 Z"
-                          fill="url(#chartGradientFillAdmin)"
-                        />
+                        {chartMetrics.areaPath && (
+                          <path
+                            d={chartMetrics.areaPath}
+                            fill="url(#chartGradientFillAdmin)"
+                          />
+                        )}
 
                         {/* Last Week muted path */}
-                        <path
-                          d="M 30 128 L 130 118 L 230 114 L 330 102 L 430 110 L 530 88 L 630 92"
-                          fill="none"
-                          stroke="#D8D2EE"
-                          strokeWidth="2.2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
+                        {chartMetrics.lastWeekPath && (
+                          <path
+                            d={chartMetrics.lastWeekPath}
+                            fill="none"
+                            stroke="#D8D2EE"
+                            strokeWidth="2.2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        )}
 
                         {/* This Week active path */}
-                        <path
-                          d="M 30 120 L 130 92 L 230 106 L 330 65 L 430 78 L 530 40 L 630 70"
-                          fill="none"
-                          stroke="#FF4D6D"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
+                        {chartMetrics.thisWeekPath && (
+                          <path
+                            d={chartMetrics.thisWeekPath}
+                            fill="none"
+                            stroke="#FF4D6D"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        )}
+
+                        {/* Active Day Indicator & Tooltip Badge */}
+                        {chartMetrics.activePoint && (
+                          <g className="transition-all duration-300 pointer-events-none">
+                            <line
+                              x1={chartMetrics.activePoint.x}
+                              y1={Math.max(10, chartMetrics.activePoint.y - 4)}
+                              x2={chartMetrics.activePoint.x}
+                              y2="190"
+                              stroke="#FF4D6D"
+                              strokeWidth="1.2"
+                              strokeDasharray="3 3"
+                              opacity="0.5"
+                            />
+                            {(() => {
+                              const badgeW = 78;
+                              const badgeH = 26;
+                              const badgeX = Math.max(25, Math.min(chartMetrics.activePoint.x - badgeW / 2, 630 - badgeW));
+                              const badgeY = Math.max(4, chartMetrics.activePoint.y - 32);
+                              const revNum = Number(chartMetrics.activePoint.revenue || 0);
+                              const formattedRev =
+                                revNum >= 1000
+                                  ? `৳${(revNum / 1000).toFixed(1).replace('.0', '')}k`
+                                  : `৳${revNum.toLocaleString()}`;
+
+                              return (
+                                <g>
+                                  <rect
+                                    x={badgeX}
+                                    y={badgeY}
+                                    width={badgeW}
+                                    height={badgeH}
+                                    rx="8"
+                                    fill="#171136"
+                                    className="drop-shadow-md"
+                                  />
+                                  <text
+                                    x={badgeX + badgeW / 2}
+                                    y={badgeY + 17}
+                                    fontFamily="inherit"
+                                    fontSize="11"
+                                    fontWeight="800"
+                                    fill="#FFFFFF"
+                                    textAnchor="middle"
+                                  >
+                                    {formattedRev}
+                                  </text>
+                                </g>
+                              );
+                            })()}
+                          </g>
+                        )}
 
                         {/* Data Points */}
-                        {[
-                          { x: 30, y: 120, day: "Mon" },
-                          { x: 130, y: 92, day: "Tue" },
-                          { x: 230, y: 106, day: "Wed" },
-                          { x: 330, y: 65, day: "Thu" },
-                          { x: 430, y: 78, day: "Fri" },
-                          { x: 530, y: 40, day: "Sat", active: true },
-                          { x: 630, y: 70, day: "Sun" },
-                        ].map((pt, i) => (
-                          <g key={i}>
-                            <circle
-                              cx={pt.x}
-                              cy={pt.y}
-                              r="4.5"
-                              fill="#FFFFFF"
-                              stroke="#FF4D6D"
-                              strokeWidth="3"
-                              className="transition-all hover:scale-125 cursor-pointer"
-                            />
-                            <text
-                              x={pt.x}
-                              y="214"
-                              fontFamily="inherit"
-                              fontSize="11"
-                              fontWeight="600"
-                              fill="#736E9B"
-                              textAnchor="middle"
+                        {chartMetrics.points.map((pt: any, i: number) => {
+                          const isHovered = chartMetrics.activeIdx === i;
+                          return (
+                            <g
+                              key={i}
+                              className="cursor-pointer"
+                              onMouseEnter={() => setHoveredChartPoint(i)}
+                              onMouseLeave={() => setHoveredChartPoint(null)}
                             >
-                              {pt.day}
-                            </text>
-                          </g>
-                        ))}
-
-                        {/* Active Saturday Indicator & Tooltip Badge */}
-                        <line x1="530" y1="36" x2="530" y2="190" stroke="#FF4D6D" strokeWidth="1.2" strokeDasharray="3 3" opacity="0.4" />
-                        <rect x="500" y="8" width="60" height="26" rx="8" fill="#171136" />
-                        <text x="530" y="25" fontFamily="inherit" fontSize="11" fontWeight="800" fill="#FFFFFF" textAnchor="middle">
-                          ৳8.8k
-                        </text>
+                              {/* Invisible larger hover trigger area */}
+                              <rect
+                                x={pt.x - 20}
+                                y="0"
+                                width="40"
+                                height="220"
+                                fill="transparent"
+                              />
+                              <circle
+                                cx={pt.x}
+                                cy={pt.y}
+                                r={isHovered ? "5.5" : "4.5"}
+                                fill={isHovered ? "#FF4D6D" : "#FFFFFF"}
+                                stroke="#FF4D6D"
+                                strokeWidth={isHovered ? "2.5" : "3"}
+                                className="transition-all duration-200"
+                              />
+                              <text
+                                x={pt.x}
+                                y="214"
+                                fontFamily="inherit"
+                                fontSize="11"
+                                fontWeight={isHovered ? "800" : "600"}
+                                fill={isHovered ? "#FF4D6D" : "#736E9B"}
+                                textAnchor="middle"
+                                className="transition-colors"
+                              >
+                                {pt.day}
+                              </text>
+                            </g>
+                          );
+                        })}
                       </svg>
                     </div>
                   </div>
@@ -1430,51 +1798,21 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
                     </div>
 
                     <div className="space-y-4">
-                      {[
-                        {
-                          name: "Neo Samurai",
-                          category: "Anime figures",
-                          sold: "312 sold",
-                          revenue: "৳10,918",
-                          percent: 92,
-                          bg: "#FFEAF0",
-                          image: "/images/figure-samurai-red.svg",
-                        },
-                        {
-                          name: "Galaxy Station",
-                          category: "Bricks & sets",
-                          sold: "248 sold",
-                          revenue: "৳19,837",
-                          percent: 74,
-                          bg: "#E4F7F8",
-                          image: "/images/bricks-stack-sunny.svg",
-                        },
-                        {
-                          name: "Robo Coder",
-                          category: "Coding kits",
-                          sold: "190 sold",
-                          revenue: "৳16,910",
-                          percent: 58,
-                          bg: "#FFF4DA",
-                          image: "/images/robot-yellow.svg",
-                        },
-                        {
-                          name: "Sky Ninja",
-                          category: "Anime figures",
-                          sold: "164 sold",
-                          revenue: "৳4,838",
-                          percent: 45,
-                          bg: "#EFE9FF",
-                          image: "/images/figure-ninja-gold.svg",
-                        },
-                      ].map((prod, idx) => (
-                        <div key={idx} className="space-y-1.5">
+                      {dynamicTopSelling.map((prod: any, idx: number) => (
+                        <div key={prod.id || idx} className="space-y-1.5">
                           <div className="flex items-center gap-3">
                             <div
-                              className="w-11 h-11 rounded-xl flex items-center justify-center p-1 shrink-0 border border-black/5"
-                              style={{ backgroundColor: prod.bg }}
+                              className="w-11 h-11 rounded-xl flex items-center justify-center p-1 shrink-0 border border-black/5 overflow-hidden"
+                              style={{ backgroundColor: prod.bg || "#FFEAF0" }}
                             >
-                              <img src={prod.image} alt={prod.name} className="w-full h-full object-contain" />
+                              <img
+                                src={prod.image || "/images/figure-samurai-red.svg"}
+                                alt={prod.name}
+                                className="w-full h-full object-contain"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = "/images/figure-samurai-red.svg";
+                                }}
+                              />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between">
@@ -1494,7 +1832,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
                           <div className="w-full bg-[#F0EBFA] h-1.5 rounded-full overflow-hidden">
                             <div
                               className="h-full rounded-full bg-[#FF4D6D] transition-all duration-500"
-                              style={{ width: `${prod.percent}%` }}
+                              style={{ width: `${Math.min(100, Math.max(10, prod.percent || 50))}%` }}
                             />
                           </div>
                         </div>
