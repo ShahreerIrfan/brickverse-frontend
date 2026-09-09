@@ -24,8 +24,9 @@ import {
   IconSparkles,
 } from "./icons";
 
-// All 64 Districts of Bangladesh in alphabetical order
+// All 64 Districts of Bangladesh with Dhaka first
 const BANGLADESH_DISTRICTS = [
+  "Dhaka",
   "Bagerhat",
   "Bandarban",
   "Barguna",
@@ -38,7 +39,6 @@ const BANGLADESH_DISTRICTS = [
   "Chuadanga",
   "Cox's Bazar",
   "Cumilla",
-  "Dhaka",
   "Dinajpur",
   "Faridpur",
   "Feni",
