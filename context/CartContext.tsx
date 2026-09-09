@@ -59,51 +59,6 @@ export function formatPrice(amount: number): string {
   })}`;
 }
 
-// Initial items matching the brickverse-cart.svg design demonstration
-const INITIAL_DEMO_ITEMS: CartItem[] = [
-  {
-    id: "demo-neo-samurai",
-    name: "Neo Samurai",
-    subtitle: "Ronin edition · 1/7 scale · Crimson dusk",
-    price: 34.99,
-    originalPrice: 46.0,
-    priceFormatted: "৳34.99",
-    image: "/images/figure-samurai-red.svg",
-    cardBg: "#FFEAF0",
-    quantity: 1,
-    seller: "Brickverse Official",
-    category: "Anime figures",
-    slug: "neo-samurai",
-  },
-  {
-    id: "demo-galaxy-station",
-    name: "Galaxy Station",
-    subtitle: "1,240 pieces · Bricks & sets",
-    price: 79.99,
-    originalPrice: 99.0,
-    priceFormatted: "৳79.99",
-    image: "/images/bricks-castle-navy.svg",
-    cardBg: "#E4F7F8",
-    quantity: 1,
-    seller: "Brickverse Official",
-    category: "Bricks & sets",
-    slug: "galaxy-station",
-  },
-  {
-    id: "demo-robo-coder",
-    name: "Robo Coder",
-    subtitle: "Starter robot · block coding kit",
-    price: 16.0,
-    priceFormatted: "৳16.00",
-    image: "/images/robot-gold.svg",
-    cardBg: "#FFF4DA",
-    quantity: 1,
-    seller: "Brickverse Official",
-    category: "Coding kits",
-    slug: "robo-coder",
-  },
-];
-
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -123,8 +78,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           setItems([]);
         }
       } else {
-        setItems(INITIAL_DEMO_ITEMS);
-        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(INITIAL_DEMO_ITEMS));
+        setItems([]);
       }
     } catch (e) {
       console.warn("Failed to load cart from storage", e);
