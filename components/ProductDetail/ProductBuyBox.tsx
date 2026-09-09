@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { IconHeart, IconBag, IconStar, IconCheck } from "../icons";
 import type { Product } from "../productData";
+import { useCart } from "@/context/CartContext";
 
 interface ProductBuyBoxProps {
   product: Product;
 }
 
 export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
+  const { addToCart, openCart } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [addedToast, setAddedToast] = useState(false);
@@ -30,12 +32,11 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
   })();
 
   const handleAddToCart = () => {
-    setAddedToast(true);
-    setTimeout(() => setAddedToast(false), 3000);
+    addToCart(product, quantity, true);
   };
 
   const handleBuyNow = () => {
-    setBuyNowModal(true);
+    addToCart(product, quantity, true);
   };
 
   return (

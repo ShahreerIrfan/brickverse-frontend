@@ -4,12 +4,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { IconArrowRight, IconHeart, IconBag, IconStar } from "../icons";
 import type { Product } from "../productData";
+import { useCart } from "@/context/CartContext";
 
 interface RelatedShelfProps {
   products?: Product[];
 }
 
 export default function RelatedShelf({ products = [] }: RelatedShelfProps) {
+  const { addToCart } = useCart();
+
   if (!products || products.length === 0) {
     return null;
   }
@@ -28,39 +31,39 @@ export default function RelatedShelf({ products = [] }: RelatedShelfProps) {
             <span className="text-[11.5px] font-bold text-[#FF4D6D] uppercase tracking-wider block">
               Same shelf
             </span>
-            <h2 className="font-[family-name:var(--font-display)] font-extrabold text-xl sm:text-2xl lg:text-[27px] text-[#171136] tracking-tight leading-tight">
-              Pairs well with this figure
-            </h2>
+            <h3 className="font-[family-name:var(--font-display)] font-extrabold text-xl sm:text-2xl text-[#171136] tracking-tight">
+              You May Also Like
+            </h3>
           </div>
         </div>
 
         <Link
-          href="/"
-          className="inline-flex items-center gap-2 border border-[#FF4D6D] text-[#FF4D6D] hover:bg-[#FF4D6D] hover:text-white transition-all font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-full shadow-xs active:scale-95"
+          href="/shop"
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#FF4D6D] hover:text-[#ff3358] transition-colors"
         >
-          <span>View all</span>
+          <span>View all items</span>
           <IconArrowRight className="w-4 h-4" />
         </Link>
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* Companion Cards Grid */}
+      {/* 4-Column Responsive Grid */}
       {/* ------------------------------------------------------------- */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
         {displayList.map((item) => (
           <div
             key={item.id}
-            className="group relative bg-white border border-[#EAE3F7] rounded-2xl sm:rounded-3xl shadow-[0_16px_0_-6px_rgba(23,17,54,0.09)] overflow-hidden flex flex-col transition-transform hover:-translate-y-1"
+            className="bg-white border border-[#EAE3F7] rounded-3xl shadow-xs overflow-hidden flex flex-col justify-between group transition-all hover:-translate-y-1 hover:shadow-md"
           >
-            {/* Image Box */}
+            {/* Image Wrap */}
             <Link
               href={`/product/${item.id}`}
-              className="relative h-[130px] sm:h-[180px] lg:h-[200px] flex items-center justify-center p-3"
-              style={{ backgroundColor: item.cardBg || "#FFEAF0" }}
+              className="relative h-[130px] sm:h-[180px] flex items-center justify-center p-3"
+              style={{ backgroundColor: item.cardBg || "#FAF8FE" }}
             >
               {item.badge && (
                 <span
-                  className="absolute left-2.5 sm:left-4 top-2.5 sm:top-4 -rotate-6 text-white text-[9px] sm:text-[11px] font-extrabold tracking-wide rounded-full px-2 sm:px-3 py-0.5 sm:py-1 z-10"
+                  className="absolute left-3 top-3 text-white text-[9px] sm:text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-xs"
                   style={{ backgroundColor: item.badgeColor || item.accent }}
                 >
                   {item.badge}
@@ -70,7 +73,7 @@ export default function RelatedShelf({ products = [] }: RelatedShelfProps) {
               <button
                 type="button"
                 aria-label="Add to wishlist"
-                className="absolute right-2.5 sm:right-4 top-2.5 sm:top-4 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white flex items-center justify-center text-[#736E9B] hover:text-[#FF4D6D] transition-colors z-10"
+                className="absolute right-3 top-3 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white flex items-center justify-center text-[#736E9B] hover:text-[#FF4D6D] transition-colors shadow-xs cursor-pointer"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -133,14 +136,15 @@ export default function RelatedShelf({ products = [] }: RelatedShelfProps) {
                   )}
                 </div>
 
-                <Link
-                  href={`/product/${item.id}`}
-                  aria-label={`View ${item.name}`}
-                  className="w-7 h-7 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-90"
-                  style={{ backgroundColor: item.accent }}
+                <button
+                  type="button"
+                  onClick={() => addToCart(item, 1, true)}
+                  aria-label={`Add ${item.name} to bag`}
+                  className="w-7 h-7 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-90 shadow-xs hover:scale-105 cursor-pointer"
+                  style={{ backgroundColor: item.accent || "#FF4D6D" }}
                 >
                   <IconBag className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-white" />
-                </Link>
+                </button>
               </div>
             </div>
           </div>

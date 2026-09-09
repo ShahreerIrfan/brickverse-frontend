@@ -5,9 +5,11 @@ import Image from "next/image";
 import { IconChevronRight, IconSearch, IconHeart, IconBag, IconUser } from "./icons";
 import MobileMenu from "./MobileMenu";
 import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
 
 export default function Navbar() {
   const { user, isAuthenticated, openLoginModal } = useAuth();
+  const { totalItems, subtotalFormatted, openCart } = useCart();
 
   return (
     <div className="bg-white border-b border-[#EAE3F7] relative z-40">
@@ -51,13 +53,16 @@ export default function Navbar() {
             </button>
 
             <button
+              onClick={openCart}
               aria-label="Cart"
               className="w-9 h-9 rounded-full bg-[#F6F1FF] hover:bg-[#EFE9FF] flex items-center justify-center relative cursor-pointer"
             >
               <IconBag className="w-3.5 h-3.5 text-[#171136]" />
-              <span className="absolute -top-1 -right-1 bg-[#FF4D6D] text-white text-[9.5px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                2
-              </span>
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#FF0055] text-white text-[9.5px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                  {totalItems}
+                </span>
+              )}
             </button>
 
             {isAuthenticated && user ? (
@@ -117,15 +122,21 @@ export default function Navbar() {
             </span>
           </button>
 
-          <button className="flex items-center gap-2 bg-[#F6F1FF] hover:bg-[#EFE9FF] rounded-full h-11 px-3.5 cursor-pointer transition-colors">
+          <button
+            onClick={openCart}
+            aria-label="Open Cart"
+            className="flex items-center gap-2 bg-[#F6F1FF] hover:bg-[#EFE9FF] rounded-full h-11 px-3.5 cursor-pointer transition-colors"
+          >
             <span className="relative flex items-center">
               <IconBag className="w-4 h-4 text-[#171136]" />
-              <span className="absolute -top-1.5 -right-2 bg-[#FF4D6D] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                2
-              </span>
+              {totalItems > 0 && (
+                <span className="absolute -top-1.5 -right-2 bg-[#FF0055] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                  {totalItems}
+                </span>
+              )}
             </span>
-            <span className="hidden md:inline text-[12.5px] font-semibold text-[#736E9B]">
-              ৳1,420
+            <span className="hidden md:inline text-[12.5px] font-bold text-[#171136] font-mono">
+              {subtotalFormatted}
             </span>
           </button>
 

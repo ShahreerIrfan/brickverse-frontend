@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Poppins, Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { CartProvider } from "@/context/CartContext";
 import AuthModal from "@/components/AuthModal";
+import RightSidebarCart from "@/components/RightSidebarCart";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -33,8 +35,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-[#FFF6EE]">
         <AuthProvider>
-          {children}
-          <AuthModal />
+          <CartProvider>
+            {children}
+            <RightSidebarCart />
+            <AuthModal />
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

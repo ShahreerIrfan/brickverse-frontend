@@ -20,6 +20,7 @@ import {
 import { CategoryGlyph } from "./CategoryRail";
 import type { Product, Category, SubCategory } from "./productData";
 import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
 
 type ShopCatalogProps = {
   initialProducts: Product[];
@@ -28,6 +29,7 @@ type ShopCatalogProps = {
 
 function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogProps) {
   const searchParams = useSearchParams();
+  const { addToCart } = useCart();
   const router = useRouter();
   const { openLoginModal } = useAuth();
 
@@ -547,13 +549,27 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
                           )}
                         </div>
 
-                        <Link
-                          href={`/product/${product.slug || product.id}`}
-                          className="inline-flex items-center gap-1 bg-[#FF4D6D] hover:bg-[#ff3358] text-white text-[10.5px] sm:text-[12px] font-bold px-2.5 sm:px-3 py-1.5 rounded-full shadow-xs active:scale-95 transition-all"
-                        >
-                          <IconEye className="w-3 h-3" />
-                          <span>View</span>
-                        </Link>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              addToCart(product, 1, true);
+                            }}
+                            title="Add to cart"
+                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#FFF1F4] hover:bg-[#FF4D6D] text-[#FF4D6D] hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-90"
+                          >
+                            <IconBag className="w-3.5 h-3.5" />
+                          </button>
+                          <Link
+                            href={`/product/${product.slug || product.id}`}
+                            className="inline-flex items-center gap-1 bg-[#171136] hover:bg-[#251c4a] text-white text-[10.5px] sm:text-[12px] font-bold px-2.5 sm:px-3 py-1.5 rounded-full shadow-xs active:scale-95 transition-all"
+                          >
+                            <IconEye className="w-3 h-3" />
+                            <span>View</span>
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </div>

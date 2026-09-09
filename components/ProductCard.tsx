@@ -4,8 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { IconHeart, IconBag, IconStar } from "./icons";
 import type { Product } from "./productData";
+import { useCart } from "@/context/CartContext";
 
 export default function ProductCard({ product }: { product: Product }) {
+  const { addToCart } = useCart();
   const ratingVal = product.rating ?? 5.0;
   const fullStars = Math.round(ratingVal);
   const regularPrice = product.regularPrice || product.originalPrice;
@@ -17,6 +19,12 @@ export default function ProductCard({ product }: { product: Product }) {
     if (reg > disc && disc > 0) return Math.round(((reg - disc) / reg) * 100);
     return null;
   })();
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart(product, 1, true);
+  };
 
   return (
     <div className="relative bg-white border border-[#EAE3F7] rounded-2xl sm:rounded-3xl shadow-[0_16px_0_-6px_rgba(23,17,54,0.09)] overflow-hidden flex flex-col group transition-transform hover:-translate-y-1">
@@ -35,7 +43,7 @@ export default function ProductCard({ product }: { product: Product }) {
         <button
           type="button"
           aria-label="Add to wishlist"
-          className="absolute right-2.5 sm:right-5 top-2.5 sm:top-4 w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-white flex items-center justify-center z-10 text-[#736E9B] hover:text-[#FF4D6D] transition-colors shadow-xs"
+          className="absolute right-2.5 sm:right-5 top-2.5 sm:top-4 w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-white flex items-center justify-center z-10 text-[#736E9B] hover:text-[#FF4D6D] transition-colors shadow-xs cursor-pointer"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -89,9 +97,11 @@ export default function ProductCard({ product }: { product: Product }) {
             )}
           </div>
           <button
+            type="button"
+            onClick={handleAddToCart}
             aria-label={`Add ${product.name} to bag`}
-            className="w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0"
-            style={{ backgroundColor: product.accent }}
+            className="w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            style={{ backgroundColor: product.accent || "#FF4D6D" }}
           >
             <IconBag className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white" />
           </button>

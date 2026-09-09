@@ -2,9 +2,11 @@
 
 import { IconHome, IconBag, IconStore, IconUser } from "./icons";
 import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
 
 export default function BottomNav() {
   const { user, isAuthenticated, openLoginModal } = useAuth();
+  const { totalItems, openCart } = useCart();
 
   return (
     <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-[#EAE3F7] pb-[env(safe-area-inset-bottom)]">
@@ -17,18 +19,21 @@ export default function BottomNav() {
           <span className="text-[10.5px] font-bold">Home</span>
         </a>
 
-        <a
-          href="#"
-          className="relative flex flex-col items-center justify-center gap-1 py-2.5 text-[#736E9B]"
+        <button
+          type="button"
+          onClick={openCart}
+          className="relative flex flex-col items-center justify-center gap-1 py-2.5 text-[#736E9B] hover:text-[#FF4D6D] cursor-pointer"
         >
           <span className="relative">
             <IconBag className="w-[22px] h-[22px]" />
-            <span className="absolute -top-1.5 -right-2 w-[15px] h-[15px] rounded-full bg-[#FF4D6D] text-white text-[8.5px] font-extrabold flex items-center justify-center">
-              2
-            </span>
+            {totalItems > 0 && (
+              <span className="absolute -top-1.5 -right-2 w-[15px] h-[15px] rounded-full bg-[#FF0055] text-white text-[8.5px] font-extrabold flex items-center justify-center shadow-xs">
+                {totalItems}
+              </span>
+            )}
           </span>
           <span className="text-[10.5px] font-medium">Cart</span>
-        </a>
+        </button>
 
         <a
           href="/shop"

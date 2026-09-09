@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { IconBag, IconStar, IconCheck } from "../icons";
 import type { Product } from "../productData";
+import { useCart } from "@/context/CartContext";
 
 interface StickyAddToCartProps {
   product: Product;
 }
 
 export default function StickyAddToCart({ product }: StickyAddToCartProps) {
+  const { addToCart } = useCart();
   const [visible, setVisible] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [addedToast, setAddedToast] = useState(false);
@@ -29,6 +31,7 @@ export default function StickyAddToCart({ product }: StickyAddToCartProps) {
   }, []);
 
   const handleAdd = () => {
+    addToCart(product, quantity, true);
     setAddedToast(true);
     setTimeout(() => setAddedToast(false), 2500);
   };
