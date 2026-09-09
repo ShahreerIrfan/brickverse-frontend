@@ -4,8 +4,8 @@ const items = [
   {
     icon: IconTruck,
     color: "#FF4D6D",
-    title: "Free delivery over ৳500",
-    subtitle: "Australia-wide, 2–4 days",
+    title: "Fast nationwide delivery",
+    subtitle: "Across all 64 districts",
   },
   {
     icon: IconReturn,

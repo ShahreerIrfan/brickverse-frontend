@@ -390,33 +390,17 @@ export default function ThankYouPage() {
                   </p>
                 </div>
 
-                {/* Right Sub-Column: Delivery & Payment Methods */}
-                <div className="space-y-4">
-                  {/* Delivery Method */}
-                  <div className="space-y-1">
-                    <span className="block text-xs font-semibold uppercase tracking-wider text-[#736E9B]">
-                      Delivery method
-                    </span>
-                    <p className="font-bold text-sm text-[#171136]">
-                      Standard delivery
-                    </p>
-                    <p className="text-xs sm:text-[13px] text-[#3B3468]">
-                      Estimated 2 – 4 business days
-                    </p>
-                  </div>
-
-                  {/* Payment */}
-                  <div className="space-y-1 pt-1">
-                    <span className="block text-xs font-semibold uppercase tracking-wider text-[#736E9B]">
-                      Payment
-                    </span>
-                    <p className="font-bold text-sm text-[#171136]">
-                      Cash on delivery
-                    </p>
-                    <p className="text-xs sm:text-[13px] text-[#3B3468]">
-                      Pay the courier when your order arrives
-                    </p>
-                  </div>
+                {/* Right Sub-Column: Payment Method */}
+                <div className="space-y-1.5">
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-[#736E9B]">
+                    Payment
+                  </span>
+                  <p className="font-bold text-sm text-[#171136]">
+                    Cash on delivery
+                  </p>
+                  <p className="text-xs sm:text-[13px] text-[#3B3468]">
+                    Pay the courier when your order arrives
+                  </p>
                 </div>
               </div>
             </div>
@@ -449,8 +433,8 @@ export default function ThankYouPage() {
 
               <div className="flex items-center justify-between">
                 <span>Shipping</span>
-                <span className="font-bold text-[#2ECC8F]">
-                  {order.shipping_cost && order.shipping_cost > 0 ? formatPrice(order.shipping_cost) : "Free"}
+                <span className="font-bold text-[#3B3468] font-mono">
+                  {formatPrice(order.shipping_cost !== undefined ? order.shipping_cost : 60)}
                 </span>
               </div>
             </div>

@@ -11,7 +11,6 @@ import {
   IconHeart,
   IconBag,
   IconTrash,
-  IconTruck,
   IconArrowRight,
   IconLock,
   IconCash,
@@ -111,9 +110,6 @@ export default function CartPage() {
     totalItems,
     subtotal,
     subtotalFormatted,
-    isFreeDeliveryUnlocked,
-    freeDeliveryThreshold,
-    freeDeliveryRemaining,
     updateQuantity,
     removeFromCart,
     addToCart,
@@ -181,8 +177,6 @@ export default function CartPage() {
   const discountAmount = subtotal * discountRate;
   const discountedSubtotal = Math.max(0, subtotal - discountAmount);
   const estimatedTotal = discountedSubtotal;
-
-  const progressPercent = Math.min(100, Math.round((subtotal / freeDeliveryThreshold) * 100));
 
   return (
     <div className="max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-12 py-5 sm:py-8 font-[family-name:var(--font-sans)]">
@@ -506,32 +500,6 @@ export default function CartPage() {
                 </div>
               )}
             </div>
-
-            {/* Free Delivery Tracker Bar (Only shown when not yet unlocked) */}
-            {!isFreeDeliveryUnlocked && freeDeliveryRemaining > 0 && (
-              <>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-xs font-medium text-[#3B3468]">
-                    <IconTruck className="w-4 h-4 text-[#FF4D6D] shrink-0" />
-                    <span>
-                      Add <strong className="text-[#FF4D6D] font-extrabold">{formatPrice(freeDeliveryRemaining)}</strong> more for FREE delivery
-                    </span>
-                  </div>
-
-                  {/* Gradient Progress Bar */}
-                  <div className="w-full bg-[#F0EBFA] h-2.5 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-500 ease-out"
-                      style={{
-                        width: `${progressPercent}%`,
-                        background: "linear-gradient(90deg, #FF9F43 0%, #FFC93C 100%)",
-                      }}
-                    />
-                  </div>
-                </div>
-                <hr className="border-[#EAE3F7]" />
-              </>
-            )}
 
             {/* Cost Breakdown */}
             <div className="space-y-2.5 text-xs sm:text-[13.5px] text-[#736E9B]">

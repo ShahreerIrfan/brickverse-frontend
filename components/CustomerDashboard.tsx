@@ -615,22 +615,22 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
                   <div className="p-5 rounded-2xl bg-[#EFE9FF] border border-[#7B5CFF]/20 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-extrabold text-base text-[#7B5CFF]">FREE SHIPPING</span>
-                        <span className="text-[10px] font-bold uppercase bg-white text-[#7B5CFF] px-2 py-0.5 rounded-full border border-[#7B5CFF]/20">
-                          Automatic
+                        <span className="font-extrabold text-base text-[#7B5CFF]">20% OFF</span>
+                        <span className="text-[10px] font-bold uppercase bg-[#7B5CFF] text-white px-2 py-0.5 rounded-full">
+                          BRICK20
                         </span>
                       </div>
-                      <p className="font-bold text-xs text-[#171136]">Free Delivery Over ৳500</p>
+                      <p className="font-bold text-xs text-[#171136]">20% Off Orders Over ৳1,000</p>
                       <p className="text-xs text-[#736E9B] mt-1">
-                        Automatically applied to all orders with cart value of ৳500 or higher across Australia.
+                        Use promo code BRICK20 at checkout for 20% off on orders over ৳1,000.
                       </p>
                     </div>
-                    <Link
-                      href="/"
-                      className="mt-4 bg-[#7B5CFF] text-white text-xs font-bold py-2 rounded-xl hover:bg-[#6847ff] transition-all text-center block"
+                    <button
+                      onClick={() => navigator.clipboard?.writeText("BRICK20")}
+                      className="mt-4 bg-[#7B5CFF] text-white text-xs font-bold py-2 rounded-xl hover:bg-[#6847ff] transition-all text-center block cursor-pointer"
                     >
-                      Shop Qualified Items
-                    </Link>
+                      Copy Code: BRICK20
+                    </button>
                   </div>
                 </div>
               </div>

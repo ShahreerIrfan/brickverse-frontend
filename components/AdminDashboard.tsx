@@ -51,6 +51,7 @@ import {
   IconTrash,
   IconRefresh,
   IconTrendingUp,
+  IconTrendingDown,
   IconFolder,
   IconInfo,
   IconDollar,
@@ -60,6 +61,11 @@ import {
   IconMail,
   IconMoon,
   IconExternalLink,
+  IconDownload,
+  IconTarget,
+  IconFilter,
+  IconWallet,
+  IconDots,
 } from "./icons";
 
 interface AdminDashboardProps {
@@ -683,7 +689,7 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
   };
 
   return (
-    <div className="h-screen w-full overflow-hidden bg-[#F7F5FA] text-[#171136] flex font-[family-name:var(--font-sans)]">
+    <div className="h-screen w-full overflow-hidden bg-[#F6F2FC] text-[#171136] flex font-[family-name:var(--font-sans)]">
       {/* ------------------------------------------------------------- */}
       {/* Toast Notification Banner */}
       {/* ------------------------------------------------------------- */}
@@ -691,34 +697,42 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
         <div className="fixed top-5 right-5 z-50 bg-[#171136] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4">
           <span className="w-2.5 h-2.5 rounded-full bg-[#00E599] animate-ping" />
           <span className="text-xs font-bold">{toastMessage}</span>
-          <button onClick={() => setToastMessage(null)} className="text-white/60 hover:text-white ml-2">
+          <button onClick={() => setToastMessage(null)} className="text-white/60 hover:text-white ml-2 cursor-pointer">
             <IconClose className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
       {/* ------------------------------------------------------------- */}
-      {/* LEFT SIDEBAR MENU (Permanently Sticky / Fixed Height) */}
+      {/* LEFT SIDEBAR MENU (Matches brickverse-admin-dashboard.svg) */}
       {/* ------------------------------------------------------------- */}
       <aside
-        className={`h-full bg-white border-r border-[#EAE3F7] flex flex-col justify-between shrink-0 select-none z-30 overflow-y-auto transition-all duration-300 ${
+        className={`h-full bg-gradient-to-b from-[#1C1440] to-[#120C2E] border-r border-[#2E2760] flex flex-col justify-between shrink-0 select-none z-30 overflow-y-auto transition-all duration-300 ${
           sidebarCollapsed ? "w-[72px]" : "w-[240px] lg:w-[260px]"
         }`}
       >
         <div>
           {/* Brand Header */}
-          <div className="p-4 sm:p-5 flex items-center justify-between border-b border-[#F0EBF8]">
-            <Link href="/" className="flex items-center gap-2.5 overflow-hidden">
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#FF4D6D] to-[#FF85A1] flex items-center justify-center shrink-0 shadow-sm text-white font-extrabold text-sm">
-                BV
+          <div className="p-4 sm:p-5 flex items-center justify-between border-b border-[#2E2760]">
+            <Link href="/" className="flex items-center gap-3 overflow-hidden">
+              {/* Brickverse Logo Icon matching SVG */}
+              <div className="relative w-9 h-8 rounded-xl bg-[#FF4D6D] flex flex-col items-center justify-center shrink-0 shadow-md shadow-[#FF4D6D]/30">
+                <span className="absolute -top-1 left-1.5 w-2.5 h-1.5 rounded-xs bg-[#FF4D6D]" />
+                <span className="absolute -top-1 right-1.5 w-2.5 h-1.5 rounded-xs bg-[#FF4D6D]" />
+                <div className="flex items-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-white" />
+                  <span className="w-1 h-1 rounded-full bg-white" />
+                </div>
+                <div className="w-2.5 h-0.5 border-b-2 border-white rounded-full mt-0.5" />
               </div>
+
               {!sidebarCollapsed && (
                 <div className="flex flex-col">
-                  <span className="font-[family-name:var(--font-display)] font-extrabold text-base tracking-tight text-[#171136] flex items-center gap-1.5">
+                  <span className="font-[family-name:var(--font-display)] font-extrabold text-lg tracking-tight text-white flex items-center gap-1.5">
                     Brickverse
                   </span>
-                  <span className="text-[10px] font-extrabold text-[#FF4D6D] tracking-wider uppercase">
-                    Admin Portal
+                  <span className="text-[10px] font-medium text-[#B9B2DA] tracking-wide">
+                    figures · bricks · code kits
                   </span>
                 </div>
               )}
@@ -727,194 +741,221 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               aria-label="Toggle Sidebar"
-              className="w-7 h-7 rounded-xl bg-[#F6F1FF] hover:bg-[#EFE9FF] flex items-center justify-center text-[#736E9B] hover:text-[#171136] transition-colors shrink-0 cursor-pointer"
+              className="w-7 h-7 rounded-lg bg-[#2A2159] hover:bg-[#352b6d] flex items-center justify-center text-[#A79FD1] hover:text-white transition-colors shrink-0 cursor-pointer text-xs"
             >
               {sidebarCollapsed ? "»" : "«"}
             </button>
           </div>
 
           {/* Navigation Links */}
-          <div className="p-3 space-y-4">
-            {/* 1) OVERVIEW -> Dashboard */}
-            <div>
-              {!sidebarCollapsed && (
-                <p className="px-3 text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider mb-1.5">
-                  Overview
-                </p>
-              )}
+          <div className="p-3 space-y-2">
+            {/* 1) Dashboard */}
+            <button
+              onClick={() => navigateTo("dashboard")}
+              title="Dashboard"
+              className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl font-bold text-xs sm:text-[13.5px] transition-all cursor-pointer relative ${
+                activeNav === "dashboard"
+                  ? "bg-[#2A2159] text-white before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-sm before:bg-[#FF4D6D]"
+                  : "text-[#C7C0E8] hover:bg-[#2A2159]/60 hover:text-white"
+              }`}
+            >
+              <IconDashboard className={`w-4 h-4 shrink-0 ${activeNav === "dashboard" ? "text-white" : "text-[#A79FD1]"}`} />
+              {!sidebarCollapsed && <span>Dashboard</span>}
+            </button>
+
+            {/* 2) Products Accordion */}
+            <div className="space-y-1">
               <button
-                onClick={() => navigateTo("dashboard")}
-                title="Dashboard"
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl font-bold text-xs sm:text-[13px] transition-all cursor-pointer ${
-                  activeNav === "dashboard"
-                    ? "bg-[#FF4D6D] text-white shadow-[0_4px_16px_rgba(255,77,109,0.35)]"
-                    : "text-[#5C5478] hover:bg-[#F8F6FD] hover:text-[#171136]"
+                onClick={() => setProductsMenuOpen(!productsMenuOpen)}
+                title="Products"
+                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-bold text-xs sm:text-[13.5px] transition-all cursor-pointer relative ${
+                  activeNav.startsWith("products")
+                    ? "bg-[#2A2159] text-white before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-sm before:bg-[#FF4D6D]"
+                    : "text-[#C7C0E8] hover:bg-[#2A2159]/60 hover:text-white"
                 }`}
               >
-                <IconDashboard className="w-4 h-4 shrink-0" />
-                {!sidebarCollapsed && <span>Dashboard</span>}
+                <div className="flex items-center gap-3">
+                  <IconBox className={`w-4 h-4 shrink-0 ${activeNav.startsWith("products") ? "text-white" : "text-[#A79FD1]"}`} />
+                  {!sidebarCollapsed && <span>Products</span>}
+                </div>
+                {!sidebarCollapsed && (
+                  <IconChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      productsMenuOpen ? "rotate-0 text-white" : "-rotate-90 text-[#A79FD1]"
+                    }`}
+                  />
+                )}
               </button>
+
+              {productsMenuOpen && !sidebarCollapsed && (
+                <div className="pl-8 pr-1 py-1 space-y-1">
+                  <button
+                    onClick={() => navigateTo("products-all")}
+                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                      activeNav === "products-all"
+                        ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
+                        : "text-[#A79FD1] hover:text-white hover:bg-[#2A2159]/40"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    <span>All Products</span>
+                  </button>
+                  <button
+                    onClick={() => navigateTo("products-taxonomy")}
+                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                      activeNav === "products-taxonomy"
+                        ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
+                        : "text-[#A79FD1] hover:text-white hover:bg-[#2A2159]/40"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    <span>Category as taxonomy</span>
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* 2) COMMERCE -> Products */}
-            <div>
-              {!sidebarCollapsed && (
-                <p className="px-3 text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider mb-1.5">
-                  Commerce
-                </p>
+            {/* 3) Orders Accordion */}
+            <div className="space-y-1">
+              <button
+                onClick={() => setOrdersMenuOpen(!ordersMenuOpen)}
+                title="Orders"
+                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-bold text-xs sm:text-[13.5px] transition-all cursor-pointer relative ${
+                  activeNav.startsWith("orders")
+                    ? "bg-[#2A2159] text-white before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-sm before:bg-[#FF4D6D]"
+                    : "text-[#C7C0E8] hover:bg-[#2A2159]/60 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <IconOrders className={`w-4 h-4 shrink-0 ${activeNav.startsWith("orders") ? "text-white" : "text-[#A79FD1]"}`} />
+                  {!sidebarCollapsed && <span>Orders</span>}
+                </div>
+                {!sidebarCollapsed && (
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full bg-[#FF4D6D] text-white text-[10.5px] font-extrabold">
+                      {orders.length || 12}
+                    </span>
+                    <IconChevronDown
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                        ordersMenuOpen ? "rotate-0 text-white" : "-rotate-90 text-[#A79FD1]"
+                      }`}
+                    />
+                  </div>
+                )}
+              </button>
+
+              {ordersMenuOpen && !sidebarCollapsed && (
+                <div className="pl-8 pr-1 py-1 space-y-1">
+                  <button
+                    onClick={() => navigateTo("orders-all")}
+                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                      activeNav === "orders-all"
+                        ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
+                        : "text-[#A79FD1] hover:text-white hover:bg-[#2A2159]/40"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    <span>All Orders</span>
+                  </button>
+                </div>
               )}
-              <div className="space-y-1">
-                {/* Products Parent Accordion */}
-                <button
-                  onClick={() => setProductsMenuOpen(!productsMenuOpen)}
-                  title="Products"
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl font-bold text-xs sm:text-[13px] transition-all cursor-pointer ${
-                    activeNav.startsWith("products")
-                      ? "text-[#FF4D6D] bg-[#FFF0F4]"
-                      : "text-[#5C5478] hover:bg-[#F8F6FD] hover:text-[#171136]"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <IconBox className="w-4 h-4 shrink-0" />
-                    {!sidebarCollapsed && <span>Products</span>}
-                  </div>
-                  {!sidebarCollapsed && (
-                    <IconChevronDown
-                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                        productsMenuOpen ? "rotate-0" : "-rotate-90 text-[#8A84A6]"
-                      }`}
-                    />
-                  )}
-                </button>
-
-                {/* Products Submenus */}
-                {productsMenuOpen && !sidebarCollapsed && (
-                  <div className="pl-8 pr-1 py-1 space-y-1">
-                    <button
-                      onClick={() => navigateTo("products-all")}
-                      className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
-                        activeNav === "products-all"
-                          ? "text-[#FF4D6D] font-extrabold bg-[#FFF0F4]"
-                          : "text-[#736E9B] hover:text-[#171136] hover:bg-[#F8F6FD]"
-                      }`}
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                      <span>All Products</span>
-                    </button>
-                    <button
-                      onClick={() => navigateTo("products-taxonomy")}
-                      className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
-                        activeNav === "products-taxonomy"
-                          ? "text-[#FF4D6D] font-extrabold bg-[#FFF0F4]"
-                          : "text-[#736E9B] hover:text-[#171136] hover:bg-[#F8F6FD]"
-                      }`}
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                      <span>Category as the taxonomy</span>
-                    </button>
-                  </div>
-                )}
-
-                {/* 3) Orders Parent Accordion */}
-                <button
-                  onClick={() => setOrdersMenuOpen(!ordersMenuOpen)}
-                  title="Orders"
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl font-bold text-xs sm:text-[13px] transition-all cursor-pointer ${
-                    activeNav.startsWith("orders")
-                      ? "text-[#FF4D6D] bg-[#FFF0F4]"
-                      : "text-[#5C5478] hover:bg-[#F8F6FD] hover:text-[#171136]"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <IconOrders className="w-4 h-4 shrink-0" />
-                    {!sidebarCollapsed && <span>Orders</span>}
-                  </div>
-                  {!sidebarCollapsed && (
-                    <IconChevronDown
-                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                        ordersMenuOpen ? "rotate-0" : "-rotate-90 text-[#8A84A6]"
-                      }`}
-                    />
-                  )}
-                </button>
-
-                {/* Orders Submenus */}
-                {ordersMenuOpen && !sidebarCollapsed && (
-                  <div className="pl-8 pr-1 py-1 space-y-1">
-                    <button
-                      onClick={() => navigateTo("orders-all")}
-                      className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
-                        activeNav === "orders-all"
-                          ? "text-[#FF4D6D] font-extrabold bg-[#FFF0F4]"
-                          : "text-[#736E9B] hover:text-[#171136] hover:bg-[#F8F6FD]"
-                      }`}
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                      <span>All Orders</span>
-                    </button>
-                  </div>
-                )}
-              </div>
             </div>
 
-            {/* 4) USERS -> Users */}
-            <div>
+            {/* 4) Users Accordion */}
+            <div className="space-y-1">
+              <button
+                onClick={() => setUsersMenuOpen(!usersMenuOpen)}
+                title="Users"
+                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-bold text-xs sm:text-[13.5px] transition-all cursor-pointer relative ${
+                  activeNav.startsWith("users")
+                    ? "bg-[#2A2159] text-white before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-sm before:bg-[#FF4D6D]"
+                    : "text-[#C7C0E8] hover:bg-[#2A2159]/60 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <IconUsers className={`w-4 h-4 shrink-0 ${activeNav.startsWith("users") ? "text-white" : "text-[#A79FD1]"}`} />
+                  {!sidebarCollapsed && <span>Users</span>}
+                </div>
+                {!sidebarCollapsed && (
+                  <IconChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      usersMenuOpen ? "rotate-0 text-white" : "-rotate-90 text-[#A79FD1]"
+                    }`}
+                  />
+                )}
+              </button>
+
+              {usersMenuOpen && !sidebarCollapsed && (
+                <div className="pl-8 pr-1 py-1 space-y-1">
+                  <button
+                    onClick={() => navigateTo("users-all")}
+                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                      activeNav === "users-all"
+                        ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
+                        : "text-[#A79FD1] hover:text-white hover:bg-[#2A2159]/40"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    <span>All Users</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* STORE Section (Matching SVG) */}
+            <div className="pt-4 border-t border-[#2E2760] space-y-1">
               {!sidebarCollapsed && (
-                <p className="px-3 text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider mb-1.5">
-                  Users
+                <p className="px-3 text-[10.5px] font-bold text-[#7A72A8] uppercase tracking-wider mb-2">
+                  STORE
                 </p>
               )}
-              <div className="space-y-1">
-                <button
-                  onClick={() => setUsersMenuOpen(!usersMenuOpen)}
-                  title="Users"
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl font-bold text-xs sm:text-[13px] transition-all cursor-pointer ${
-                    activeNav.startsWith("users")
-                      ? "text-[#FF4D6D] bg-[#FFF0F4]"
-                      : "text-[#5C5478] hover:bg-[#F8F6FD] hover:text-[#171136]"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <IconUsers className="w-4 h-4 shrink-0" />
-                    {!sidebarCollapsed && <span>Users</span>}
-                  </div>
-                  {!sidebarCollapsed && (
-                    <IconChevronDown
-                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                        usersMenuOpen ? "rotate-0" : "-rotate-90 text-[#8A84A6]"
-                      }`}
-                    />
-                  )}
-                </button>
-
-                {/* Users Submenus */}
-                {usersMenuOpen && !sidebarCollapsed && (
-                  <div className="pl-8 pr-1 py-1 space-y-1">
-                    <button
-                      onClick={() => navigateTo("users-all")}
-                      className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
-                        activeNav === "users-all"
-                          ? "text-[#FF4D6D] font-extrabold bg-[#FFF0F4]"
-                          : "text-[#736E9B] hover:text-[#171136] hover:bg-[#F8F6FD]"
-                      }`}
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                      <span>All Users</span>
-                    </button>
-                  </div>
-                )}
-              </div>
+              <Link
+                href="/"
+                target="_blank"
+                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-[#C7C0E8] hover:text-white hover:bg-[#2A2159]/60 transition-colors cursor-pointer"
+              >
+                <IconStore className="w-4 h-4 text-[#A79FD1]" />
+                {!sidebarCollapsed && <span>View storefront</span>}
+              </Link>
+              <button
+                onClick={logout}
+                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-[#C7C0E8] hover:text-white hover:bg-[#2A2159]/60 transition-colors cursor-pointer"
+              >
+                <IconLogOut className="w-4 h-4 text-[#A79FD1]" />
+                {!sidebarCollapsed && <span>Log out</span>}
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Clean Sidebar Footer */}
-        <div className="p-3.5 border-t border-[#F0EBF8] text-center">
-          {!sidebarCollapsed && (
-            <p className="text-[10px] font-bold text-[#A5A0C2] uppercase tracking-wider">
-              Brickverse v2.4 • Admin
-            </p>
-          )}
+        {/* Profile Card at bottom (Matching SVG) */}
+        <div className="p-3 border-t border-[#2E2760]">
+          <div className="bg-[#241D54] rounded-2xl p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-9 h-9 rounded-full bg-[#FF4D6D] text-white flex items-center justify-center font-extrabold text-sm shrink-0">
+                {(user.first_name ? user.first_name[0] : (user.email ? user.email[0] : "T")).toUpperCase()}
+              </div>
+              {!sidebarCollapsed && (
+                <div className="flex flex-col min-w-0">
+                  <span className="font-bold text-xs text-white truncate">
+                    {[user.first_name, user.last_name].filter(Boolean).join(" ") || user.first_name || "Tanvir Ahmed"}
+                  </span>
+                  <span className="text-[11px] font-medium text-[#A79FD1] truncate">
+                    Store admin
+                  </span>
+                </div>
+              )}
+            </div>
+            {!sidebarCollapsed && (
+              <button
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                className="text-[#A79FD1] hover:text-white p-1 transition-colors cursor-pointer"
+                title="Account menu"
+              >
+                <IconDots className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
       </aside>
 
@@ -922,117 +963,98 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
       {/* MAIN CONTENT AREA */}
       {/* ------------------------------------------------------------- */}
       <div className="flex-1 flex flex-col h-full min-w-0 overflow-y-auto">
-        {/* Top Header Bar */}
-        <header className="bg-white border-b border-[#EAE3F7] sticky top-0 z-20 px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 flex-1 max-w-xl">
-            <span className="font-[family-name:var(--font-display)] font-extrabold text-sm sm:text-base text-[#171136] hidden md:inline">
-              Welcome back, <span className="text-[#FF4D6D]">{[user.first_name, user.last_name].filter(Boolean).join(" ") || user.first_name || "Admin"}</span>!
-            </span>
-
-            {/* Search Bar */}
-            <div className="relative w-full max-w-sm">
-              <IconSearch className="w-4 h-4 text-[#8A84A6] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Search products, orders, users..."
-                value={searchGlobal}
-                onChange={(e) => setSearchGlobal(e.target.value)}
-                className="w-full bg-[#F8F6FD] border border-[#EAE3F7] rounded-full pl-9 pr-4 py-1.5 text-xs text-[#171136] placeholder-[#8A84A6] focus:outline-none focus:border-[#FF4D6D]"
-              />
-              {searchGlobal && (
-                <button
-                  onClick={() => setSearchGlobal("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
-                >
-                  <IconClose className="w-3 h-3" />
-                </button>
-              )}
-            </div>
+        {/* Top Header Bar (Matching brickverse-admin-dashboard.svg) */}
+        <header className="bg-white border-b border-[#EAE3F7] sticky top-0 z-20 px-6 sm:px-8 py-3.5 flex items-center justify-between gap-4 shrink-0">
+          {/* Search Bar matching SVG */}
+          <div className="relative w-full max-w-sm sm:max-w-md">
+            <IconSearch className="w-4 h-4 text-[#736E9B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search orders, products, customers…"
+              value={searchGlobal}
+              onChange={(e) => setSearchGlobal(e.target.value)}
+              className="w-full bg-[#F6F1FF] border border-[#EAE3F7] rounded-full pl-10 pr-4 py-2.5 text-xs text-[#171136] placeholder-[#736E9B] focus:outline-none focus:border-[#FF4D6D] transition-all"
+            />
+            {searchGlobal && (
+              <button
+                onClick={() => setSearchGlobal("")}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+              >
+                <IconClose className="w-3 h-3" />
+              </button>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* View Storefront Icon Button */}
-            <Link
-              href="/"
-              target="_blank"
-              title="View Storefront"
-              className="w-9 h-9 rounded-full bg-[#F8F6FD] hover:bg-[#EFE9FF] flex items-center justify-center text-[#736E9B] hover:text-[#FF4D6D] transition-all cursor-pointer"
-            >
-              <IconExternalLink className="w-4 h-4" />
-            </Link>
-
+          {/* Right Header Actions */}
+          <div className="flex items-center gap-2.5 sm:gap-3.5">
             {/* Notification Bell */}
             <button
               title="Notifications"
               onClick={() => showToast("🔔 All systems operational. 0 alerts.")}
-              className="w-9 h-9 rounded-full bg-[#F8F6FD] hover:bg-[#EFE9FF] flex items-center justify-center text-[#736E9B] hover:text-[#171136] transition-all cursor-pointer relative"
+              className="w-9 h-9 rounded-full bg-[#F6F1FF] border border-[#EAE3F7] flex items-center justify-center text-[#3B3468] hover:bg-[#EFE9FF] transition-all cursor-pointer relative"
             >
               <IconBell className="w-4 h-4" />
-              <span className="w-2 h-2 rounded-full bg-[#FF4D6D] absolute top-2 right-2 border-2 border-white" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#FF4D6D] absolute top-1.5 right-1.5 border-2 border-white" />
             </button>
 
             {/* Messages / Mail */}
             <button
               title="Messages"
-              onClick={() => showToast("✉️ No new customer messages.")}
-              className="w-9 h-9 rounded-full bg-[#F8F6FD] hover:bg-[#EFE9FF] flex items-center justify-center text-[#736E9B] hover:text-[#171136] transition-all cursor-pointer"
+              onClick={() => showToast("✉️ 0 unread customer messages.")}
+              className="w-9 h-9 rounded-full bg-[#F6F1FF] border border-[#EAE3F7] flex items-center justify-center text-[#3B3468] hover:bg-[#EFE9FF] transition-all cursor-pointer relative"
             >
               <IconMail className="w-4 h-4" />
-            </button>
-
-            {/* Theme Toggle Button */}
-            <button
-              title="Toggle Theme"
-              onClick={() => showToast("🌙 Light/Dark theme mode active.")}
-              className="w-9 h-9 rounded-full bg-[#F8F6FD] hover:bg-[#EFE9FF] flex items-center justify-center text-[#736E9B] hover:text-[#171136] transition-all cursor-pointer"
-            >
-              <IconMoon className="w-4 h-4" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#13BFC9] absolute top-1.5 right-1.5 border-2 border-white" />
             </button>
 
             {/* Vertical Divider */}
-            <div className="h-6 w-px bg-[#EAE3F7] mx-1" />
+            <div className="h-6 w-px bg-[#EAE3F7] mx-1 hidden sm:block" />
 
-            {/* Admin Avatar Circle & Profile Dropdown */}
+            {/* Admin Avatar & Dropdown Pill */}
             <div className="relative" ref={profileDropdownRef}>
               <button
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className="w-9 h-9 rounded-full bg-[#FF4D6D] hover:opacity-90 text-white flex items-center justify-center font-extrabold text-sm shadow-md transition-all cursor-pointer ring-2 ring-offset-2 ring-[#FF4D6D]/20"
-                title="Admin Account Profile"
+                className="flex items-center gap-2.5 p-1 sm:pr-3 rounded-full hover:bg-[#F6F1FF] border border-transparent hover:border-[#EAE3F7] transition-all cursor-pointer"
               >
-                {(user.first_name ? user.first_name[0] : (user.email ? user.email[0] : "A")).toUpperCase()}
+                <div className="w-8 h-8 rounded-full bg-[#EFE9FF] text-[#7B5CFF] flex items-center justify-center font-extrabold text-xs shrink-0">
+                  {(user.first_name ? user.first_name[0] : (user.email ? user.email[0] : "T")).toUpperCase()}
+                </div>
+                <div className="hidden sm:flex flex-col text-left">
+                  <span className="font-bold text-xs text-[#171136] leading-tight truncate">
+                    {[user.first_name, user.last_name].filter(Boolean).join(" ") || user.first_name || "Tanvir Ahmed"}
+                  </span>
+                  <span className="text-[10px] font-medium text-[#736E9B] leading-tight">
+                    Store admin
+                  </span>
+                </div>
+                <IconChevronDown className="w-3 h-3 text-[#736E9B] hidden sm:block" />
               </button>
 
-              {/* Profile Popover Menu */}
               {profileDropdownOpen && (
-                <div className="absolute right-0 top-12 w-64 bg-white rounded-2xl shadow-2xl border border-[#EAE3F7] p-3 z-50 animate-in fade-in zoom-in-95 duration-150">
-                  {/* User Profile Card */}
-                  <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[#FAF8FD] border border-[#F0EBF8]">
-                    <div className="w-10 h-10 rounded-full bg-[#FF4D6D] text-white flex items-center justify-center font-extrabold text-base shrink-0 shadow-sm">
-                      {(user.first_name ? user.first_name[0] : (user.email ? user.email[0] : "A")).toUpperCase()}
-                    </div>
-                    <div className="flex flex-col min-w-0">
-                      <span className="font-extrabold text-sm text-[#171136] truncate">
-                        {[user.first_name, user.last_name].filter(Boolean).join(" ") || user.email.split("@")[0] || "Admin"}
-                      </span>
-                      <span className="text-[11px] font-semibold text-[#8A84A6] capitalize truncate">
-                        {user.role || "admin"}
-                      </span>
-                    </div>
+                <div className="absolute right-0 top-12 w-56 bg-white rounded-2xl shadow-2xl border border-[#EAE3F7] p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="p-2 border-b border-[#F0EBF8] mb-1.5">
+                    <p className="font-bold text-xs text-[#171136]">
+                      {[user.first_name, user.last_name].filter(Boolean).join(" ") || "Tanvir Ahmed"}
+                    </p>
+                    <p className="text-[10.5px] text-[#736E9B] truncate">{user.email}</p>
                   </div>
-
-                  {/* Divider */}
-                  <div className="h-px bg-[#F0EBF8] my-2" />
-
-                  {/* Logout Button */}
+                  <Link
+                    href="/"
+                    target="_blank"
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-[#3B3468] hover:bg-[#F6F1FF] transition-colors"
+                  >
+                    <IconExternalLink className="w-3.5 h-3.5 text-[#736E9B]" />
+                    <span>Storefront</span>
+                  </Link>
                   <button
                     onClick={() => {
                       setProfileDropdownOpen(false);
                       logout();
                     }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors cursor-pointer text-left"
                   >
-                    <IconLogOut className="w-4 h-4" />
-                    <span>Logout</span>
+                    <IconLogOut className="w-3.5 h-3.5" />
+                    <span>Log out</span>
                   </button>
                 </div>
               )}
@@ -1043,408 +1065,458 @@ export default function AdminDashboard({ user, initialNav }: AdminDashboardProps
         {/* Dynamic Main Workspace Views */}
         <main className="p-4 sm:p-8 flex-1">
           {/* ========================================================= */}
-          {/* 1) VIEW: DASHBOARD */}
+          {/* 1) VIEW: DASHBOARD (Matches brickverse-admin-dashboard.svg) */}
           {/* ========================================================= */}
           {activeNav === "dashboard" && (
-            <div className="space-y-6">
-              {/* Page Title & Subtitle */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="space-y-6 max-w-[1400px]">
+              {/* Page Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h1 className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-3xl text-[#171136] tracking-tight">
-                    Admin Dashboard
+                  <h1 className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[28px] text-[#171136] tracking-tight">
+                    Dashboard
                   </h1>
-                  <p className="text-xs sm:text-sm text-[#736E9B]">
-                    Real-time overview of your marketplace performance
+                  <p className="text-xs sm:text-[13.5px] text-[#736E9B] mt-0.5">
+                    Welcome back, {[user.first_name, user.last_name].filter(Boolean).join(" ") || user.first_name || "Tanvir"}. Here&apos;s what&apos;s happening with your store today.
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="px-4 py-2.5 rounded-full bg-white border border-[#EAE3F7] flex items-center gap-2 text-xs font-semibold text-[#171136] shadow-xs cursor-pointer">
+                    <IconChevronRight className="w-3 h-3 text-[#736E9B] rotate-90" />
+                    <span>Last 7 days</span>
+                  </div>
+
                   <button
-                    onClick={() => navigateTo("products-all")}
-                    className="bg-[#171136] hover:bg-[#251c4a] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+                    onClick={() => showToast("📊 Performance export downloaded.")}
+                    className="px-5 py-2.5 rounded-full bg-[#171136] hover:bg-[#251c4a] text-white text-xs font-bold flex items-center gap-2 shadow-md transition-all active:scale-98 cursor-pointer"
                   >
-                    <IconPlus className="w-3.5 h-3.5" />
-                    <span>Manage Products</span>
-                  </button>
-                  <button
-                    onClick={() => navigateTo("orders-all")}
-                    className="bg-[#FF4D6D] hover:bg-[#ff3358] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
-                  >
-                    <span>View Orders</span>
-                    <IconArrowRight className="w-3.5 h-3.5" />
+                    <IconDownload className="w-3.5 h-3.5" />
+                    <span>Export</span>
                   </button>
                 </div>
               </div>
 
-              {/* 4 Major KPI Cards (Matching screenshot style) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* 1. TOTAL REVENUE */}
-                <div className="bg-white rounded-3xl p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.03)] flex items-start justify-between relative overflow-hidden">
-                  <div>
-                    <span className="text-[11px] font-extrabold text-[#8A84A6] uppercase tracking-wider block">
-                      Total Revenue
+              {/* 4 Major KPI Cards (Matching SVG) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                {/* 1. Total revenue */}
+                <div className="bg-white rounded-[20px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.04)] flex flex-col justify-between">
+                  <div className="flex items-start justify-between">
+                    <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#FF4D6D] to-[#FF7A93] flex items-center justify-center text-white shadow-md shadow-[#FF4D6D]/20">
+                      <IconWallet className="w-5 h-5" />
+                    </div>
+                    <span className="text-[11.5px] font-semibold text-[#736E9B]">
+                      Total revenue
                     </span>
-                    <div className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-3xl text-[#171136] mt-1.5">
-                      ৳{Number(stats.total_revenue).toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
-                    </div>
-                    <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 mt-2">
-                      <IconTrendingUp className="w-3.5 h-3.5" />
-                      <span>100%</span>
-                      <span className="text-[#8A84A6] font-normal">vs last 30 days</span>
-                    </div>
                   </div>
-                  <div className="w-11 h-11 rounded-2xl bg-[#FFEAF0] flex items-center justify-center text-[#FF4D6D] shrink-0">
-                    <span className="font-extrabold text-base">৳</span>
+                  <div className="mt-4">
+                    <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block font-mono">
+                      ৳{Number(stats.total_revenue || 48920.50).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="px-2 py-0.5 rounded-full bg-[#E7F8F0] text-[#2ECC8F] text-[11px] font-extrabold flex items-center gap-1">
+                        <IconTrendingUp className="w-3 h-3" />
+                        +12.4%
+                      </span>
+                      <span className="text-[10.5px] text-[#736E9B]">vs last week</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* 2. TOTAL ORDERS */}
-                <div className="bg-white rounded-3xl p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.03)] flex items-start justify-between relative overflow-hidden">
-                  <div>
-                    <span className="text-[11px] font-extrabold text-[#8A84A6] uppercase tracking-wider block">
-                      Total Orders
+                {/* 2. Orders */}
+                <div className="bg-white rounded-[20px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.04)] flex flex-col justify-between">
+                  <div className="flex items-start justify-between">
+                    <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#6B3BF7] to-[#B14BE8] flex items-center justify-center text-white shadow-md shadow-[#6B3BF7]/20">
+                      <IconBag className="w-5 h-5" />
+                    </div>
+                    <span className="text-[11.5px] font-semibold text-[#736E9B]">
+                      Orders
                     </span>
-                    <div className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-3xl text-[#171136] mt-1.5">
-                      {stats.total_orders}
-                    </div>
-                    <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 mt-2">
-                      <IconTrendingUp className="w-3.5 h-3.5" />
-                      <span>100%</span>
-                      <span className="text-[#8A84A6] font-normal">vs last 30 days</span>
-                    </div>
                   </div>
-                  <div className="w-11 h-11 rounded-2xl bg-[#FFEAF0] flex items-center justify-center text-[#FF4D6D] shrink-0">
-                    <IconBag className="w-5 h-5" />
+                  <div className="mt-4">
+                    <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block">
+                      {stats.total_orders ? stats.total_orders.toLocaleString("en-US") : "1,284"}
+                    </span>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="px-2 py-0.5 rounded-full bg-[#E7F8F0] text-[#2ECC8F] text-[11px] font-extrabold flex items-center gap-1">
+                        <IconTrendingUp className="w-3 h-3" />
+                        +8.1%
+                      </span>
+                      <span className="text-[10.5px] text-[#736E9B]">vs last week</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* 3. TOTAL CUSTOMERS */}
-                <div className="bg-white rounded-3xl p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.03)] flex items-start justify-between relative overflow-hidden">
-                  <div>
-                    <span className="text-[11px] font-extrabold text-[#8A84A6] uppercase tracking-wider block">
-                      Total Customers
+                {/* 3. New customers */}
+                <div className="bg-white rounded-[20px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.04)] flex flex-col justify-between">
+                  <div className="flex items-start justify-between">
+                    <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#13BFC9] to-[#57E0C9] flex items-center justify-center text-white shadow-md shadow-[#13BFC9]/20">
+                      <IconUsers className="w-5 h-5" />
+                    </div>
+                    <span className="text-[11.5px] font-semibold text-[#736E9B]">
+                      New customers
                     </span>
-                    <div className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-3xl text-[#171136] mt-1.5">
-                      {stats.total_customers}
-                    </div>
-                    <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 mt-2">
-                      <IconTrendingUp className="w-3.5 h-3.5" />
-                      <span>66.7%</span>
-                      <span className="text-[#8A84A6] font-normal">vs last 30 days</span>
-                    </div>
                   </div>
-                  <div className="w-11 h-11 rounded-2xl bg-[#F6F1FF] flex items-center justify-center text-[#7B5CFF] shrink-0">
-                    <IconUser className="w-5 h-5" />
-                  </div>
-                </div>
-
-                {/* 4. ACTIVE VENDORS / CATALOG */}
-                <div className="bg-white rounded-3xl p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.03)] flex items-start justify-between relative overflow-hidden">
-                  <div>
-                    <span className="text-[11px] font-extrabold text-[#8A84A6] uppercase tracking-wider block">
-                      Active Vendors
+                  <div className="mt-4">
+                    <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block">
+                      {stats.total_customers ? stats.total_customers.toLocaleString("en-US") : "382"}
                     </span>
-                    <div className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-3xl text-[#171136] mt-1.5">
-                      {stats.active_vendors || 4}
-                    </div>
-                    <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 mt-2">
-                      <IconTrendingUp className="w-3.5 h-3.5" />
-                      <span>0%</span>
-                      <span className="text-[#8A84A6] font-normal">vs last 30 days</span>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="px-2 py-0.5 rounded-full bg-[#E7F8F0] text-[#2ECC8F] text-[11px] font-extrabold flex items-center gap-1">
+                        <IconTrendingUp className="w-3 h-3" />
+                        +3.2%
+                      </span>
+                      <span className="text-[10.5px] text-[#736E9B]">vs last week</span>
                     </div>
                   </div>
-                  <div className="w-11 h-11 rounded-2xl bg-[#FFF6EE] flex items-center justify-center text-[#FF922B] shrink-0">
-                    <IconStore className="w-5 h-5" />
-                  </div>
-                </div>
-              </div>
-
-              {/* 4 Mini KPI Metric Pills Strip */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-                <div className="p-3.5 rounded-2xl bg-[#EAF7FF] border border-[#C5E9FF] flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-[#0099FF] shadow-xs">
-                    <IconBox className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="font-extrabold text-sm sm:text-base text-[#171136] block leading-tight">
-                      {stats.total_products}
-                    </span>
-                    <span className="text-[11px] text-[#5A738E] font-semibold">Products in Catalog</span>
-                  </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-[#FFF9E6] border border-[#FFE8A3] flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-[#FFC93C] shadow-xs">
-                    <IconStar className="w-4 h-4" filled />
-                  </div>
-                  <div>
-                    <span className="font-extrabold text-sm sm:text-base text-[#171136] block leading-tight">
-                      {stats.avg_rating || 4.8} <span className="text-xs text-[#8A84A6]">/ 5</span>
+                {/* 4. Conversion rate */}
+                <div className="bg-white rounded-[20px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.04)] flex flex-col justify-between">
+                  <div className="flex items-start justify-between">
+                    <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#FF9F43] to-[#FFC93C] flex items-center justify-center text-white shadow-md shadow-[#FF9F43]/20">
+                      <IconTarget className="w-5 h-5" />
+                    </div>
+                    <span className="text-[11.5px] font-semibold text-[#736E9B]">
+                      Conversion rate
                     </span>
-                    <span className="text-[11px] text-[#8C7A3E] font-semibold">Avg Store Rating</span>
                   </div>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-[#EAFBF3] border border-[#B3F2D4] flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-[#059669] shadow-xs">
-                    <IconTrendingUp className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="font-extrabold text-sm sm:text-base text-[#171136] block leading-tight">
-                      ৳{stats.profit_est || 72}
+                  <div className="mt-4">
+                    <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block">
+                      3.8%
                     </span>
-                    <span className="text-[11px] text-[#427A62] font-semibold">Net Profit Margin</span>
-                  </div>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-[#F4F1FD] border border-[#DFD7FA] flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-[#7B5CFF] shadow-xs">
-                    <span className="font-extrabold text-xs">৳</span>
-                  </div>
-                  <div>
-                    <span className="font-extrabold text-sm sm:text-base text-[#171136] block leading-tight">
-                      ৳{stats.commission_est || 316}
-                    </span>
-                    <span className="text-[11px] text-[#6956A8] font-semibold">Commission & Fees</span>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="px-2 py-0.5 rounded-full bg-[#FFE6EA] text-[#D2455C] text-[11px] font-extrabold flex items-center gap-1">
+                        <IconTrendingDown className="w-3 h-3" />
+                        0.6%
+                      </span>
+                      <span className="text-[10.5px] text-[#736E9B]">vs last week</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Main Analytics Grid: Revenue Chart (Left) + Order Status Donut (Right) */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Revenue Analytics Curve / Bars */}
-                <div className="lg:col-span-2 bg-white rounded-3xl p-6 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.03)] flex flex-col justify-between">
+              {/* Middle Row Grid: Sales Overview (Left) + Top Selling Products (Right) */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Sales Overview Card */}
+                <div className="lg:col-span-7 xl:col-span-8 bg-white rounded-[22px] border border-[#EAE3F7] p-6 shadow-[0_4px_25px_rgba(23,17,54,0.04)] flex flex-col justify-between">
                   <div>
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
                       <div>
-                        <h2 className="font-[family-name:var(--font-display)] font-extrabold text-lg text-[#171136]">
-                          Revenue Analytics
+                        <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base sm:text-[16.5px] text-[#171136]">
+                          Sales overview
                         </h2>
-                        <p className="text-xs text-[#736E9B]">
-                          Monthly revenue, vendor earnings & fee commissions
+                        <p className="text-xs text-[#736E9B] mt-0.5">
+                          Revenue trend for the last 7 days
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-4 text-xs font-bold">
-                        <span className="flex items-center gap-1.5 text-[#7B5CFF]">
-                          <span className="w-2.5 h-2.5 rounded-full bg-[#7B5CFF]" />
-                          Revenue
+                      <div className="flex items-center gap-4 text-[11.5px] font-semibold">
+                        <span className="flex items-center gap-1.5 text-[#3B3468]">
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#FF4D6D]" />
+                          This week
                         </span>
-                        <span className="flex items-center gap-1.5 text-[#10B981]">
-                          <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
-                          Vendor
-                        </span>
-                        <span className="flex items-center gap-1.5 text-[#FF922B]">
-                          <span className="w-2.5 h-2.5 rounded-full bg-[#FF922B]" />
-                          Commission
+                        <span className="flex items-center gap-1.5 text-[#736E9B]">
+                          <span className="w-3.5 h-0.5 rounded-full bg-[#D8D2EE]" />
+                          Last week
                         </span>
                       </div>
                     </div>
 
-                    {/* Chart Visualization */}
-                    <div className="h-56 mt-6 flex items-end justify-between gap-3 px-2 pt-6 pb-2 border-b border-[#F0EBF8] relative">
-                      {/* Grid Lines */}
-                      <div className="absolute inset-x-0 top-0 border-b border-dashed border-gray-100 flex items-center justify-between text-[10px] text-gray-400">
-                        <span>৳5.0K</span>
-                      </div>
-                      <div className="absolute inset-x-0 top-1/2 border-b border-dashed border-gray-100 flex items-center justify-between text-[10px] text-gray-400">
-                        <span>৳2.5K</span>
-                      </div>
+                    {/* SVG Area Chart matching brickverse-admin-dashboard.svg */}
+                    <div className="w-full relative h-[250px] select-none">
+                      <svg viewBox="0 0 650 240" className="w-full h-full overflow-visible" preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient id="chartGradientFillAdmin" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#FF4D6D" stopOpacity="0.28" />
+                            <stop offset="100%" stopColor="#FF4D6D" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
 
-                      {/* Monthly Bar Stacks */}
+                        {/* Horizontal Grid lines */}
+                        <line x1="25" y1="190" x2="630" y2="190" stroke="#F0EBFA" strokeWidth="1.2" />
+                        <text x="16" y="194" fontFamily="inherit" fontSize="10" fontWeight="500" fill="#736E9B" textAnchor="end">0k</text>
+
+                        <line x1="25" y1="148" x2="630" y2="148" stroke="#F0EBFA" strokeWidth="1.2" />
+                        <text x="16" y="152" fontFamily="inherit" fontSize="10" fontWeight="500" fill="#736E9B" textAnchor="end">6k</text>
+
+                        <line x1="25" y1="106" x2="630" y2="106" stroke="#F0EBFA" strokeWidth="1.2" />
+                        <text x="16" y="110" fontFamily="inherit" fontSize="10" fontWeight="500" fill="#736E9B" textAnchor="end">12k</text>
+
+                        <line x1="25" y1="64" x2="630" y2="64" stroke="#F0EBFA" strokeWidth="1.2" />
+                        <text x="16" y="68" fontFamily="inherit" fontSize="10" fontWeight="500" fill="#736E9B" textAnchor="end">18k</text>
+
+                        <line x1="25" y1="22" x2="630" y2="22" stroke="#F0EBFA" strokeWidth="1.2" />
+                        <text x="16" y="26" fontFamily="inherit" fontSize="10" fontWeight="500" fill="#736E9B" textAnchor="end">24k</text>
+
+                        {/* Gradient Area Fill */}
+                        <path
+                          d="M 30 120 L 130 92 L 230 106 L 330 65 L 430 78 L 530 40 L 630 70 L 630 190 L 30 190 Z"
+                          fill="url(#chartGradientFillAdmin)"
+                        />
+
+                        {/* Last Week muted path */}
+                        <path
+                          d="M 30 128 L 130 118 L 230 114 L 330 102 L 430 110 L 530 88 L 630 92"
+                          fill="none"
+                          stroke="#D8D2EE"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+
+                        {/* This Week active path */}
+                        <path
+                          d="M 30 120 L 130 92 L 230 106 L 330 65 L 430 78 L 530 40 L 630 70"
+                          fill="none"
+                          stroke="#FF4D6D"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+
+                        {/* Data Points */}
+                        {[
+                          { x: 30, y: 120, day: "Mon" },
+                          { x: 130, y: 92, day: "Tue" },
+                          { x: 230, y: 106, day: "Wed" },
+                          { x: 330, y: 65, day: "Thu" },
+                          { x: 430, y: 78, day: "Fri" },
+                          { x: 530, y: 40, day: "Sat", active: true },
+                          { x: 630, y: 70, day: "Sun" },
+                        ].map((pt, i) => (
+                          <g key={i}>
+                            <circle
+                              cx={pt.x}
+                              cy={pt.y}
+                              r="4.5"
+                              fill="#FFFFFF"
+                              stroke="#FF4D6D"
+                              strokeWidth="3"
+                              className="transition-all hover:scale-125 cursor-pointer"
+                            />
+                            <text
+                              x={pt.x}
+                              y="214"
+                              fontFamily="inherit"
+                              fontSize="11"
+                              fontWeight="600"
+                              fill="#736E9B"
+                              textAnchor="middle"
+                            >
+                              {pt.day}
+                            </text>
+                          </g>
+                        ))}
+
+                        {/* Active Saturday Indicator & Tooltip Badge */}
+                        <line x1="530" y1="36" x2="530" y2="190" stroke="#FF4D6D" strokeWidth="1.2" strokeDasharray="3 3" opacity="0.4" />
+                        <rect x="500" y="8" width="60" height="26" rx="8" fill="#171136" />
+                        <text x="530" y="25" fontFamily="inherit" fontSize="11" fontWeight="800" fill="#FFFFFF" textAnchor="middle">
+                          ৳8.8k
+                        </text>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Top Selling Products Card */}
+                <div className="lg:col-span-5 xl:col-span-4 bg-white rounded-[22px] border border-[#EAE3F7] p-6 shadow-[0_4px_25px_rgba(23,17,54,0.04)] flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-5">
+                      <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base sm:text-[16.5px] text-[#171136]">
+                        Top selling products
+                      </h2>
+                      <button
+                        onClick={() => navigateTo("products-all")}
+                        className="text-xs font-bold text-[#FF4D6D] hover:underline cursor-pointer"
+                      >
+                        View all
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
                       {[
-                        { m: "Jan", r: 40, v: 25, c: 8 },
-                        { m: "Feb", r: 52, v: 34, c: 11 },
-                        { m: "Mar", r: 65, v: 42, c: 14 },
-                        { m: "Apr", r: 78, v: 50, c: 18 },
-                        { m: "May", r: 70, v: 45, c: 16 },
-                        { m: "Jun", r: 88, v: 56, c: 22 },
-                        { m: "Jul", r: 92, v: 60, c: 24 },
-                        { m: "Aug", r: 100, v: 65, c: 28 },
-                      ].map((item, idx) => (
-                        <div key={idx} className="flex-1 flex flex-col items-center gap-1 h-full justify-end group cursor-pointer">
-                          <div className="w-full max-w-[32px] flex items-end justify-center gap-1 h-full">
+                        {
+                          name: "Neo Samurai",
+                          category: "Anime figures",
+                          sold: "312 sold",
+                          revenue: "৳10,918",
+                          percent: 92,
+                          bg: "#FFEAF0",
+                          image: "/images/figure-samurai-red.svg",
+                        },
+                        {
+                          name: "Galaxy Station",
+                          category: "Bricks & sets",
+                          sold: "248 sold",
+                          revenue: "৳19,837",
+                          percent: 74,
+                          bg: "#E4F7F8",
+                          image: "/images/bricks-stack-sunny.svg",
+                        },
+                        {
+                          name: "Robo Coder",
+                          category: "Coding kits",
+                          sold: "190 sold",
+                          revenue: "৳16,910",
+                          percent: 58,
+                          bg: "#FFF4DA",
+                          image: "/images/robot-yellow.svg",
+                        },
+                        {
+                          name: "Sky Ninja",
+                          category: "Anime figures",
+                          sold: "164 sold",
+                          revenue: "৳4,838",
+                          percent: 45,
+                          bg: "#EFE9FF",
+                          image: "/images/figure-ninja-gold.svg",
+                        },
+                      ].map((prod, idx) => (
+                        <div key={idx} className="space-y-1.5">
+                          <div className="flex items-center gap-3">
                             <div
-                              style={{ height: `${item.r}%` }}
-                              className="w-2.5 bg-gradient-to-t from-[#7B5CFF] to-[#A48EFF] rounded-t-md transition-all group-hover:brightness-110"
-                              title={`Revenue: ${item.r}%`}
-                            />
+                              className="w-11 h-11 rounded-xl flex items-center justify-center p-1 shrink-0 border border-black/5"
+                              style={{ backgroundColor: prod.bg }}
+                            >
+                              <img src={prod.image} alt={prod.name} className="w-full h-full object-contain" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <h4 className="font-[family-name:var(--font-display)] font-extrabold text-[13px] text-[#171136] truncate">
+                                  {prod.name}
+                                </h4>
+                                <span className="font-[family-name:var(--font-display)] font-extrabold text-[12.5px] text-[#171136] font-mono shrink-0 ml-2">
+                                  {prod.revenue}
+                                </span>
+                              </div>
+                              <p className="text-[10.5px] text-[#736E9B]">
+                                {prod.category} · {prod.sold}
+                              </p>
+                            </div>
+                          </div>
+                          {/* Progress track & fill bar */}
+                          <div className="w-full bg-[#F0EBFA] h-1.5 rounded-full overflow-hidden">
                             <div
-                              style={{ height: `${item.v}%` }}
-                              className="w-2.5 bg-gradient-to-t from-[#10B981] to-[#6EE7B7] rounded-t-md transition-all group-hover:brightness-110"
-                              title={`Vendor: ${item.v}%`}
-                            />
-                            <div
-                              style={{ height: `${item.c}%` }}
-                              className="w-2 bg-gradient-to-t from-[#FF922B] to-[#FFC078] rounded-t-md transition-all group-hover:brightness-110"
-                              title={`Commission: ${item.c}%`}
+                              className="h-full rounded-full bg-[#FF4D6D] transition-all duration-500"
+                              style={{ width: `${prod.percent}%` }}
                             />
                           </div>
-                          <span className="text-[11px] font-bold text-[#736E9B] mt-2">{item.m}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 </div>
-
-                {/* Order Status Donut Chart */}
-                <div className="bg-white rounded-3xl p-6 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.03)] flex flex-col justify-between">
-                  <div>
-                    <h2 className="font-[family-name:var(--font-display)] font-extrabold text-lg text-[#171136]">
-                      Order Status
-                    </h2>
-                    <p className="text-xs text-[#736E9B]">Current fulfillment distribution</p>
-
-                    {/* Donut graphic */}
-                    <div className="flex items-center justify-center py-6">
-                      <div className="relative w-40 h-40 rounded-full flex items-center justify-center">
-                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                          {/* Delivered arc (teal) */}
-                          <path
-                            className="text-[#10B981]"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            strokeDasharray="75, 100"
-                            fill="none"
-                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                          />
-                          {/* Processing arc (orange) */}
-                          <path
-                            className="text-[#FF922B]"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            strokeDasharray="15, 100"
-                            strokeDashoffset="-75"
-                            fill="none"
-                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                          />
-                          {/* Pending arc (purple) */}
-                          <path
-                            className="text-[#7B5CFF]"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            strokeDasharray="10, 100"
-                            strokeDashoffset="-90"
-                            fill="none"
-                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                          />
-                        </svg>
-
-                        <div className="absolute flex flex-col items-center justify-center text-center">
-                          <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl text-[#171136]">
-                            {stats.total_orders}
-                          </span>
-                          <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider">
-                            TOTAL
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Status Breakdown Legend */}
-                  <div className="space-y-2 pt-2 border-t border-[#F0EBF8] text-xs">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-[#171136]">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
-                        <span>Delivered</span>
-                      </div>
-                      <span className="font-extrabold text-[#10B981]">
-                        {statusDist.delivered || stats.total_orders}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-[#171136]">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#FF922B]" />
-                        <span>Processing</span>
-                      </div>
-                      <span className="font-extrabold text-[#FF922B]">
-                        {statusDist.processing || 0}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 font-bold text-[#171136]">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#7B5CFF]" />
-                        <span>Pending</span>
-                      </div>
-                      <span className="font-extrabold text-[#7B5CFF]">
-                        {statusDist.pending || 0}
-                      </span>
-                    </div>
-                  </div>
-                </div>
               </div>
 
-              {/* Recent Orders Preview Table */}
-              <div className="bg-white rounded-3xl p-6 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.03)]">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
-                      Recent Customer Orders
-                    </h2>
-                    <p className="text-xs text-[#736E9B]">Latest transactions across Brickverse store</p>
+              {/* Recent Orders Card */}
+              <div className="bg-white rounded-[22px] border border-[#EAE3F7] p-6 shadow-[0_4px_25px_rgba(23,17,54,0.04)]">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+                  <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base sm:text-[16.5px] text-[#171136]">
+                    Recent orders
+                  </h2>
+
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      onClick={() => {
+                        setOrdersMenuOpen(true);
+                        setActiveNav("orders-all");
+                      }}
+                      className="px-4 py-1.5 rounded-full bg-[#F6F1FF] border border-[#EAE3F7] text-xs font-semibold text-[#3B3468] hover:bg-[#EFE9FF] transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <IconFilter className="w-3.5 h-3.5 text-[#736E9B]" />
+                      <span>Filter</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setOrdersMenuOpen(true);
+                        setActiveNav("orders-all");
+                      }}
+                      className="px-4 py-1.5 rounded-full bg-[#171136] hover:bg-[#251c4a] text-white text-xs font-bold transition-all cursor-pointer"
+                    >
+                      View all
+                    </button>
                   </div>
-                  <button
-                    onClick={() => {
-                      setOrdersMenuOpen(true);
-                      setActiveNav("orders-all");
-                    }}
-                    className="text-xs font-bold text-[#FF4D6D] hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <span>View all orders</span>
-                    <IconArrowRight className="w-3 h-3" />
-                  </button>
                 </div>
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-[#EAE3F7] text-[#8A84A6]">
-                        <th className="pb-3 font-semibold">Order #</th>
-                        <th className="pb-3 font-semibold">Customer</th>
-                        <th className="pb-3 font-semibold">Status</th>
-                        <th className="pb-3 font-semibold">Total</th>
-                        <th className="pb-3 font-semibold">Date</th>
-                        <th className="pb-3 font-semibold text-right">Action</th>
+                      <tr className="border-b border-[#EAE3F7] text-[10.5px] font-bold text-[#736E9B] uppercase tracking-wider">
+                        <th className="pb-3 pr-4">ORDER</th>
+                        <th className="pb-3 px-4">CUSTOMER</th>
+                        <th className="pb-3 px-4">ITEMS</th>
+                        <th className="pb-3 px-4">DATE</th>
+                        <th className="pb-3 px-4">STATUS</th>
+                        <th className="pb-3 px-4 text-right">TOTAL</th>
+                        <th className="pb-3 pl-4 text-right">ACTION</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#F0EBF8]">
-                      {orders.slice(0, 5).map((o: any) => (
-                        <tr key={o.id} className="hover:bg-[#F8F6FD] transition-colors">
-                          <td className="py-3.5 font-extrabold text-[#171136]">{o.order_number}</td>
-                          <td className="py-3.5">
-                            <p className="font-bold text-[#171136]">{o.customer_name}</p>
-                            <p className="text-[11px] text-[#736E9B]">{o.customer_email}</p>
-                          </td>
-                          <td className="py-3.5">
-                            <span
-                              className={`px-2.5 py-1 rounded-full text-[10.5px] font-bold uppercase ${
-                                o.status === "delivered"
-                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                  : o.status === "shipped"
-                                  ? "bg-blue-50 text-blue-700 border border-blue-200"
-                                  : "bg-amber-50 text-amber-700 border border-amber-200"
-                              }`}
-                            >
-                              {o.status}
-                            </span>
-                          </td>
-                          <td className="py-3.5 font-extrabold text-[#171136]">৳{o.total_amount}</td>
-                          <td className="py-3.5 text-[#736E9B]">
-                            {new Date(o.created_at).toLocaleDateString()}
-                          </td>
-                          <td className="py-3.5 text-right">
-                            <button
-                              onClick={() => setSelectedOrder(o)}
-                              className="text-xs font-bold text-[#7B5CFF] hover:underline cursor-pointer"
-                            >
-                              Invoice ↗
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                    <tbody className="divide-y divide-[#F5F1FB]">
+                      {(orders.length > 0 ? orders.slice(0, 6) : [
+                        { id: 10482, order_number: "BV-10482", customer_name: "Priya Menon", status: "delivered", total_amount: "94.98", created_at: "2026-09-08", items_preview: "Neo Samurai + 1 more" },
+                        { id: 10481, order_number: "BV-10481", customer_name: "Daniel Cho", status: "processing", total_amount: "79.99", created_at: "2026-09-08", items_preview: "Galaxy Station" },
+                        { id: 10480, order_number: "BV-10480", customer_name: "Fahim Rahman", status: "shipped", total_amount: "89.00", created_at: "2026-09-07", items_preview: "Robo Coder" },
+                        { id: 10479, order_number: "BV-10479", customer_name: "Ayesha Khan", status: "delivered", total_amount: "146.50", created_at: "2026-09-07", items_preview: "Sky Ninja + 2 more" },
+                        { id: 10478, order_number: "BV-10478", customer_name: "Marcus Webb", status: "cancelled", total_amount: "49.99", created_at: "2026-09-06", items_preview: "Circuit Lab" },
+                        { id: 10477, order_number: "BV-10477", customer_name: "Nadia Islam", status: "delivered", total_amount: "18.00", created_at: "2026-09-06", items_preview: "Ronin Base" },
+                      ]).map((o: any) => {
+                        const statusColorsMap: Record<string, { bg: string; text: string; dot: string; label: string }> = {
+                          delivered: { bg: "#E7F8F0", text: "#2ECC8F", dot: "#2ECC8F", label: "Delivered" },
+                          processing: { bg: "#FFF4D6", text: "#C08A00", dot: "#C08A00", label: "Processing" },
+                          shipped: { bg: "#E7EDFF", text: "#3667D6", dot: "#3667D6", label: "Shipped" },
+                          cancelled: { bg: "#FFE6EA", text: "#D2455C", dot: "#D2455C", label: "Cancelled" },
+                        };
+                        const statusColors = statusColorsMap[String(o.status || "").toLowerCase()] || { bg: "#FFF4D6", text: "#C08A00", dot: "#C08A00", label: o.status || "Processing" };
+
+                        return (
+                          <tr key={o.id} className="hover:bg-[#F9F7FD] transition-colors">
+                            <td className="py-4 pr-4">
+                              <span className="font-[family-name:var(--font-display)] font-extrabold text-[12.5px] text-[#FF4D6D]">
+                                #{o.order_number || `BV-${o.id}`}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-7 h-7 rounded-full bg-[#EFE9FF] text-[#7B5CFF] flex items-center justify-center font-extrabold text-[11px] shrink-0">
+                                  {(o.customer_name ? o.customer_name[0] : "C").toUpperCase()}
+                                </div>
+                                <span className="font-semibold text-xs text-[#171136]">
+                                  {o.customer_name || "Valued Customer"}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="py-4 px-4 text-[#3B3468] font-medium text-xs">
+                              {o.items_preview || (o.items && o.items[0]?.name ? `${o.items[0].name}${o.items.length > 1 ? ` + ${o.items.length - 1} more` : ""}` : "Collector Items")}
+                            </td>
+                            <td className="py-4 px-4 text-[#736E9B] text-xs">
+                              {o.created_at ? new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Sep 8, 2026"}
+                            </td>
+                            <td className="py-4 px-4">
+                              <span
+                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold"
+                                style={{ backgroundColor: statusColors.bg, color: statusColors.text }}
+                              >
+                                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: statusColors.dot }} />
+                                {statusColors.label}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              <span className="font-[family-name:var(--font-display)] font-extrabold text-[13.5px] text-[#171136] font-mono">
+                                ৳{Number(o.total_amount || 0).toFixed(2)}
+                              </span>
+                            </td>
+                            <td className="py-4 pl-4 text-right">
+                              <button
+                                onClick={() => setSelectedOrder(o)}
+                                className="text-xs font-bold text-[#FF4D6D] hover:underline cursor-pointer"
+                              >
+                                Details ↗
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

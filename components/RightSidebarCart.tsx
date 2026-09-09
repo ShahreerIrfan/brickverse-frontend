@@ -28,9 +28,6 @@ export default function RightSidebarCart() {
     totalItems,
     subtotal,
     subtotalFormatted,
-    isFreeDeliveryUnlocked,
-    freeDeliveryThreshold,
-    freeDeliveryRemaining,
     updateQuantity,
     removeFromCart,
     clearCart,
@@ -76,11 +73,6 @@ export default function RightSidebarCart() {
     closeCart();
     router.push("/checkout");
   };
-
-  const deliveryProgressPercent = Math.min(
-    100,
-    Math.round((subtotal / freeDeliveryThreshold) * 100)
-  );
 
   return (
     <>
@@ -156,27 +148,6 @@ export default function RightSidebarCart() {
             <IconClose className="w-4 h-4" />
           </button>
         </div>
-
-        {/* --- Free Delivery Indicator Banner (Only shown when not yet unlocked) --- */}
-        {!isFreeDeliveryUnlocked && freeDeliveryRemaining > 0 && (
-          <div className="px-5 py-2.5 bg-[#F6FDF9] border-b border-[#E3F8EE] shrink-0">
-            <div className="flex items-center justify-between text-xs font-bold text-[#00B074]">
-              <span className="flex items-center gap-1.5">
-                <span className="text-sm">✓</span>
-                Add {formatPrice(freeDeliveryRemaining)} more for free delivery
-              </span>
-              <span className="text-[10.5px] font-extrabold text-[#736E9B]">
-                {deliveryProgressPercent}%
-              </span>
-            </div>
-            <div className="w-full h-1 bg-[#D9F5E8] rounded-full overflow-hidden mt-1.5">
-              <div
-                className="h-full bg-[#00D084] transition-all duration-500 rounded-full"
-                style={{ width: `${deliveryProgressPercent}%` }}
-              />
-            </div>
-          </div>
-        )}
 
         {/* --- Cart Items List (Scrollable Area) --- */}
         <div className="flex-1 overflow-y-auto divide-y divide-[#F0EBF8] px-5 py-2">
@@ -280,8 +251,8 @@ export default function RightSidebarCart() {
               </div>
               <div className="flex items-center justify-between">
                 <span>Delivery</span>
-                <span className="text-[#00B074] font-bold">
-                  {isFreeDeliveryUnlocked ? "FREE" : "Calculated at checkout"}
+                <span className="text-[#736E9B] font-bold">
+                  Calculated at checkout
                 </span>
               </div>
               <div className="flex items-center justify-between pt-2 border-t border-[#F0EBF8]">

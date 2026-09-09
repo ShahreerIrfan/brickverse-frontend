@@ -98,7 +98,7 @@ const AVAILABLE_COUPONS = [
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, totalItems, subtotal, subtotalFormatted, isFreeDeliveryUnlocked, clearCart } = useCart();
+  const { items, totalItems, subtotal, subtotalFormatted, clearCart } = useCart();
   const { user, isAuthenticated } = useAuth();
 
   // Form State
@@ -159,7 +159,7 @@ export default function CheckoutPage() {
   const discountRate = appliedCoupon ? appliedCoupon.discountPercent / 100 : 0;
   const discountAmount = subtotal * discountRate;
   const discountedSubtotal = Math.max(0, subtotal - discountAmount);
-  const shippingCost = isFreeDeliveryUnlocked || subtotal === 0 ? 0 : 60;
+  const shippingCost = subtotal === 0 ? 0 : 60;
   const totalAmount = discountedSubtotal + (discountedSubtotal > 0 ? shippingCost : 0);
 
   const handleApplyCoupon = () => {
@@ -724,8 +724,8 @@ export default function CheckoutPage() {
 
                 <div className="flex items-center justify-between">
                   <span>Shipping</span>
-                  <span className="font-bold text-[#2ECC8F]">
-                    {shippingCost === 0 ? "Free" : formatPrice(shippingCost)}
+                  <span className="font-bold text-[#3B3468] font-mono">
+                    {formatPrice(shippingCost)}
                   </span>
                 </div>
               </div>
