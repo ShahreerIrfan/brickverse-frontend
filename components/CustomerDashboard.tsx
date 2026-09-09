@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { User } from "./productData";
 import { useAuth } from "@/context/AuthContext";
-import { getCustomerOrders } from "@/lib/api";
+import { getCustomerOrders, trackOrder } from "@/lib/api";
 import {
   IconHome,
   IconBag,
@@ -20,19 +20,27 @@ import {
   IconCheck,
   IconArrowRight,
   IconShield,
+  IconTruck,
 } from "./icons";
 
 interface CustomerDashboardProps {
   user: User;
 }
 
-type DashboardTab = "account" | "orders" | "wishlist" | "coupons" | "password";
+type DashboardTab = "account" | "orders" | "track" | "wishlist" | "coupons" | "password";
 
 export default function CustomerDashboard({ user }: CustomerDashboardProps) {
   const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState<DashboardTab>("account");
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+
+  // Tracking state
+  const [searchOrderNumber, setSearchOrderNumber] = useState("");
+  const [trackedOrder, setTrackedOrder] = useState<any | null>(null);
+  const [trackingLoading, setTrackingLoading] = useState(false);
+  const [trackingError, setTrackingError] = useState("");
+  const [copiedTracking, setCopiedTracking] = useState(false);
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -43,10 +51,55 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
   useEffect(() => {
     getCustomerOrders(user.email)
       .then((data) => {
-        if (Array.isArray(data)) setOrders(data);
+        if (Array.isArray(data)) {
+          setOrders(data);
+          // If orders exist, pre-select the most recent order for tracking
+          if (data.length > 0 && !searchOrderNumber) {
+            setSearchOrderNumber(data[0].order_number);
+          }
+        }
       })
       .finally(() => setLoadingOrders(false));
   }, [user.email]);
+
+  const handleTrackOrder = async (orderNumToTrack?: string) => {
+    const target = (orderNumToTrack || searchOrderNumber || "").trim();
+    if (!target) {
+      setTrackingError("Please enter an order number to track.");
+      return;
+    }
+    setTrackingLoading(true);
+    setTrackingError("");
+    try {
+      const res = await trackOrder(target);
+      if (res && !res.error && res.order_number) {
+        setTrackedOrder(res);
+        setSearchOrderNumber(res.order_number);
+      } else {
+        setTrackingError(res?.error || "Order not found. Please check your order number.");
+        setTrackedOrder(null);
+      }
+    } catch (e) {
+      setTrackingError("Failed to track order. Please try again.");
+      setTrackedOrder(null);
+    } finally {
+      setTrackingLoading(false);
+    }
+  };
+
+  const selectAndTrackOrder = (orderNumber: string) => {
+    setSearchOrderNumber(orderNumber);
+    setActiveTab("track");
+    handleTrackOrder(orderNumber);
+  };
+
+  const copyToClipboard = (text: string) => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedTracking(true);
+      setTimeout(() => setCopiedTracking(false), 2000);
+    }
+  };
 
   const avatarInitial = (user.first_name ? user.first_name[0] : (user.email ? user.email[0] : "U")).toUpperCase();
   const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ") || user.first_name || user.email.split("@")[0];
@@ -162,6 +215,27 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
                     {orders.length}
                   </span>
                 )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("track");
+                  if (orders.length > 0 && !trackedOrder) {
+                    handleTrackOrder(orders[0].order_number);
+                  }
+                }}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm transition-all cursor-pointer ${
+                  activeTab === "track"
+                    ? "bg-[#FFF1F4] text-[#FF4D6D] font-extrabold"
+                    : "text-[#736E9B] hover:text-[#171136] hover:bg-[#F8F6FD] font-semibold"
+                }`}
+              >
+                <IconTruck className="w-4 h-4 shrink-0" />
+                <span>Track Order</span>
+                <span className="ml-auto text-[10px] font-bold bg-[#7B5CFF] text-white px-2 py-0.5 rounded-full">
+                  Live
+                </span>
               </button>
 
               <button
@@ -323,14 +397,19 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
 
                     <button
                       type="button"
-                      onClick={() => setActiveTab("coupons")}
+                      onClick={() => {
+                        setActiveTab("track");
+                        if (orders.length > 0 && !trackedOrder) {
+                          handleTrackOrder(orders[0].order_number);
+                        }
+                      }}
                       className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-2xl hover:bg-[#F8F6FD] transition-all group cursor-pointer"
                     >
-                      <div className="w-12 h-12 rounded-full bg-[#FFF9E6] text-[#FFC93C] flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <IconTag className="w-5 h-5" />
+                      <div className="w-12 h-12 rounded-full bg-[#E6F9F0] text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <IconTruck className="w-5 h-5" />
                       </div>
                       <span className="text-xs font-bold text-[#171136] text-center">
-                        My Coupons
+                        Track Order
                       </span>
                     </button>
 
@@ -506,13 +585,389 @@ export default function CustomerDashboard({ user }: CustomerDashboardProps) {
                           )}
                         </div>
 
-                        <div className="mt-3 pt-2 border-t border-[#EAE3F7] text-[11px] text-[#736E9B] flex items-center justify-between">
-                          <span>📍 {order.shipping_address}</span>
-                          <span className="text-emerald-600 font-bold">✓ 48h Dispatched</span>
+                        <div className="mt-3 pt-2 border-t border-[#EAE3F7] text-[11px] text-[#736E9B] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <span className="truncate">📍 {order.shipping_address}</span>
+                          <div className="flex items-center gap-2 self-end sm:self-auto">
+                            <span className="text-emerald-600 font-bold">✓ 48h Dispatched</span>
+                            <button
+                              type="button"
+                              onClick={() => selectAndTrackOrder(order.order_number)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFF1F4] hover:bg-[#FFE0E6] text-[#FF4D6D] font-bold text-xs rounded-xl border border-[#FF4D6D]/20 transition-all cursor-pointer shadow-2xs"
+                            >
+                              <IconTruck className="w-3.5 h-3.5" />
+                              Track Package
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
+                )}
+              </div>
+            )}
+
+            {/* --------------------------------------------------------------------- */}
+            {/* TAB: TRACK ORDER (Interactive Live Tracking System) */}
+            {/* --------------------------------------------------------------------- */}
+            {activeTab === "track" && (
+              <div className="flex flex-col gap-6">
+                {/* 1. Track Search Header Card */}
+                <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 sm:p-7 shadow-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <div>
+                      <h2 className="font-bold text-lg sm:text-xl text-[#171136] flex items-center gap-2">
+                        <span className="w-8 h-8 rounded-xl bg-[#FFF1F4] text-[#FF4D6D] flex items-center justify-center text-sm">
+                          🚚
+                        </span>
+                        Live Order Tracking
+                      </h2>
+                      <p className="text-xs text-[#736E9B] mt-1">
+                        Real-time delivery status, milestone updates, and carrier details
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F0FDF4] text-[#16A34A] text-xs font-bold rounded-full border border-[#BBF7D0]">
+                      <span className="w-2 h-2 rounded-full bg-[#16A34A] animate-pulse"></span>
+                      Live GPS Sync
+                    </span>
+                  </div>
+
+                  {/* Search Input Bar */}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleTrackOrder();
+                    }}
+                    className="flex flex-col sm:flex-row gap-3"
+                  >
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={searchOrderNumber}
+                        onChange={(e) => setSearchOrderNumber(e.target.value)}
+                        placeholder="Enter Order Number (e.g. #BV-1001 or BV-1001)..."
+                        className="w-full bg-[#F8F6FD] border border-[#EAE3F7] focus:border-[#FF4D6D] focus:bg-white rounded-2xl h-12 pl-11 pr-4 outline-none text-sm text-[#171136] transition-all font-medium"
+                      />
+                      <IconSearch className="w-5 h-5 text-[#736E9B] absolute left-3.5 top-3.5 pointer-events-none" />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={trackingLoading}
+                      className="bg-[#FF4D6D] hover:bg-[#ff3358] text-white font-bold text-xs sm:text-sm px-6 h-12 rounded-2xl transition-all shadow-md shadow-[#FF4D6D]/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shrink-0"
+                    >
+                      {trackingLoading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <span>Searching...</span>
+                        </>
+                      ) : (
+                        <>
+                          <IconTruck className="w-4 h-4" />
+                          <span>Track Package</span>
+                        </>
+                      )}
+                    </button>
+                  </form>
+
+                  {/* Quick Select Buttons from user's actual orders */}
+                  {orders.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-[#EAE3F7] flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-bold text-[#736E9B]">Quick Track:</span>
+                      {orders.map((o) => (
+                        <button
+                          key={o.id}
+                          type="button"
+                          onClick={() => selectAndTrackOrder(o.order_number)}
+                          className={`text-xs px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer border ${
+                            searchOrderNumber === o.order_number && trackedOrder?.order_number === o.order_number
+                              ? "bg-[#FFF1F4] text-[#FF4D6D] border-[#FF4D6D]/40 shadow-xs ring-2 ring-[#FF4D6D]/20"
+                              : "bg-[#F8F6FD] text-[#171136] border-[#EAE3F7] hover:bg-[#EFE9FF]"
+                          }`}
+                        >
+                          #{o.order_number} · ৳{o.total_amount}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {trackingError && (
+                    <div className="mt-4 p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold flex items-center gap-2">
+                      <span>⚠️</span>
+                      <span>{trackingError}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. Tracked Order Result Details */}
+                {trackedOrder ? (
+                  <div className="space-y-6">
+                    {/* Main Status & Stepper Card */}
+                    <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 sm:p-7 shadow-xs">
+                      {/* Top Bar */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#EAE3F7]">
+                        <div>
+                          <div className="flex items-center gap-2.5 flex-wrap">
+                            <h3 className="font-[family-name:var(--font-display)] font-extrabold text-xl sm:text-2xl text-[#171136]">
+                              Order #{trackedOrder.order_number}
+                            </h3>
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wide ${
+                                trackedOrder.status === "delivered"
+                                  ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                                  : trackedOrder.status === "shipped"
+                                  ? "bg-blue-100 text-blue-800 border border-blue-300"
+                                  : trackedOrder.status === "processing"
+                                  ? "bg-purple-100 text-purple-800 border border-purple-300"
+                                  : trackedOrder.status === "cancelled"
+                                  ? "bg-red-100 text-red-800 border border-red-300"
+                                  : "bg-amber-100 text-amber-800 border border-amber-300"
+                              }`}
+                            >
+                              ● {trackedOrder.status}
+                            </span>
+                          </div>
+                          <p className="text-xs text-[#736E9B] mt-1">
+                            Placed on {new Date(trackedOrder.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+
+                        {/* Tracking ID & Carrier Badge */}
+                        <div className="bg-[#F8F6FD] rounded-2xl p-3 sm:p-4 border border-[#EAE3F7] flex items-center justify-between sm:justify-start gap-4">
+                          <div>
+                            <p className="text-[10px] sm:text-[11px] font-bold text-[#736E9B] uppercase tracking-wider">Carrier & Tracking</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-xs sm:text-sm font-extrabold text-[#171136]">
+                                {trackedOrder.carrier || "Australia Post / Express"}
+                              </span>
+                              {trackedOrder.tracking_number && (
+                                <span className="text-xs font-mono font-bold text-[#7B5CFF]">
+                                  #{trackedOrder.tracking_number}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {trackedOrder.tracking_number && (
+                            <button
+                              type="button"
+                              onClick={() => copyToClipboard(trackedOrder.tracking_number)}
+                              className="bg-white hover:bg-[#EFE9FF] text-[#7B5CFF] text-xs font-bold px-3 py-2 rounded-xl border border-[#EAE3F7] transition-all cursor-pointer shadow-2xs shrink-0"
+                            >
+                              {copiedTracking ? "✓ Copied!" : "Copy #"}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Interactive Visual Stepper */}
+                      {(() => {
+                        const statusSteps = [
+                          { key: "pending", label: "Order Placed", desc: "Order verified & logged", icon: "📋" },
+                          { key: "processing", label: "Processing", desc: "Packed at warehouse", icon: "📦" },
+                          { key: "shipped", label: "Dispatched", desc: `In transit via ${trackedOrder.carrier || "Carrier"}`, icon: "🚚" },
+                          { key: "delivered", label: "Delivered", desc: "Package reached destination", icon: "🎉" },
+                        ];
+
+                        const statusRank: Record<string, number> = {
+                          pending: 0,
+                          processing: 1,
+                          shipped: 2,
+                          delivered: 3,
+                          cancelled: -1,
+                        };
+
+                        const currentRank = statusRank[trackedOrder.status?.toLowerCase()] ?? 0;
+                        const isCancelled = trackedOrder.status?.toLowerCase() === "cancelled";
+
+                        if (isCancelled) {
+                          return (
+                            <div className="my-6 p-5 rounded-2xl bg-red-50 border border-red-200 text-red-700 flex items-center gap-3">
+                              <span className="text-2xl">❌</span>
+                              <div>
+                                <h4 className="font-bold text-sm">Order Cancelled</h4>
+                                <p className="text-xs text-red-600 mt-0.5">
+                                  This order has been marked as cancelled. If payment was deducted, a refund will be credited back to you.
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        const progressPercentage = Math.min(100, Math.max(12, ((currentRank) / (statusSteps.length - 1)) * 100));
+
+                        return (
+                          <div className="py-6 sm:py-8">
+                            {/* Progress Bar Container */}
+                            <div className="relative mb-8 px-4 sm:px-10">
+                              {/* Background Track Line */}
+                              <div className="absolute top-1/2 left-8 right-8 h-2 bg-[#EAE3F7] -translate-y-1/2 rounded-full"></div>
+                              {/* Active Filled Line */}
+                              <div
+                                className="absolute top-1/2 left-8 h-2 bg-gradient-to-r from-[#FF4D6D] to-[#7B5CFF] -translate-y-1/2 rounded-full transition-all duration-700"
+                                style={{ width: `calc(${progressPercentage}% - 16px)` }}
+                              ></div>
+
+                              {/* Step Circles */}
+                              <div className="relative flex items-center justify-between">
+                                {statusSteps.map((step, idx) => {
+                                  const isCompleted = currentRank >= idx;
+                                  const isCurrent = currentRank === idx;
+
+                                  return (
+                                    <div key={step.key} className="flex flex-col items-center">
+                                      <div
+                                        className={`w-11 h-11 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-base sm:text-xl font-bold transition-all shadow-md ${
+                                          isCompleted
+                                            ? "bg-gradient-to-tr from-[#FF4D6D] to-[#7B5CFF] text-white shadow-[#FF4D6D]/30 ring-4 ring-[#FFF1F4]"
+                                            : "bg-white border-2 border-[#EAE3F7] text-[#736E9B]"
+                                        } ${isCurrent ? "scale-110 ring-4 ring-[#7B5CFF]/30" : ""}`}
+                                      >
+                                        {isCompleted ? step.icon : idx + 1}
+                                      </div>
+
+                                      <div className="text-center mt-3 max-w-[80px] sm:max-w-[120px]">
+                                        <p
+                                          className={`text-xs sm:text-sm font-extrabold ${
+                                            isCompleted ? "text-[#171136]" : "text-[#736E9B]"
+                                          }`}
+                                        >
+                                          {step.label}
+                                        </p>
+                                        <p className="text-[10px] sm:text-[11px] text-[#736E9B] mt-0.5 hidden sm:block">
+                                          {step.desc}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            {/* Live Checkpoint Box */}
+                            <div className="mt-4 p-4 sm:p-5 rounded-2xl bg-[#FFF6EE] border border-[#FFE3CC] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                              <div className="flex items-start sm:items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl bg-[#FF4D6D] text-white flex items-center justify-center shrink-0 shadow-xs">
+                                  <IconTruck className="w-5 h-5" />
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-xs sm:text-sm text-[#171136]">
+                                    {currentRank === 3
+                                      ? "Package successfully delivered to recipient!"
+                                      : currentRank === 2
+                                      ? "Package is in transit with carrier network"
+                                      : currentRank === 1
+                                      ? "Order is undergoing quality inspection and packing"
+                                      : "Order received & ready for dispatch"}
+                                  </h4>
+                                  <p className="text-[11.5px] text-[#736E9B] mt-0.5">
+                                    Destination Address: <strong className="text-[#171136]">{trackedOrder.shipping_address}</strong>
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-xs font-extrabold text-[#FF4D6D] bg-white px-3 py-1.5 rounded-xl border border-[#FFE3CC] shadow-2xs">
+                                  {currentRank === 3 ? "Delivered" : "48h Fast Dispatch"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* 2-Column Info Grid (Package Items + Shipping & Customer details) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      {/* Left 2 Cols: Package Items */}
+                      <div className="lg:col-span-2 bg-white rounded-3xl border border-[#EAE3F7] p-6 shadow-xs">
+                        <h3 className="font-bold text-sm sm:text-base text-[#171136] mb-4 flex items-center gap-2">
+                          <IconBag className="w-4 h-4 text-[#FF4D6D]" />
+                          Package Items ({trackedOrder.items?.length || 1})
+                        </h3>
+
+                        <div className="divide-y divide-[#EAE3F7]">
+                          {trackedOrder.items && trackedOrder.items.length > 0 ? (
+                            trackedOrder.items.map((item: any) => (
+                              <div key={item.id} className="py-3.5 flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-11 h-11 rounded-xl bg-[#F8F6FD] border border-[#EAE3F7] flex items-center justify-center text-lg shrink-0">
+                                    🧱
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-xs sm:text-sm text-[#171136]">
+                                      {item.product_name}
+                                    </p>
+                                    <p className="text-[11px] text-[#736E9B]">
+                                      Qty: <strong className="text-[#171136]">{item.quantity}</strong> × ৳{item.price}
+                                    </p>
+                                  </div>
+                                </div>
+                                <span className="font-extrabold text-xs sm:text-sm text-[#171136]">
+                                  ৳{(parseFloat(item.price) * item.quantity).toFixed(2)}
+                                </span>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="py-4 text-xs text-[#736E9B]">
+                              Brickverse Anime Figures & Collector Building Kits
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="mt-4 pt-4 border-t border-[#EAE3F7] flex items-center justify-between">
+                          <span className="font-bold text-xs sm:text-sm text-[#736E9B]">Total Paid</span>
+                          <span className="font-[family-name:var(--font-display)] font-extrabold text-lg text-[#FF4D6D]">
+                            ৳{trackedOrder.total_amount}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right 1 Col: Shipping & Support */}
+                      <div className="flex flex-col gap-6">
+                        {/* Delivery Destination Card */}
+                        <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 shadow-xs">
+                          <h3 className="font-bold text-sm sm:text-base text-[#171136] mb-3 flex items-center gap-2">
+                            <IconPin className="w-4 h-4 text-[#7B5CFF]" />
+                            Delivery Address
+                          </h3>
+                          <div className="space-y-1.5 text-xs text-[#736E9B]">
+                            <p className="font-bold text-[#171136]">{trackedOrder.customer_name}</p>
+                            <p className="leading-relaxed">{trackedOrder.shipping_address}</p>
+                            {trackedOrder.customer_phone && <p>📞 {trackedOrder.customer_phone}</p>}
+                            <p>✉️ {trackedOrder.customer_email}</p>
+                          </div>
+                        </div>
+
+                        {/* Assistance Support Card */}
+                        <div className="bg-[#EFE9FF] rounded-3xl border border-[#7B5CFF]/20 p-5">
+                          <h4 className="font-extrabold text-xs text-[#7B5CFF] uppercase tracking-wide">
+                            Need Help With Package?
+                          </h4>
+                          <p className="text-xs text-[#171136] font-medium mt-1">
+                            Contact Brickverse Collector Care for courier inquiries and delivery rescheduling.
+                          </p>
+                          <Link
+                            href="/"
+                            className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#7B5CFF] hover:bg-[#6847ff] px-4 py-2 rounded-xl transition-all shadow-xs"
+                          >
+                            Collector Support <IconArrowRight className="w-3.5 h-3.5" />
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  !trackingLoading && (
+                    <div className="bg-white rounded-3xl border border-[#EAE3F7] p-10 text-center shadow-xs">
+                      <div className="w-16 h-16 rounded-full bg-[#FFF1F4] text-[#FF4D6D] flex items-center justify-center mx-auto text-2xl mb-4">
+                        📦
+                      </div>
+                      <h3 className="font-bold text-base text-[#171136]">No Package Selected</h3>
+                      <p className="text-xs text-[#736E9B] mt-1 max-w-sm mx-auto">
+                        Enter an order number above or click on any of your recent orders to see real-time delivery checkpoints.
+                      </p>
+                    </div>
+                  )
                 )}
               </div>
             )}
