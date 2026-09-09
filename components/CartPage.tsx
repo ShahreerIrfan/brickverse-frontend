@@ -122,10 +122,7 @@ export default function CartPage() {
 
   // Coupon state
   const [couponInput, setCouponInput] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountPercent: number } | null>({
-    code: "BUILD10",
-    discountPercent: 10,
-  });
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountPercent: number } | null>(null);
   const [couponError, setCouponError] = useState("");
   const [showCouponsModal, setShowCouponsModal] = useState(false);
   const [savedForLaterIds, setSavedForLaterIds] = useState<string[]>([]);
@@ -524,7 +521,7 @@ export default function CartPage() {
                 <IconTruck className="w-4 h-4 text-[#FF4D6D] shrink-0" />
                 {isFreeDeliveryUnlocked ? (
                   <span className="text-[#00B074] font-bold">
-                    🎉 You have unlocked <span className="underline">FREE delivery</span>!
+                    Free delivery unlocked
                   </span>
                 ) : (
                   <span>
