@@ -1,4 +1,3 @@
-import AnnouncementBar from "@/components/AnnouncementBar";
 import Navbar from "@/components/Navbar";
 import NavLinks from "@/components/NavLinks";
 import CategoryRail from "@/components/CategoryRail";
@@ -20,7 +19,6 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col flex-1 bg-[#FFF6EE] pb-16 lg:pb-0">
-      <AnnouncementBar />
       <Navbar />
       <NavLinks />
 

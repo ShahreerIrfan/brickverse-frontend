@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import AnnouncementBar from "@/components/AnnouncementBar";
 import Navbar from "@/components/Navbar";
 import NavLinks from "@/components/NavLinks";
 import ProductBreadcrumb from "@/components/ProductDetail/ProductBreadcrumb";
@@ -33,7 +32,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <StickyAddToCart product={product} />
 
       {/* Top Header Bars */}
-      <AnnouncementBar />
       <Navbar />
       <NavLinks />
 

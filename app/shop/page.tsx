@@ -1,4 +1,3 @@
-import AnnouncementBar from "@/components/AnnouncementBar";
 import Navbar from "@/components/Navbar";
 import NavLinks from "@/components/NavLinks";
 import ShopCatalog from "@/components/ShopCatalog";
@@ -17,7 +16,6 @@ export default async function ShopPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#FFF6EE] pb-16 lg:pb-0">
-      <AnnouncementBar />
       <Navbar />
       <NavLinks />
 
