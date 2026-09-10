@@ -688,8 +688,8 @@ export async function addStoreProduct(storeId: number | string, productId: strin
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ productId, qty }),
     });
-    const data = await res.json();
-    return { success: res.ok, data };
+    const data = await res.json().catch(() => null);
+    return { success: res.ok, data, error: !res.ok ? (data?.error || "Failed to add product") : undefined };
   } catch (error) {
     return { success: false, error: "Failed to add product" };
   }
@@ -702,8 +702,8 @@ export async function recordStoreSale(storeId: number | string, lineId: number, 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ lineId, qty }),
     });
-    const data = await res.json();
-    return { success: res.ok, data };
+    const data = await res.json().catch(() => null);
+    return { success: res.ok, data, error: !res.ok ? (data?.error || "Failed to record sale") : undefined };
   } catch (error) {
     return { success: false, error: "Failed to record sale" };
   }
@@ -716,8 +716,8 @@ export async function recordStoreReturn(storeId: number | string, lineId: number
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ lineId, qty }),
     });
-    const data = await res.json();
-    return { success: res.ok, data };
+    const data = await res.json().catch(() => null);
+    return { success: res.ok, data, error: !res.ok ? (data?.error || "Failed to record return") : undefined };
   } catch (error) {
     return { success: false, error: "Failed to record return" };
   }
@@ -730,8 +730,8 @@ export async function recordStorePayment(storeId: number | string, amount: numbe
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ amount, payment_date: paymentDate, note }),
     });
-    const data = await res.json();
-    return { success: res.ok, data };
+    const data = await res.json().catch(() => null);
+    return { success: res.ok, data, error: !res.ok ? (data?.error || "Failed to record payment") : undefined };
   } catch (error) {
     return { success: false, error: "Failed to record payment" };
   }
