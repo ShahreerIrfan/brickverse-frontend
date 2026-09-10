@@ -88,11 +88,28 @@ export default function PartnerStoreForm({
     return prod?.tradePrice || "৳0.00";
   };
 
+  const getProductStock = (prodId: string) => {
+    const prod = catalogProducts.find((p) => String(p.id) === String(prodId));
+    return typeof prod?.stock === "number" ? prod.stock : 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
       showToast?.("Store name is required");
       return;
+    }
+
+    // Validate starting stock against warehouse availability
+    for (const row of stockRows) {
+      if (row.productId && row.qty > 0) {
+        const prod = catalogProducts.find((p) => String(p.id) === String(row.productId));
+        const avail = typeof prod?.stock === "number" ? prod.stock : 0;
+        if (row.qty > avail) {
+          showToast?.(`Only ${avail} unit(s) of ${prod?.name || "selected product"} are available in warehouse stock.`);
+          return;
+        }
+      }
     }
 
     setSubmitting(true);
@@ -304,21 +321,40 @@ export default function PartnerStoreForm({
                         onChange={(e) => updateRowProduct(idx, e.target.value)}
                         className="w-full px-3 py-2 text-xs font-semibold bg-white border border-[#EAE3F7] rounded-xl outline-none focus:border-[#FF4D6D] cursor-pointer"
                       >
-                        {catalogProducts.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name} ({p.sku || "KS-PROD"})
-                          </option>
-                        ))}
+                        {catalogProducts.map((p) => {
+                          const avail = typeof p.stock === "number" ? p.stock : 0;
+                          return (
+                            <option key={p.id} value={p.id}>
+                              {p.name} ({p.sku || "KS-PROD"}) • {avail} in stock
+                            </option>
+                          );
+                        })}
                       </select>
                     </div>
 
-                    <div className="w-32 shrink-0">
+                    <div className="w-28 shrink-0">
                       <label className="text-[11px] font-bold text-[#736E9B] block mb-1">
                         Trade Price (TP)
                       </label>
                       <div className="px-3 py-2 text-xs font-mono font-bold bg-white/70 border border-[#EAE3F7] rounded-xl text-[#7B5CFF]">
                         {tp}
                       </div>
+                    </div>
+
+                    <div className="w-28 shrink-0">
+                      <label className="text-[11px] font-bold text-[#736E9B] block mb-1">
+                        Warehouse Stock
+                      </label>
+                      {(() => {
+                        const avail = getProductStock(row.productId);
+                        return (
+                          <div className={`px-2.5 py-2 text-xs font-bold rounded-xl border text-center ${
+                            avail > 0 ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-600 border-red-200"
+                          }`}>
+                            {avail} in stock
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     <div className="w-24 shrink-0">
@@ -328,6 +364,7 @@ export default function PartnerStoreForm({
                       <input
                         type="number"
                         min={1}
+                        max={getProductStock(row.productId) || 1}
                         value={row.qty}
                         onChange={(e) => updateRowQty(idx, parseInt(e.target.value) || 1)}
                         className="w-full px-3 py-2 text-xs font-bold bg-white border border-[#EAE3F7] rounded-xl outline-none focus:border-[#FF4D6D] text-center"

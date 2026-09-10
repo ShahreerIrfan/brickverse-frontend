@@ -148,13 +148,20 @@ export default function PartnerStoreDetail({
   const handleAddProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProductId || addProductQty <= 0) return;
+    
+    const availableStock = typeof selectedProductObj?.stock === "number" ? selectedProductObj.stock : 0;
+    if (addProductQty > availableStock) {
+      showToast?.(`Only ${availableStock} unit(s) of ${selectedProductObj?.name || "this product"} are available in warehouse stock.`);
+      return;
+    }
+
     setAddingProduct(true);
     try {
       const res = await addStoreProduct(storeId, selectedProductId, addProductQty);
       if (res.success) {
         showToast?.("Product inventory assigned to store successfully!");
         setIsAddProductOpen(false);
-        setAddProductQty(5);
+        setAddProductQty(1);
         fetchStoreData();
       } else {
         showToast?.(res.error || "Failed to add product to store");
@@ -737,11 +744,14 @@ export default function PartnerStoreDetail({
                   onChange={(e) => setSelectedProductId(e.target.value)}
                   className="w-full px-3.5 py-2.5 text-xs font-semibold bg-white border border-[#EAE3F7] rounded-xl outline-none focus:border-[#FF4D6D] cursor-pointer"
                 >
-                  {filteredCatalog.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} (TP: {p.tradePrice || "৳0.00"}, Stock: {p.stock ?? 50})
-                    </option>
-                  ))}
+                  {filteredCatalog.map((p) => {
+                    const avail = typeof p.stock === "number" ? p.stock : 0;
+                    return (
+                      <option key={p.id} value={p.id}>
+                        {p.name} (TP: {p.tradePrice || "৳0.00"} • {avail} in stock)
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
 
@@ -754,25 +764,40 @@ export default function PartnerStoreDetail({
                     </span>
                   </div>
                   <div>
-                    <span className="text-[#736E9B] block">Warehouse Stock:</span>
-                    <span className="font-bold text-[#171136]">
-                      {selectedProductObj.stock ?? 50} units
+                    <span className="text-[#736E9B] block">Available Warehouse Stock:</span>
+                    <span className={`font-extrabold text-sm ${
+                      (selectedProductObj.stock ?? 0) > 0 ? "text-[#1E9E64]" : "text-[#FF4D6D]"
+                    }`}>
+                      {selectedProductObj.stock ?? 0} units
                     </span>
                   </div>
                 </div>
               )}
 
               <div>
-                <label className="text-xs font-bold text-[#736E9B] block mb-1">
-                  Quantity Given
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-[#736E9B]">
+                    Quantity Given
+                  </label>
+                  {selectedProductObj && (
+                    <span className="text-[11px] text-[#736E9B]">
+                      Max available: <strong className="text-[#171136]">{selectedProductObj.stock ?? 0}</strong>
+                    </span>
+                  )}
+                </div>
                 <input
                   type="number"
                   min={1}
+                  max={selectedProductObj?.stock ?? 1}
                   value={addProductQty}
                   onChange={(e) => setAddProductQty(parseInt(e.target.value) || 1)}
                   className="w-full px-3.5 py-2.5 text-xs font-bold bg-white border border-[#EAE3F7] rounded-xl outline-none focus:border-[#FF4D6D]"
                 />
+                {selectedProductObj && addProductQty > (selectedProductObj.stock ?? 0) && (
+                  <p className="text-[11px] text-[#FF4D6D] font-bold mt-1">
+                    Requested quantity exceeds available warehouse stock ({selectedProductObj.stock ?? 0} available).
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-2.5 pt-2">
@@ -785,7 +810,12 @@ export default function PartnerStoreDetail({
                 </button>
                 <button
                   type="submit"
-                  disabled={addingProduct || !selectedProductId}
+                  disabled={
+                    addingProduct ||
+                    !selectedProductId ||
+                    (selectedProductObj?.stock ?? 0) <= 0 ||
+                    addProductQty > (selectedProductObj?.stock ?? 0)
+                  }
                   className="px-5 py-2.5 rounded-full bg-[#FF4D6D] hover:bg-[#ff3358] text-white text-xs font-extrabold shadow-xs active:scale-95 transition-all cursor-pointer disabled:opacity-50"
                 >
                   {addingProduct ? "Adding..." : "Transfer Stock"}
