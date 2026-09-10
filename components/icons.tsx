@@ -645,3 +645,15 @@ export function IconDots({ className, style }: IconProps) {
   );
 }
 
+export function IconPartnerStore({ className, style }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} style={style} fill="none">
+      <path d="M3 9l1.5-5h15L21 9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 9v10h16V9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="4" y1="9" x2="20" y2="9" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+      <rect x="9.5" y="14" width="5" height="5" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+

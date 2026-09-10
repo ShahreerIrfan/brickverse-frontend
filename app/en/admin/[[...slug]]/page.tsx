@@ -22,8 +22,19 @@ export default function AdminRoutePage({ params }: PageProps) {
   // /en/admin/products/taxonomy     -> products-taxonomy
   // /en/admin/orders                -> orders-all
   // /en/admin/users                 -> users-all
-  let initialNav: "dashboard" | "products-all" | "products-form" | "products-taxonomy" | "orders-all" | "orders-single" | "users-all" = "dashboard";
+  let initialNav:
+    | "dashboard"
+    | "products-all"
+    | "products-form"
+    | "products-taxonomy"
+    | "orders-all"
+    | "orders-single"
+    | "users-all"
+    | "stores-all"
+    | "stores-single"
+    | "stores-form" = "dashboard";
   let initialOrderId: string | undefined = undefined;
+  let initialStoreId: string | undefined = undefined;
 
   if (slug.length >= 2 && slug[0] === "products") {
     if (slug[1] === "new" || slug[1] === "edit" || slug[1] === "add") {
@@ -44,6 +55,15 @@ export default function AdminRoutePage({ params }: PageProps) {
     }
   } else if (slug[0] === "users") {
     initialNav = "users-all";
+  } else if (slug[0] === "stores") {
+    if (slug.length >= 2 && slug[1] === "new") {
+      initialNav = "stores-form";
+    } else if (slug.length >= 2) {
+      initialNav = "stores-single";
+      initialStoreId = slug[1];
+    } else {
+      initialNav = "stores-all";
+    }
   }
 
   useEffect(() => {
@@ -69,5 +89,12 @@ export default function AdminRoutePage({ params }: PageProps) {
     return null;
   }
 
-  return <AdminDashboard user={user} initialNav={initialNav} initialOrderId={initialOrderId} />;
+  return (
+    <AdminDashboard
+      user={user}
+      initialNav={initialNav}
+      initialOrderId={initialOrderId}
+      initialStoreId={initialStoreId}
+    />
+  );
 }

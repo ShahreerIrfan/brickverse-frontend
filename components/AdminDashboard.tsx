@@ -26,6 +26,7 @@ import {
   updateUserRole,
   createUser,
   deleteUser,
+  getAllStores,
 } from "@/lib/api";
 import {
   IconShield,
@@ -43,6 +44,7 @@ import {
   IconBox,
   IconOrders,
   IconUsers,
+  IconPartnerStore,
   IconLayers,
   IconChevronDown,
   IconChevronRight,
@@ -67,16 +69,30 @@ import {
   IconWallet,
   IconDots,
 } from "./icons";
+import PartnerStoresList from "./admin/PartnerStoresList";
+import PartnerStoreDetail from "./admin/PartnerStoreDetail";
+import PartnerStoreForm from "./admin/PartnerStoreForm";
 
 interface AdminDashboardProps {
   user: User;
   initialNav?: ActiveNav;
   initialOrderId?: string;
+  initialStoreId?: string;
 }
 
-type ActiveNav = "dashboard" | "products-all" | "products-form" | "products-taxonomy" | "orders-all" | "orders-single" | "users-all";
+type ActiveNav =
+  | "dashboard"
+  | "products-all"
+  | "products-form"
+  | "products-taxonomy"
+  | "orders-all"
+  | "orders-single"
+  | "users-all"
+  | "stores-all"
+  | "stores-single"
+  | "stores-form";
 
-export default function AdminDashboard({ user, initialNav, initialOrderId }: AdminDashboardProps) {
+export default function AdminDashboard({ user, initialNav, initialOrderId, initialStoreId }: AdminDashboardProps) {
   const { logout } = useAuth();
 
   // Dynamic user display name & avatar resolution (First Name, Last Name, Avatar initial)
@@ -102,6 +118,8 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
   const [productsMenuOpen, setProductsMenuOpen] = useState(initialNav ? initialNav.startsWith("products") : false);
   const [ordersMenuOpen, setOrdersMenuOpen] = useState(initialNav ? initialNav.startsWith("orders") : false);
   const [usersMenuOpen, setUsersMenuOpen] = useState(initialNav ? initialNav.startsWith("users") : false);
+  const [storesMenuOpen, setStoresMenuOpen] = useState(initialNav ? initialNav.startsWith("stores") : false);
+  const [currentStoreId, setCurrentStoreId] = useState<string | undefined>(initialStoreId);
 
   // Profile Dropdown Popover
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -131,6 +149,9 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
     "orders-all": "/en/admin/orders",
     "orders-single": "/en/admin/orders",
     "users-all": "/en/admin/users",
+    "stores-all": "/en/admin/stores",
+    "stores-form": "/en/admin/stores/new",
+    "stores-single": "/en/admin/stores",
   };
 
   const navigateTo = (nav: ActiveNav, customUrl?: string) => {
@@ -138,6 +159,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
     if (nav.startsWith("products")) setProductsMenuOpen(true);
     if (nav.startsWith("orders")) setOrdersMenuOpen(true);
     if (nav.startsWith("users")) setUsersMenuOpen(true);
+    if (nav.startsWith("stores")) setStoresMenuOpen(true);
     const targetUrl = customUrl || navToUrlMap[nav] || "/en/admin";
     if (typeof window !== "undefined" && window.location.pathname !== targetUrl) {
       window.history.pushState(null, "", targetUrl);
@@ -150,8 +172,15 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
       if (initialNav.startsWith("products")) setProductsMenuOpen(true);
       if (initialNav.startsWith("orders")) setOrdersMenuOpen(true);
       if (initialNav.startsWith("users")) setUsersMenuOpen(true);
+      if (initialNav.startsWith("stores")) setStoresMenuOpen(true);
     }
   }, [initialNav]);
+
+  useEffect(() => {
+    if (initialStoreId) {
+      setCurrentStoreId(initialStoreId);
+    }
+  }, [initialStoreId]);
 
   // Handle browser back/forward buttons
   useEffect(() => {
@@ -175,6 +204,16 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
       } else if (path.includes("/users")) {
         setActiveNav("users-all");
         setUsersMenuOpen(true);
+      } else if (path.includes("/stores/new")) {
+        setActiveNav("stores-form");
+        setStoresMenuOpen(true);
+      } else if (path.includes("/stores/") && path.split("/stores/")[1]) {
+        setActiveNav("stores-single");
+        setCurrentStoreId(path.split("/stores/")[1]);
+        setStoresMenuOpen(true);
+      } else if (path.includes("/stores")) {
+        setActiveNav("stores-all");
+        setStoresMenuOpen(true);
       } else if (path.includes("/en/admin") || path.includes("/admin")) {
         setActiveNav("dashboard");
       }
@@ -210,6 +249,8 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
   const [categories, setCategories] = useState<Category[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [usersList, setUsersList] = useState<any[]>([]);
+  const [stores, setStores] = useState<any[]>([]);
+  const [loadingStores, setLoadingStores] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Filter & Search states
@@ -340,22 +381,37 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
     }
   };
 
+  // Fetch stores separately or refresh them
+  const fetchStoresData = async () => {
+    setLoadingStores(true);
+    try {
+      const strs = await getAllStores();
+      if (strs && Array.isArray(strs)) setStores(strs);
+    } catch (err) {
+      console.error("Failed fetching partner stores:", err);
+    } finally {
+      setLoadingStores(false);
+    }
+  };
+
   // Fetch all live backend data
   const fetchData = async () => {
     setRefreshing(true);
     try {
-      const [stats, prods, cats, ords, usrs] = await Promise.all([
+      const [stats, prods, cats, ords, usrs, strs] = await Promise.all([
         getAdminStats(),
         getAllProducts(),
         getCategories(),
         getAllOrders(),
         getAllUsers(),
+        getAllStores(),
       ]);
       if (stats) setStatsData(stats);
       if (prods && Array.isArray(prods)) setProducts(prods);
       if (cats && Array.isArray(cats)) setCategories(cats);
       if (ords && Array.isArray(ords)) setOrders(ords);
       if (usrs && Array.isArray(usrs)) setUsersList(usrs);
+      if (strs && Array.isArray(strs)) setStores(strs);
     } catch (err) {
       console.error("Failed fetching admin data:", err);
     } finally {
@@ -363,6 +419,10 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
       setRefreshing(false);
     }
   };
+
+  const overdueStoreCount = useMemo(() => {
+    return stores.filter((s) => s.settlementStatus === "overdue").length;
+  }, [stores]);
 
   useEffect(() => {
     fetchData();
@@ -1290,6 +1350,55 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-current" />
                     <span>All Users</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 5) Partner Stores Accordion */}
+            <div className="space-y-1">
+              <button
+                onClick={() => setStoresMenuOpen(!storesMenuOpen)}
+                title="Partner Stores"
+                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-bold text-xs sm:text-[13.5px] transition-all cursor-pointer relative ${
+                  activeNav.startsWith("stores")
+                    ? "bg-[#2A2159] text-white before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-sm before:bg-[#FF4D6D]"
+                    : "text-[#C7C0E8] hover:bg-[#2A2159]/60 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <IconPartnerStore className={`w-4 h-4 shrink-0 ${activeNav.startsWith("stores") ? "text-white" : "text-[#A79FD1]"}`} />
+                  {!sidebarCollapsed && <span>Partner Stores</span>}
+                </div>
+                {!sidebarCollapsed && (
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full bg-[#FF4D6D] text-white text-[10.5px] font-extrabold">
+                      {overdueStoreCount}
+                    </span>
+                    <IconChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${storesMenuOpen ? "rotate-0 text-white" : "-rotate-90 text-[#A79FD1]"}`} />
+                  </div>
+                )}
+              </button>
+
+              {storesMenuOpen && !sidebarCollapsed && (
+                <div className="pl-8 pr-1 py-1 space-y-1">
+                  <button
+                    onClick={() => navigateTo("stores-all")}
+                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                      activeNav === "stores-all" ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]" : "text-[#A79FD1] hover:text-white hover:bg-[#2A2159]/40"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    <span>All Stores</span>
+                  </button>
+                  <button
+                    onClick={() => navigateTo("stores-form")}
+                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                      activeNav === "stores-form" ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]" : "text-[#A79FD1] hover:text-white hover:bg-[#2A2159]/40"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    <span>Add Store</span>
                   </button>
                 </div>
               )}
@@ -3601,6 +3710,55 @@ export default function AdminDashboard({ user, initialNav, initialOrderId }: Adm
                 </div>
               </div>
             </div>
+          )}
+
+          {/* ============================================================= */}
+          {/* VIEW: PARTNER STORES LIST */}
+          {/* ============================================================= */}
+          {activeNav === "stores-all" && (
+            <PartnerStoresList
+              stores={stores}
+              loading={loadingStores}
+              onRefresh={fetchStoresData}
+              onOpenStore={(id) => {
+                setCurrentStoreId(String(id));
+                navigateTo("stores-single", `/en/admin/stores/${id}`);
+              }}
+              onCreateStore={() => navigateTo("stores-form")}
+            />
+          )}
+
+          {/* ============================================================= */}
+          {/* VIEW: PARTNER STORE DETAIL */}
+          {/* ============================================================= */}
+          {activeNav === "stores-single" && currentStoreId && (
+            <PartnerStoreDetail
+              storeId={currentStoreId}
+              onBack={() => {
+                fetchStoresData();
+                navigateTo("stores-all");
+              }}
+              showToast={showToast}
+            />
+          )}
+
+          {/* ============================================================= */}
+          {/* VIEW: PARTNER STORE FORM */}
+          {/* ============================================================= */}
+          {activeNav === "stores-form" && (
+            <PartnerStoreForm
+              onSaved={(newStore) => {
+                fetchStoresData();
+                if (newStore?.id) {
+                  setCurrentStoreId(String(newStore.id));
+                  navigateTo("stores-single", `/en/admin/stores/${newStore.id}`);
+                } else {
+                  navigateTo("stores-all");
+                }
+              }}
+              onCancel={() => navigateTo("stores-all")}
+              showToast={showToast}
+            />
           )}
         </main>
       </div>

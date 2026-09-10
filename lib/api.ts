@@ -614,4 +614,138 @@ export async function createOrder(orderData: {
   }
 }
 
+// -------------------------------------------------------------
+// Partner Stores App APIs
+// -------------------------------------------------------------
+export async function getAllStores(params?: { status?: string; search?: string }) {
+  try {
+    let url = `${getApiBaseUrl()}/stores/`;
+    const q: string[] = [];
+    if (params?.status && params.status !== "all") q.push(`status=${encodeURIComponent(params.status)}`);
+    if (params?.search) q.push(`search=${encodeURIComponent(params.search)}`);
+    if (q.length) url += `?${q.join("&")}`;
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (error) {
+    console.warn("[API] Failed to fetch stores:", error);
+    return [];
+  }
+}
+
+export async function getStoreById(id: number | string) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/stores/${id}/`, { cache: "no-store" });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.warn("[API] Failed to fetch store by id:", error);
+    return null;
+  }
+}
+
+export async function createStore(data: any) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/stores/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    return { success: res.ok, data: result };
+  } catch (error) {
+    return { success: false, error: "Failed to create store" };
+  }
+}
+
+export async function updateStore(id: number | string, data: any) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/stores/${id}/`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    return { success: res.ok, data: result };
+  } catch (error) {
+    return { success: false, error: "Failed to update store" };
+  }
+}
+
+export async function deleteStore(id: number | string) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/stores/${id}/`, { method: "DELETE" });
+    return { success: res.ok };
+  } catch (error) {
+    return { success: false };
+  }
+}
+
+export async function addStoreProduct(storeId: number | string, productId: string, qty: number) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/stores/${storeId}/add-product/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId, qty }),
+    });
+    const data = await res.json();
+    return { success: res.ok, data };
+  } catch (error) {
+    return { success: false, error: "Failed to add product" };
+  }
+}
+
+export async function recordStoreSale(storeId: number | string, lineId: number, qty: number) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/stores/${storeId}/record-sale/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lineId, qty }),
+    });
+    const data = await res.json();
+    return { success: res.ok, data };
+  } catch (error) {
+    return { success: false, error: "Failed to record sale" };
+  }
+}
+
+export async function recordStoreReturn(storeId: number | string, lineId: number, qty: number) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/stores/${storeId}/record-return/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lineId, qty }),
+    });
+    const data = await res.json();
+    return { success: res.ok, data };
+  } catch (error) {
+    return { success: false, error: "Failed to record return" };
+  }
+}
+
+export async function recordStorePayment(storeId: number | string, amount: number, paymentDate: string, note?: string) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/stores/${storeId}/payments/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount, payment_date: paymentDate, note }),
+    });
+    const data = await res.json();
+    return { success: res.ok, data };
+  } catch (error) {
+    return { success: false, error: "Failed to record payment" };
+  }
+}
+
+export async function getStoreSettlement(storeId: number | string) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/stores/${storeId}/settlement/`, { cache: "no-store" });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (error) {
+    return [];
+  }
+}
+
+
 
