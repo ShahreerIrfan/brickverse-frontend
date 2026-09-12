@@ -21,6 +21,7 @@ import { CategoryGlyph } from "./CategoryRail";
 import type { Product, Category, SubCategory } from "./productData";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { getMediaUrl } from "@/lib/api";
 
 type ShopCatalogProps = {
   initialProducts: Product[];
@@ -496,11 +497,11 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
                         className="w-full h-full flex items-center justify-center p-1"
                       >
                         <Image
-                          src={product.image || "/images/figure-samurai-red.svg"}
+                          src={getMediaUrl(product.image || product.image_file)}
                           alt={product.name}
                           width={140}
                           height={160}
-                          className="w-[70px] sm:w-[110px] h-auto max-h-[115px] sm:max-h-[160px] object-contain transition-transform group-hover:scale-105 drop-shadow-sm"
+                          className="w-auto h-auto max-h-[115px] sm:max-h-[160px] max-w-[85%] object-contain transition-transform group-hover:scale-105 drop-shadow-sm"
                         />
                       </Link>
                     </div>
@@ -644,7 +645,7 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
 
             <div className="sm:w-1/2 h-[180px] sm:h-auto bg-[#FAF7FF] rounded-2xl flex items-center justify-center p-4">
               <Image
-                src={quickViewProduct.image || "/images/figure-samurai-red.svg"}
+                src={getMediaUrl(quickViewProduct.image || quickViewProduct.image_file)}
                 alt={quickViewProduct.name}
                 width={180}
                 height={220}

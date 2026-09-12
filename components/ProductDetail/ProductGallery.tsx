@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { IconHeart, IconSpark, IconZoomIn, IconClose } from "../icons";
 import type { Product } from "../productData";
+import { getMediaUrl } from "@/lib/api";
 
 interface ProductGalleryProps {
   product: Product;
@@ -17,11 +18,11 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
 
   // Available thumbnail images / angles from product data and gallery
   const thumbs = [
-    { type: "image", src: product.image || "/images/figure-samurai-red.svg", label: "Primary View", bg: "#FFEAF0" },
+    { type: "image", src: getMediaUrl(product.image || product.image_file), label: "Primary View", bg: "#FFEAF0" },
     ...(product.gallery_images && product.gallery_images.length > 0
       ? product.gallery_images.map((g, idx) => ({
           type: "image",
-          src: g.imageUrl || g.image_url || "/images/figure-samurai-red.svg",
+          src: getMediaUrl(g.imageUrl || g.image_url),
           label: `Gallery ${idx + 1}`,
           bg: "#F4F1FD",
         }))

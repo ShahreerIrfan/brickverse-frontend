@@ -5,6 +5,7 @@ import Image from "next/image";
 import { IconHeart, IconBag, IconStar } from "./icons";
 import type { Product } from "./productData";
 import { useCart } from "@/context/CartContext";
+import { getMediaUrl } from "@/lib/api";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
@@ -26,6 +27,8 @@ export default function ProductCard({ product }: { product: Product }) {
     addToCart(product, 1, true);
   };
 
+  const imageSrc = getMediaUrl(product.image || product.image_file);
+
   return (
     <div className="relative bg-white border border-[#EAE3F7] rounded-2xl sm:rounded-3xl shadow-[0_16px_0_-6px_rgba(23,17,54,0.09)] overflow-hidden flex flex-col group transition-transform hover:-translate-y-1">
       <Link
@@ -43,7 +46,7 @@ export default function ProductCard({ product }: { product: Product }) {
         <button
           type="button"
           aria-label="Add to wishlist"
-          className="absolute right-2.5 sm:right-5 top-2.5 sm:top-4 w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-white flex items-center justify-center z-10 text-[#736E9B] hover:text-[#FF4D6D] transition-colors shadow-xs cursor-pointer"
+          className="absolute right-2.5 sm:left-auto right-2.5 sm:right-5 top-2.5 sm:top-4 w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-white flex items-center justify-center z-10 text-[#736E9B] hover:text-[#FF4D6D] transition-colors shadow-xs cursor-pointer"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -52,11 +55,11 @@ export default function ProductCard({ product }: { product: Product }) {
           <IconHeart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
         <Image
-          src={product.image}
+          src={imageSrc}
           alt={product.name}
-          width={130}
+          width={140}
           height={170}
-          className="w-[68px] sm:w-[130px] h-auto transition-transform group-hover:scale-105"
+          className="w-auto h-auto max-h-[110px] sm:max-h-[180px] max-w-[85%] object-contain transition-transform group-hover:scale-105 drop-shadow-sm"
         />
       </Link>
 
