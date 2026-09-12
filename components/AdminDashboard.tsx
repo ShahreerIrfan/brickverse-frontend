@@ -507,7 +507,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     setProductPage(1);
   }, [productCategoryFilter, searchGlobal]);
 
-  // Product Selection & Bulk Action Helpers
+  // Product Selection & Bulk Action Helpers (Scoped to current page of 20 items)
   const isAllPageSelected =
     paginatedProducts.length > 0 &&
     paginatedProducts.every((p) => selectedProductIds.includes(p.id));
@@ -516,11 +516,13 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     paginatedProducts.some((p) => selectedProductIds.includes(p.id)) && !isAllPageSelected;
 
   const toggleSelectAllPage = () => {
+    const currentPageIds = paginatedProducts.map((p) => p.id);
     if (isAllPageSelected) {
-      const pageIds = new Set(paginatedProducts.map((p) => p.id));
-      setSelectedProductIds((prev) => prev.filter((id) => !pageIds.has(id)));
+      // Deselect only products on the current page
+      setSelectedProductIds((prev) => prev.filter((id) => !currentPageIds.includes(id)));
     } else {
-      const newIds = new Set([...selectedProductIds, ...paginatedProducts.map((p) => p.id)]);
+      // Select ONLY the products on the current page (up to 20 items)
+      const newIds = new Set([...selectedProductIds, ...currentPageIds]);
       setSelectedProductIds(Array.from(newIds));
     }
   };
@@ -529,10 +531,6 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     setSelectedProductIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
-  };
-
-  const selectAllFilteredProducts = () => {
-    setSelectedProductIds(filteredProducts.map((p) => p.id));
   };
 
   const clearProductSelection = () => {
@@ -943,11 +941,23 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   };
 
   const handleGalleryFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const currentTotal = existingGalleryImages.length + galleryFiles.length;
+    const availableSlots = 4 - currentTotal;
+    if (availableSlots <= 0) {
+      alert("Maximum 4 gallery images allowed. Please delete or remove an existing image before adding new ones.");
+      e.target.value = "";
+      return;
+    }
     if (e.target.files && e.target.files.length > 0) {
-      const newFiles = Array.from(e.target.files);
+      const allFiles = Array.from(e.target.files);
+      if (allFiles.length > availableSlots) {
+        alert(`Only ${availableSlots} more photo(s) can be added (maximum 4 gallery photos). The first ${availableSlots} selected image(s) will be added.`);
+      }
+      const newFiles = allFiles.slice(0, availableSlots);
       const newUrls = newFiles.map((file) => URL.createObjectURL(file));
       setGalleryFiles((prev) => [...prev, ...newFiles]);
       setGalleryPreviewUrls((prev) => [...prev, ...newUrls]);
+      e.target.value = "";
     }
   };
 
@@ -2198,15 +2208,6 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                     <span className="text-xs font-bold text-[#171136]">
                       product{selectedProductIds.length > 1 ? "s" : ""} selected
                     </span>
-                    {selectedProductIds.length < filteredProducts.length && (
-                      <button
-                        type="button"
-                        onClick={selectAllFilteredProducts}
-                        className="text-[11.5px] font-bold text-[#7B5CFF] hover:underline cursor-pointer ml-1"
-                      >
-                        Select all {filteredProducts.length} filtered products
-                      </button>
-                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -2214,7 +2215,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                       onClick={clearProductSelection}
                       className="px-3 py-1.5 rounded-xl border border-[#EAE3F7] text-xs font-bold text-[#736E9B] hover:bg-[#F8F6FD] transition-colors cursor-pointer"
                     >
-                      Clear
+                      Deselect
                     </button>
                     <button
                       type="button"
@@ -2873,21 +2874,23 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                       </div>
                     </div>
 
-                    {/* Image Gallery Multi-Upload Field */}
+                    {/* Image Gallery Multi-Upload Field (Max 4 photos) */}
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
                           <label className="font-bold text-xs text-[#171136]">
-                            Product Image Gallery (Multiple)
+                            Product Image Gallery (Max 4 photos)
                           </label>
-                          <span title="Additional photos for angles, close-ups, and box contents" className="text-[#8A84A6] hover:text-[#171136] cursor-help">
+                          <span title="Showcase up to 4 additional gallery photos for angles, close-ups, and box contents" className="text-[#8A84A6] hover:text-[#171136] cursor-help">
                             <IconInfo className="w-3.5 h-3.5" />
                           </span>
-                          {(existingGalleryImages.length > 0 || galleryFiles.length > 0) && (
-                            <span className="text-[11px] font-bold text-[#7B5CFF] bg-[#F4F1FD] px-2 py-0.5 rounded-full ml-1">
-                              {existingGalleryImages.length + galleryFiles.length} photo{existingGalleryImages.length + galleryFiles.length > 1 ? "s" : ""}
-                            </span>
-                          )}
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ml-1 ${
+                            existingGalleryImages.length + galleryFiles.length >= 4
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-[#F4F1FD] text-[#7B5CFF]"
+                          }`}>
+                            {existingGalleryImages.length + galleryFiles.length}/4 photos {existingGalleryImages.length + galleryFiles.length >= 4 ? "(Max reached)" : ""}
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
                           {(existingGalleryImages.length > 0 || galleryFiles.length > 0) && (
@@ -2907,13 +2910,19 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                               Clear All
                             </button>
                           )}
-                          <label
-                            htmlFor="gallery-image-input"
-                            className="px-3 py-1 rounded-xl bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] text-[11px] font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
-                          >
-                            <IconPlus className="w-3.5 h-3.5" />
-                            <span>Add Photos</span>
-                          </label>
+                          {existingGalleryImages.length + galleryFiles.length < 4 ? (
+                            <label
+                              htmlFor="gallery-image-input"
+                              className="px-3 py-1 rounded-xl bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] text-[11px] font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
+                            >
+                              <IconPlus className="w-3.5 h-3.5" />
+                              <span>Add Photos ({4 - (existingGalleryImages.length + galleryFiles.length)} left)</span>
+                            </label>
+                          ) : (
+                            <span className="px-3 py-1 rounded-xl bg-gray-100 text-gray-500 text-[11px] font-bold cursor-not-allowed">
+                              Max 4 Reached
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -2927,7 +2936,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                               <IconPlus className="w-5 h-5" />
                             </div>
                             <span className="font-bold text-xs text-[#171136]">
-                              Add gallery photos from your computer
+                              Add up to 4 gallery photos from your computer
                             </span>
                             <span className="text-[11px] text-[#736E9B] mt-0.5">
                               Select multiple images to showcase all sides and details
@@ -2989,14 +2998,18 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                               </div>
                             ))}
 
-                            {/* Add More Button */}
-                            <label
-                              htmlFor="gallery-image-input"
-                              className="rounded-xl border border-dashed border-[#7B5CFF] bg-[#F6F1FF]/50 hover:bg-[#F6F1FF] flex flex-col items-center justify-center h-24 cursor-pointer text-[#7B5CFF] transition-colors"
-                            >
-                              <IconPlus className="w-5 h-5" />
-                              <span className="text-[10px] font-bold mt-1">Add More</span>
-                            </label>
+                            {/* Add More Button (Only if total < 4) */}
+                            {existingGalleryImages.length + galleryFiles.length < 4 && (
+                              <label
+                                htmlFor="gallery-image-input"
+                                className="rounded-xl border border-dashed border-[#7B5CFF] bg-[#F6F1FF]/50 hover:bg-[#F6F1FF] flex flex-col items-center justify-center h-24 cursor-pointer text-[#7B5CFF] transition-colors"
+                              >
+                                <IconPlus className="w-5 h-5" />
+                                <span className="text-[10px] font-bold mt-1">
+                                  Add More ({4 - (existingGalleryImages.length + galleryFiles.length)} left)
+                                </span>
+                              </label>
+                            )}
                           </div>
                         )}
                         <input
@@ -3005,6 +3018,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                           multiple
                           accept="image/*"
                           onChange={handleGalleryFilesChange}
+                          disabled={existingGalleryImages.length + galleryFiles.length >= 4}
                           className="hidden"
                         />
                       </div>
