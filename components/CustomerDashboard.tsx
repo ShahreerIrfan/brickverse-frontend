@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { User } from "./productData";
 import { useAuth } from "@/context/AuthContext";
 import { getCustomerOrders, trackOrder } from "@/lib/api";
+import { printOrderInvoice } from "@/lib/invoice";
 import {
   IconHome,
   IconBag,
@@ -703,10 +704,11 @@ export default function CustomerDashboard({
                         <div className="flex items-center gap-3">
                           <button
                             type="button"
-                            onClick={() => window.print()}
-                            className="text-xs font-bold text-[#171136] bg-[#F8F6FD] hover:bg-[#EFE9FF] px-4 py-2 rounded-xl border border-[#EAE3F7] transition-all cursor-pointer"
+                            onClick={() => printOrderInvoice(selectedOrder)}
+                            className="text-xs font-bold text-[#171136] bg-[#F8F6FD] hover:bg-[#EFE9FF] px-4 py-2 rounded-xl border border-[#EAE3F7] transition-all cursor-pointer flex items-center gap-1.5"
+                            title="Generate & Print A4 PDF Invoice"
                           >
-                            🖨️ Print Invoice
+                            <span>🖨️ Print Invoice (PDF)</span>
                           </button>
                         </div>
                       </div>

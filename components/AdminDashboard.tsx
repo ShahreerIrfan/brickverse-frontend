@@ -72,6 +72,7 @@ import {
 import PartnerStoresList from "./admin/PartnerStoresList";
 import PartnerStoreDetail from "./admin/PartnerStoreDetail";
 import PartnerStoreForm from "./admin/PartnerStoreForm";
+import { printOrderInvoice } from "@/lib/invoice";
 
 interface AdminDashboardProps {
   user: User;
@@ -3260,6 +3261,16 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                       {currentOrder.status}
                     </div>
 
+                    {/* Print A4 Invoice Button */}
+                    <button
+                      onClick={() => printOrderInvoice(currentOrder)}
+                      className="px-3.5 py-2 bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] font-bold text-xs rounded-xl border border-[#EAE3F7] transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                      title="Generate & Print A4 PDF Invoice"
+                    >
+                      <IconDownload className="w-3.5 h-3.5" />
+                      <span>Print Invoice</span>
+                    </button>
+
                     {/* Update Status Dropdown */}
                     <select
                       value={currentOrder.status}
@@ -3496,10 +3507,12 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                       </div>
 
                       <button
-                        onClick={() => window.print()}
+                        onClick={() => printOrderInvoice(currentOrder)}
                         className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#FF4D6D] hover:bg-[#ff3358] text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all cursor-pointer"
+                        title="Generate & Print A4 PDF Invoice"
                       >
-                        Download Invoice ↓
+                        <IconDownload className="w-4 h-4" />
+                        <span>Print A4 Invoice (PDF) ↓</span>
                       </button>
                     </div>
                   </div>
