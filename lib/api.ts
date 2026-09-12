@@ -415,6 +415,17 @@ export async function deleteProduct(id: string) {
   }
 }
 
+export async function deleteProductGalleryImage(galleryId: number | string) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/products/gallery/${galleryId}/`, {
+      method: "DELETE",
+    });
+    return { success: res.ok };
+  } catch (error) {
+    return { success: false };
+  }
+}
+
 export async function bulkDeleteProducts(ids: string[]) {
   if (!ids || ids.length === 0) return { success: true, count: 0 };
   try {

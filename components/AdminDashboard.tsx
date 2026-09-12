@@ -12,6 +12,7 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  deleteProductGalleryImage,
   bulkDeleteProducts,
   getMediaUrl,
   getCategories,
@@ -294,6 +295,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [galleryPreviewUrls, setGalleryPreviewUrls] = useState<string[]>([]);
   const [existingGalleryImages, setExistingGalleryImages] = useState<any[]>([]);
+  const [deletedGalleryImageIds, setDeletedGalleryImageIds] = useState<(number | string)[]>([]);
 
   // Product Form dynamic states
   const [formName, setFormName] = useState("");
@@ -900,6 +902,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     setGalleryFiles([]);
     setGalleryPreviewUrls([]);
     setExistingGalleryImages([]);
+    setDeletedGalleryImageIds([]);
     navigateTo("products-form");
   };
 
@@ -918,6 +921,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     setGalleryFiles([]);
     setGalleryPreviewUrls([]);
     setExistingGalleryImages(prod.gallery_images || []);
+    setDeletedGalleryImageIds([]);
     navigateTo("products-form");
   };
 
@@ -950,6 +954,13 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const removeGalleryFile = (index: number) => {
     setGalleryFiles((prev) => prev.filter((_, i) => i !== index));
     setGalleryPreviewUrls((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingGalleryImage = (imageObj: any, index: number) => {
+    if (imageObj.id) {
+      setDeletedGalleryImageIds((prev) => [...prev, imageObj.id]);
+    }
+    setExistingGalleryImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSaveProduct = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -992,10 +1003,17 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       data.append("image_file", primaryFile);
     }
 
-    // Gallery images
+    // Gallery images (new uploads)
     if (galleryFiles.length > 0) {
       galleryFiles.forEach((file) => {
         data.append("gallery_files", file);
+      });
+    }
+
+    // Deleted existing gallery images
+    if (deletedGalleryImageIds.length > 0) {
+      deletedGalleryImageIds.forEach((gid) => {
+        data.append("delete_gallery_ids", String(gid));
       });
     }
 
@@ -2865,13 +2883,38 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                           <span title="Additional photos for angles, close-ups, and box contents" className="text-[#8A84A6] hover:text-[#171136] cursor-help">
                             <IconInfo className="w-3.5 h-3.5" />
                           </span>
+                          {(existingGalleryImages.length > 0 || galleryFiles.length > 0) && (
+                            <span className="text-[11px] font-bold text-[#7B5CFF] bg-[#F4F1FD] px-2 py-0.5 rounded-full ml-1">
+                              {existingGalleryImages.length + galleryFiles.length} photo{existingGalleryImages.length + galleryFiles.length > 1 ? "s" : ""}
+                            </span>
+                          )}
                         </div>
-                        <label
-                          htmlFor="gallery-image-input"
-                          className="px-3 py-1 rounded-xl bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] text-[11px] font-bold transition-colors cursor-pointer"
-                        >
-                          + Add Photos
-                        </label>
+                        <div className="flex items-center gap-2">
+                          {(existingGalleryImages.length > 0 || galleryFiles.length > 0) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                // Mark all existing as deleted
+                                existingGalleryImages.forEach((g) => {
+                                  if (g.id) setDeletedGalleryImageIds((prev) => [...prev, g.id]);
+                                });
+                                setExistingGalleryImages([]);
+                                setGalleryFiles([]);
+                                setGalleryPreviewUrls([]);
+                              }}
+                              className="text-[11px] font-bold text-red-500 hover:text-red-700 transition-colors cursor-pointer px-1"
+                            >
+                              Clear All
+                            </button>
+                          )}
+                          <label
+                            htmlFor="gallery-image-input"
+                            className="px-3 py-1 rounded-xl bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] text-[11px] font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
+                          >
+                            <IconPlus className="w-3.5 h-3.5" />
+                            <span>Add Photos</span>
+                          </label>
+                        </div>
                       </div>
 
                       <div className="border border-[#EAE3F7] rounded-2xl p-4 bg-[#FAF8FD] min-h-[160px] flex flex-col justify-center">
@@ -2892,28 +2935,40 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                           </label>
                         ) : (
                           <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                            {/* Existing Gallery Images */}
-                            {existingGalleryImages.map((g: any, i: number) => (
-                              <div
-                                key={`exist-${g.id || i}`}
-                                className="relative rounded-xl bg-white p-1.5 border border-[#EAE3F7] shadow-xs flex flex-col items-center justify-center group h-24 overflow-hidden"
-                              >
-                                <Image
-                                  src={g.imageUrl || g.image_url || "/images/figure-samurai-red.svg"}
-                                  alt={`Gallery ${i}`}
-                                  width={64}
-                                  height={64}
-                                  className="object-contain max-h-16"
-                                />
-                                <span className="text-[9px] font-bold text-[#8A84A6] mt-1 truncate">Saved</span>
-                              </div>
-                            ))}
+                            {/* Existing Saved Gallery Images */}
+                            {existingGalleryImages.map((g: any, i: number) => {
+                              const rawImg = g.imageUrl || g.image_url || "/images/figure-samurai-red.svg";
+                              const imgSrc = getMediaUrl(rawImg);
+                              return (
+                                <div
+                                  key={`exist-${g.id || i}`}
+                                  className="relative rounded-xl bg-white p-1.5 border border-[#EAE3F7] hover:border-red-300 shadow-xs flex flex-col items-center justify-center group h-24 overflow-hidden transition-all"
+                                >
+                                  <Image
+                                    src={imgSrc}
+                                    alt={`Gallery ${i}`}
+                                    width={64}
+                                    height={64}
+                                    className="object-contain max-h-16"
+                                  />
+                                  <span className="text-[9px] font-bold text-[#8A84A6] mt-1 truncate">Saved</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => removeExistingGalleryImage(g, i)}
+                                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold flex items-center justify-center shadow-md hover:scale-110 transition-transform cursor-pointer"
+                                    title="Delete this image from gallery"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              );
+                            })}
 
                             {/* Newly Selected Local Gallery Files */}
                             {galleryPreviewUrls.map((url, idx) => (
                               <div
                                 key={`new-${idx}`}
-                                className="relative rounded-xl bg-white p-1.5 border border-[#7B5CFF]/40 shadow-xs flex flex-col items-center justify-center group h-24 overflow-hidden"
+                                className="relative rounded-xl bg-white p-1.5 border border-[#7B5CFF]/50 shadow-xs flex flex-col items-center justify-center group h-24 overflow-hidden transition-all"
                               >
                                 <Image
                                   src={url}
@@ -2922,10 +2977,11 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                   height={64}
                                   className="object-contain max-h-16"
                                 />
+                                <span className="text-[9px] font-bold text-[#7B5CFF] mt-1 truncate">New</span>
                                 <button
                                   type="button"
                                   onClick={() => removeGalleryFile(idx)}
-                                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shadow-md hover:scale-110 transition-transform cursor-pointer"
+                                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold flex items-center justify-center shadow-md hover:scale-110 transition-transform cursor-pointer"
                                   title="Remove image"
                                 >
                                   ✕
