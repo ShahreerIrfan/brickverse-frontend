@@ -912,11 +912,8 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
 
     // Primary image
     if (primaryFile) {
+      data.append("image", primaryFile);
       data.append("image_file", primaryFile);
-    } else if (editingProduct?.image) {
-      data.append("image", editingProduct.image);
-    } else {
-      data.append("image", "/images/figure-samurai-red.svg");
     }
 
     // Gallery images

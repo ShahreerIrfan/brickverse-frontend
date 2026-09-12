@@ -34,6 +34,18 @@ export function getApiBaseUrl(): string {
   return envUrl || "http://127.0.0.1:8000/api";
 }
 
+export function getMediaUrl(path?: string | null): string {
+  if (!path) return "/images/figure-samurai-red.svg";
+  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("blob:") || path.startsWith("data:")) {
+    return path;
+  }
+  if (path.startsWith("/media/")) {
+    const apiBase = getApiBaseUrl().replace(/\/api\/?$/, "");
+    return `${apiBase}${path}`;
+  }
+  return path;
+}
+
 const getApi = () => getApiBaseUrl();
 
 // -------------------------------------------------------------
