@@ -12,6 +12,8 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  bulkDeleteProducts,
+  getMediaUrl,
   getCategories,
   createCategory,
   updateCategory,
@@ -48,6 +50,7 @@ import {
   IconLayers,
   IconChevronDown,
   IconChevronRight,
+  IconChevronLeft,
   IconPlus,
   IconEdit,
   IconTrash,
@@ -259,6 +262,13 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [productCategoryFilter, setProductCategoryFilter] = useState("all");
   const [orderStatusFilter, setOrderStatusFilter] = useState("all");
   const [userRoleFilter, setUserRoleFilter] = useState("all");
+
+  // Product List Pagination & Bulk Delete States
+  const [productPage, setProductPage] = useState(1);
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const PRODUCTS_PER_PAGE = 20;
 
   // Modals & Action Drawers
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
@@ -481,6 +491,72 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       return matchCat && matchSearch;
     });
   }, [products, productCategoryFilter, searchGlobal]);
+
+  // Product Pagination calculations (20 per page)
+  const totalProductPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
+  const currentProductPage = Math.min(Math.max(1, productPage), totalProductPages);
+  const paginatedProducts = useMemo(() => {
+    const start = (currentProductPage - 1) * PRODUCTS_PER_PAGE;
+    return filteredProducts.slice(start, start + PRODUCTS_PER_PAGE);
+  }, [filteredProducts, currentProductPage, PRODUCTS_PER_PAGE]);
+
+  // Reset page to 1 when filters or search change
+  useEffect(() => {
+    setProductPage(1);
+  }, [productCategoryFilter, searchGlobal]);
+
+  // Product Selection & Bulk Action Helpers
+  const isAllPageSelected =
+    paginatedProducts.length > 0 &&
+    paginatedProducts.every((p) => selectedProductIds.includes(p.id));
+
+  const isSomePageSelected =
+    paginatedProducts.some((p) => selectedProductIds.includes(p.id)) && !isAllPageSelected;
+
+  const toggleSelectAllPage = () => {
+    if (isAllPageSelected) {
+      const pageIds = new Set(paginatedProducts.map((p) => p.id));
+      setSelectedProductIds((prev) => prev.filter((id) => !pageIds.has(id)));
+    } else {
+      const newIds = new Set([...selectedProductIds, ...paginatedProducts.map((p) => p.id)]);
+      setSelectedProductIds(Array.from(newIds));
+    }
+  };
+
+  const toggleSelectProduct = (id: string) => {
+    setSelectedProductIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const selectAllFilteredProducts = () => {
+    setSelectedProductIds(filteredProducts.map((p) => p.id));
+  };
+
+  const clearProductSelection = () => {
+    setSelectedProductIds([]);
+  };
+
+  const handleExecuteBulkDelete = async () => {
+    if (selectedProductIds.length === 0) return;
+    setIsBulkDeleting(true);
+    try {
+      const res = await bulkDeleteProducts(selectedProductIds);
+      if (res.success) {
+        showToast(`✓ Successfully deleted ${selectedProductIds.length} product(s)!`);
+        setSelectedProductIds([]);
+        setShowBulkDeleteConfirm(false);
+        fetchData();
+      } else {
+        alert("Error during bulk delete: " + (res.error || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Bulk delete failed:", err);
+      alert("Failed to delete selected products.");
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
 
   // Filtered Orders
   const filteredOrders = useMemo(() => {
@@ -2094,6 +2170,46 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                 </div>
               </div>
 
+              {/* Bulk Action Toolbar */}
+              {selectedProductIds.length > 0 && (
+                <div className="bg-white border-2 border-[#7B5CFF]/30 p-3.5 sm:p-4 rounded-2xl shadow-lg flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <span className="w-7 h-7 rounded-xl bg-[#7B5CFF] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                      {selectedProductIds.length}
+                    </span>
+                    <span className="text-xs font-bold text-[#171136]">
+                      product{selectedProductIds.length > 1 ? "s" : ""} selected
+                    </span>
+                    {selectedProductIds.length < filteredProducts.length && (
+                      <button
+                        type="button"
+                        onClick={selectAllFilteredProducts}
+                        className="text-[11.5px] font-bold text-[#7B5CFF] hover:underline cursor-pointer ml-1"
+                      >
+                        Select all {filteredProducts.length} filtered products
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={clearProductSelection}
+                      className="px-3 py-1.5 rounded-xl border border-[#EAE3F7] text-xs font-bold text-[#736E9B] hover:bg-[#F8F6FD] transition-colors cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowBulkDeleteConfirm(true)}
+                      className="px-4 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
+                    >
+                      <IconTrash className="w-3.5 h-3.5" />
+                      <span>Delete Selected ({selectedProductIds.length})</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Filter Bar */}
               <div className="bg-white p-4 rounded-2xl border border-[#EAE3F7] flex flex-wrap items-center justify-between gap-3 shadow-xs">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -2112,9 +2228,11 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                   </select>
                 </div>
 
-                <span className="text-xs text-[#736E9B] font-semibold">
-                  Showing <strong className="text-[#171136]">{filteredProducts.length}</strong> products
-                </span>
+                <div className="flex items-center gap-3 text-xs text-[#736E9B] font-semibold">
+                  <span>
+                    Showing <strong className="text-[#171136]">{filteredProducts.length > 0 ? (currentProductPage - 1) * PRODUCTS_PER_PAGE + 1 : 0}</strong> - <strong className="text-[#171136]">{Math.min(currentProductPage * PRODUCTS_PER_PAGE, filteredProducts.length)}</strong> of <strong className="text-[#171136]">{filteredProducts.length}</strong> products
+                  </span>
+                </div>
               </div>
 
               {/* Products Table */}
@@ -2123,6 +2241,18 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                   <table className="w-full text-left text-xs">
                     <thead>
                       <tr className="border-b border-[#EAE3F7] text-[#8A84A6]">
+                        <th className="pb-3 pl-1 pr-3 w-9">
+                          <input
+                            type="checkbox"
+                            checked={isAllPageSelected}
+                            ref={(el) => {
+                              if (el) el.indeterminate = isSomePageSelected;
+                            }}
+                            onChange={toggleSelectAllPage}
+                            className="w-4 h-4 rounded-md border-[#D9CEEE] text-[#7B5CFF] focus:ring-[#7B5CFF] cursor-pointer"
+                            title="Select / Unselect all on this page"
+                          />
+                        </th>
                         <th className="pb-3 font-semibold">Product & SKU</th>
                         <th className="pb-3 font-semibold">Category</th>
                         <th className="pb-3 font-semibold">Regular Price</th>
@@ -2130,103 +2260,198 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                         <th className="pb-3 font-semibold">Trade Price (TP)</th>
                         <th className="pb-3 font-semibold">Stock</th>
                         <th className="pb-3 font-semibold">Discount</th>
-                        <th className="pb-3 font-semibold text-right">Actions</th>
+                        <th className="pb-3 font-semibold text-right pr-2">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#F0EBF8]">
-                      {filteredProducts.map((p) => {
-                        const reg = p.regularPrice || p.originalPrice || "—";
-                        const disc = p.discountedPrice || p.price || "—";
-                        const tp = p.tradePrice || "—";
-                        const discountBadge = p.discountPercent ? `-${p.discountPercent}%` : null;
+                      {paginatedProducts.length === 0 ? (
+                        <tr>
+                          <td colSpan={9} className="py-12 text-center text-[#736E9B]">
+                            <div className="flex flex-col items-center justify-center gap-2">
+                              <IconBox className="w-8 h-8 text-[#8A84A6]" />
+                              <p className="font-bold text-sm text-[#171136]">No products found</p>
+                              <p className="text-xs">Try clearing your search or category filter.</p>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        paginatedProducts.map((p) => {
+                          const isSelected = selectedProductIds.includes(p.id);
+                          const reg = p.regularPrice || p.originalPrice || "—";
+                          const disc = p.discountedPrice || p.price || "—";
+                          const tp = p.tradePrice || "—";
+                          const discountBadge = p.discountPercent ? `-${p.discountPercent}%` : null;
 
-                        return (
-                          <tr key={p.id} className="hover:bg-[#F8F6FD] transition-colors">
-                            <td className="py-3.5 flex items-center gap-3">
-                              <div className="w-12 h-12 rounded-xl bg-[#F6F1FF] flex items-center justify-center overflow-hidden shrink-0 border border-[#EAE3F7]">
-                                <Image src={p.image} alt={p.name} width={40} height={40} className="object-contain" />
-                              </div>
-                              <div>
-                                <p className="font-extrabold text-[#171136] text-sm leading-tight">{p.name}</p>
-                                <div className="flex items-center gap-1.5 mt-0.5">
-                                  <span className="font-mono text-[10.5px] px-1.5 py-0.5 rounded bg-[#F0EBF8] text-[#5C5478] font-bold">
-                                    {p.sku || p.id}
-                                  </span>
+                          return (
+                            <tr
+                              key={p.id}
+                              className={`transition-colors ${
+                                isSelected ? "bg-[#F6F1FF]/60 hover:bg-[#F6F1FF]" : "hover:bg-[#F8F6FD]"
+                              }`}
+                            >
+                              <td className="py-3.5 pl-1 pr-3 w-9">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => toggleSelectProduct(p.id)}
+                                  className="w-4 h-4 rounded-md border-[#D9CEEE] text-[#7B5CFF] focus:ring-[#7B5CFF] cursor-pointer"
+                                />
+                              </td>
+                              <td className="py-3.5 flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-xl bg-[#F6F1FF] flex items-center justify-center overflow-hidden shrink-0 border border-[#EAE3F7]">
+                                  <Image
+                                    src={getMediaUrl(p.image || p.image_file)}
+                                    alt={p.name}
+                                    width={40}
+                                    height={40}
+                                    className="object-contain max-h-10 max-w-10"
+                                  />
                                 </div>
-                              </div>
-                            </td>
-                            <td className="py-3.5">
-                              <span className="px-2.5 py-1 bg-[#F6F1FF] text-[#7B5CFF] text-[11px] font-bold rounded-lg capitalize">
-                                {p.category}
-                              </span>
-                            </td>
-                            <td className="py-3.5">
-                              <span className="text-[11.5px] text-[#8A84A6] line-through font-semibold">
-                                {reg}
-                              </span>
-                            </td>
-                            <td className="py-3.5">
-                              <span className="font-extrabold text-[#171136] text-sm">
-                                {disc}
-                              </span>
-                            </td>
-                            <td className="py-3.5">
-                              <span className="font-bold text-[#059669] text-xs bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">
-                                {tp}
-                              </span>
-                            </td>
-                            <td className="py-3.5">
-                              <span
-                                className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold ${
-                                  (p.stock || 10) > 10
-                                    ? "bg-emerald-50 text-emerald-700"
-                                    : "bg-red-50 text-red-700"
-                                }`}
-                              >
-                                {p.stock || 100} in stock
-                              </span>
-                            </td>
-                            <td className="py-3.5">
-                              {discountBadge ? (
-                                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FF4D6D] text-white shadow-xs">
-                                  {discountBadge}
+                                <div>
+                                  <p className="font-extrabold text-[#171136] text-sm leading-tight">{p.name}</p>
+                                  <div className="flex items-center gap-1.5 mt-0.5">
+                                    <span className="font-mono text-[10.5px] px-1.5 py-0.5 rounded bg-[#F0EBF8] text-[#5C5478] font-bold">
+                                      {p.sku || p.id}
+                                    </span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-3.5">
+                                <span className="px-2.5 py-1 bg-[#F6F1FF] text-[#7B5CFF] text-[11px] font-bold rounded-lg capitalize">
+                                  {p.category}
                                 </span>
-                              ) : (
-                                <span className="text-[#8A84A6]">—</span>
-                              )}
-                            </td>
-                            <td className="py-3.5 text-right">
-                              <div className="flex items-center justify-end gap-2">
-                                <Link
-                                  href={`/product/${p.slug || p.id}`}
-                                  target="_blank"
-                                  className="p-1.5 rounded-lg text-[#736E9B] hover:text-[#171136] hover:bg-[#F6F1FF] transition-colors"
-                                  title="View on Store"
+                              </td>
+                              <td className="py-3.5">
+                                <span className="text-[11.5px] text-[#8A84A6] line-through font-semibold">
+                                  {reg}
+                                </span>
+                              </td>
+                              <td className="py-3.5">
+                                <span className="font-extrabold text-[#171136] text-sm">
+                                  {disc}
+                                </span>
+                              </td>
+                              <td className="py-3.5">
+                                <span className="font-bold text-[#059669] text-xs bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">
+                                  {tp}
+                                </span>
+                              </td>
+                              <td className="py-3.5">
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold ${
+                                    (p.stock || 10) > 10
+                                      ? "bg-emerald-50 text-emerald-700"
+                                      : "bg-red-50 text-red-700"
+                                  }`}
                                 >
-                                  <IconStore className="w-4 h-4" />
-                                </Link>
-                                <button
-                                  onClick={() => openEditProductForm(p)}
-                                  className="p-1.5 rounded-lg text-[#7B5CFF] hover:bg-[#EFE9FF] transition-colors cursor-pointer"
-                                  title="Edit Product"
-                                >
-                                  <IconEdit className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => setDeletingProduct(p)}
-                                  className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
-                                  title="Delete Product"
-                                >
-                                  <IconTrash className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                                  {p.stock || 100} in stock
+                                </span>
+                              </td>
+                              <td className="py-3.5">
+                                {discountBadge ? (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FF4D6D] text-white shadow-xs">
+                                    {discountBadge}
+                                  </span>
+                                ) : (
+                                  <span className="text-[#8A84A6]">—</span>
+                                )}
+                              </td>
+                              <td className="py-3.5 text-right pr-2">
+                                <div className="flex items-center justify-end gap-2">
+                                  <Link
+                                    href={`/product/${p.slug || p.id}`}
+                                    target="_blank"
+                                    className="p-1.5 rounded-lg text-[#736E9B] hover:text-[#171136] hover:bg-[#F6F1FF] transition-colors"
+                                    title="View on Store"
+                                  >
+                                    <IconStore className="w-4 h-4" />
+                                  </Link>
+                                  <button
+                                    onClick={() => openEditProductForm(p)}
+                                    className="p-1.5 rounded-lg text-[#7B5CFF] hover:bg-[#EFE9FF] transition-colors cursor-pointer"
+                                    title="Edit Product"
+                                  >
+                                    <IconEdit className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => setDeletingProduct(p)}
+                                    className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                                    title="Delete Product"
+                                  >
+                                    <IconTrash className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
+
+                {/* Pagination Controls (20 Products per page) */}
+                {totalProductPages > 1 && (
+                  <div className="pt-6 border-t border-[#F0EBF8] flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <span className="text-xs text-[#736E9B] font-semibold order-2 sm:order-1">
+                      Page <strong className="text-[#171136]">{currentProductPage}</strong> of <strong className="text-[#171136]">{totalProductPages}</strong>
+                    </span>
+
+                    <div className="flex items-center gap-1.5 order-1 sm:order-2">
+                      <button
+                        type="button"
+                        onClick={() => setProductPage((p) => Math.max(1, p - 1))}
+                        disabled={currentProductPage <= 1}
+                        className="p-2 rounded-xl border border-[#EAE3F7] text-[#736E9B] hover:text-[#171136] hover:bg-[#F8F6FD] disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                        title="Previous Page"
+                      >
+                        <IconChevronLeft className="w-4 h-4" />
+                      </button>
+
+                      {Array.from({ length: totalProductPages }, (_, i) => i + 1).map((pg) => {
+                        // Display sliding page window
+                        if (
+                          pg === 1 ||
+                          pg === totalProductPages ||
+                          (pg >= currentProductPage - 2 && pg <= currentProductPage + 2)
+                        ) {
+                          return (
+                            <button
+                              key={pg}
+                              type="button"
+                              onClick={() => setProductPage(pg)}
+                              className={`w-8 h-8 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                                currentProductPage === pg
+                                  ? "bg-[#7B5CFF] text-white shadow-xs"
+                                  : "border border-[#EAE3F7] text-[#5C5478] hover:bg-[#F8F6FD] hover:text-[#171136]"
+                              }`}
+                            >
+                              {pg}
+                            </button>
+                          );
+                        }
+                        if (pg === currentProductPage - 3 || pg === currentProductPage + 3) {
+                          return (
+                            <span key={pg} className="px-1 text-[#8A84A6] text-xs">
+                              ...
+                            </span>
+                          );
+                        }
+                        return null;
+                      })}
+
+                      <button
+                        type="button"
+                        onClick={() => setProductPage((p) => Math.min(totalProductPages, p + 1))}
+                        disabled={currentProductPage >= totalProductPages}
+                        className="p-2 rounded-xl border border-[#EAE3F7] text-[#736E9B] hover:text-[#171136] hover:bg-[#F8F6FD] disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                        title="Next Page"
+                      >
+                        <IconChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -3803,6 +4028,53 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                 className="px-4 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 cursor-pointer"
               >
                 Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================= */}
+      {/* MODAL: BULK DELETE PRODUCTS CONFIRMATION */}
+      {/* ============================================================= */}
+      {showBulkDeleteConfirm && (
+        <div className="fixed inset-0 z-50 bg-[#171136]/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl text-center animate-in zoom-in-95">
+            <div className="w-14 h-14 rounded-2xl bg-red-50 text-red-600 border border-red-200 flex items-center justify-center mx-auto mb-4">
+              <IconTrash className="w-7 h-7" />
+            </div>
+            <h3 className="font-[family-name:var(--font-display)] font-extrabold text-xl text-[#171136] mb-2">
+              Bulk Delete {selectedProductIds.length} Products?
+            </h3>
+            <p className="text-xs sm:text-sm text-[#736E9B] mb-6 leading-relaxed">
+              Are you sure you want to permanently delete these <strong>{selectedProductIds.length}</strong> selected products? This action cannot be undone and will remove them from your catalog and store channels.
+            </p>
+            <div className="flex items-center justify-center gap-3 text-xs font-bold">
+              <button
+                type="button"
+                disabled={isBulkDeleting}
+                onClick={() => setShowBulkDeleteConfirm(false)}
+                className="px-5 py-2.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isBulkDeleting}
+                onClick={handleExecuteBulkDelete}
+                className="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white transition-all shadow-md active:scale-95 cursor-pointer flex items-center gap-2"
+              >
+                {isBulkDeleting ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <IconTrash className="w-4 h-4" />
+                    <span>Yes, Delete All {selectedProductIds.length}</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

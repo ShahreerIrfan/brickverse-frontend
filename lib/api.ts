@@ -415,6 +415,31 @@ export async function deleteProduct(id: string) {
   }
 }
 
+export async function bulkDeleteProducts(ids: string[]) {
+  if (!ids || ids.length === 0) return { success: true, count: 0 };
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/products/bulk-delete/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return { success: true, data };
+    }
+    // Fallback: parallel deleteProduct
+    await Promise.all(ids.map((id) => deleteProduct(id)));
+    return { success: true };
+  } catch (error) {
+    try {
+      await Promise.all(ids.map((id) => deleteProduct(id)));
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: "Failed to bulk delete products" };
+    }
+  }
+}
+
 export async function createCategory(data: any) {
   try {
     const isFormData = typeof FormData !== "undefined" && data instanceof FormData;

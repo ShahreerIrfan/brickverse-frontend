@@ -10,6 +10,7 @@ import {
   IconStar,
   IconSearch,
   IconChevronRight,
+  IconChevronLeft,
   IconChevronDown,
   IconFilter,
   IconEye,
@@ -229,6 +230,32 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
     sortBy,
   ]);
 
+  // Shop Catalog Pagination (20 products per page)
+  const [shopPage, setShopPage] = useState(1);
+  const PRODUCTS_PER_PAGE = 20;
+
+  // Reset page when any filter changes
+  useEffect(() => {
+    setShopPage(1);
+  }, [
+    selectedCategory,
+    selectedSubcategory,
+    searchQuery,
+    appliedMinPrice,
+    appliedMaxPrice,
+    selectedRating,
+    inStockOnly,
+    onSaleOnly,
+    sortBy,
+  ]);
+
+  const totalShopPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
+  const currentShopPage = Math.min(Math.max(1, shopPage), totalShopPages);
+  const paginatedShopProducts = useMemo(() => {
+    const start = (currentShopPage - 1) * PRODUCTS_PER_PAGE;
+    return filteredProducts.slice(start, start + PRODUCTS_PER_PAGE);
+  }, [filteredProducts, currentShopPage, PRODUCTS_PER_PAGE]);
+
   // Current active category object
   const currentCategoryObj = initialCategories.find(
     (c) => c.id.toLowerCase() === selectedCategory.toLowerCase()
@@ -442,134 +469,198 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4.5">
-              {filteredProducts.map((product) => {
-                const isWishlisted = wishlistProductIds.has(product.id);
-                const regularPrice = product.regularPrice || product.originalPrice;
-                const discountedPrice = product.discountedPrice || product.price;
-                const discountPercent =
-                  product.discountPercent ||
-                  (() => {
-                    const reg = parsePrice(regularPrice);
-                    const disc = parsePrice(discountedPrice);
-                    if (reg > disc && disc > 0) return Math.round(((reg - disc) / reg) * 100);
-                    return null;
-                  })();
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4.5">
+                {paginatedShopProducts.map((product) => {
+                  const isWishlisted = wishlistProductIds.has(product.id);
+                  const regularPrice = product.regularPrice || product.originalPrice;
+                  const discountedPrice = product.discountedPrice || product.price;
+                  const discountPercent =
+                    product.discountPercent ||
+                    (() => {
+                      const reg = parsePrice(regularPrice);
+                      const disc = parsePrice(discountedPrice);
+                      if (reg > disc && disc > 0) return Math.round(((reg - disc) / reg) * 100);
+                      return null;
+                    })();
 
-                return (
-                  <div
-                    key={product.id}
-                    className="relative bg-white border border-[#EAE3F7] rounded-2xl sm:rounded-[20px] shadow-[0_10px_0_-5px_rgba(23,17,54,0.06)] hover:shadow-[0_16px_28px_-6px_rgba(23,17,54,0.12)] overflow-hidden flex flex-col group transition-all hover:-translate-y-1"
-                  >
-                    {/* Top Image Box */}
-                    <div className="relative h-[130px] sm:h-[180px] bg-[#FAF7FF] flex items-center justify-center p-2.5 sm:p-3 overflow-hidden">
-                      {discountPercent ? (
-                        <span className="absolute left-2 top-2 bg-[#FF4D6D] text-white text-[9px] sm:text-[10.5px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full z-10 shadow-xs">
-                          -{discountPercent}%
-                        </span>
-                      ) : null}
+                  return (
+                    <div
+                      key={product.id}
+                      className="relative bg-white border border-[#EAE3F7] rounded-2xl sm:rounded-[20px] shadow-[0_10px_0_-5px_rgba(23,17,54,0.06)] hover:shadow-[0_16px_28px_-6px_rgba(23,17,54,0.12)] overflow-hidden flex flex-col group transition-all hover:-translate-y-1"
+                    >
+                      {/* Top Image Box */}
+                      <div className="relative h-[130px] sm:h-[180px] bg-[#FAF7FF] flex items-center justify-center p-2.5 sm:p-3 overflow-hidden">
+                        {discountPercent ? (
+                          <span className="absolute left-2 top-2 bg-[#FF4D6D] text-white text-[9px] sm:text-[10.5px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full z-10 shadow-xs">
+                            -{discountPercent}%
+                          </span>
+                        ) : null}
 
-                      {/* Top Right Actions (Heart + Quick View Eye) */}
-                      <div className="absolute right-1.5 top-1.5 sm:right-2 sm:top-2 z-10 flex flex-col gap-1 sm:gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
-                        <button
-                          type="button"
-                          aria-label="Wishlist"
-                          onClick={(e) => toggleWishlist(product.id, e)}
-                          className={`w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-white/95 backdrop-blur-md flex items-center justify-center shadow-xs transition-colors cursor-pointer ${
-                            isWishlisted ? "text-[#FF4D6D]" : "text-[#736E9B] hover:text-[#FF4D6D]"
-                          }`}
-                        >
-                          <IconHeart className="w-3.5 h-3.5" style={{ fill: isWishlisted ? "#FF4D6D" : "none" }} />
-                        </button>
+                        {/* Top Right Actions (Heart + Quick View Eye) */}
+                        <div className="absolute right-1.5 top-1.5 sm:right-2 sm:top-2 z-10 flex flex-col gap-1 sm:gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            aria-label="Wishlist"
+                            onClick={(e) => toggleWishlist(product.id, e)}
+                            className={`w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-white/95 backdrop-blur-md flex items-center justify-center shadow-xs transition-colors cursor-pointer ${
+                              isWishlisted ? "text-[#FF4D6D]" : "text-[#736E9B] hover:text-[#FF4D6D]"
+                            }`}
+                          >
+                            <IconHeart className="w-3.5 h-3.5" style={{ fill: isWishlisted ? "#FF4D6D" : "none" }} />
+                          </button>
 
-                        <button
-                          type="button"
-                          aria-label="Quick View"
-                          onClick={() => setQuickViewProduct(product)}
-                          className="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-white/95 backdrop-blur-md flex items-center justify-center shadow-xs text-[#736E9B] hover:text-[#7B5CFF] transition-colors cursor-pointer"
-                        >
-                          <IconEye className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                          <button
+                            type="button"
+                            aria-label="Quick View"
+                            onClick={() => setQuickViewProduct(product)}
+                            className="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-white/95 backdrop-blur-md flex items-center justify-center shadow-xs text-[#736E9B] hover:text-[#7B5CFF] transition-colors cursor-pointer"
+                          >
+                            <IconEye className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
 
-                      <Link
-                        href={`/product/${product.slug || product.id}`}
-                        className="w-full h-full flex items-center justify-center p-1"
-                      >
-                        <Image
-                          src={getMediaUrl(product.image || product.image_file)}
-                          alt={product.name}
-                          width={140}
-                          height={160}
-                          className="w-auto h-auto max-h-[115px] sm:max-h-[160px] max-w-[85%] object-contain transition-transform group-hover:scale-105 drop-shadow-sm"
-                        />
-                      </Link>
-                    </div>
-
-                    {/* Card Content Details */}
-                    <div className="p-2.5 sm:p-4 flex flex-col flex-1 justify-between gap-1.5 sm:gap-2.5">
-                      <div>
-                        <span
-                          className="text-[8.5px] sm:text-[10px] font-bold tracking-wide uppercase block truncate"
-                          style={{ color: product.categoryColor || "#7B5CFF" }}
-                        >
-                          {product.category}
-                        </span>
                         <Link
                           href={`/product/${product.slug || product.id}`}
-                          className="font-[family-name:var(--font-display)] font-extrabold text-[12px] sm:text-[14.5px] text-[#171136] hover:text-[#FF4D6D] transition-colors line-clamp-2 mt-0.5 leading-snug"
+                          className="w-full h-full flex items-center justify-center p-1"
                         >
-                          {product.name}
+                          <Image
+                            src={getMediaUrl(product.image || product.image_file)}
+                            alt={product.name}
+                            width={140}
+                            height={160}
+                            className="w-auto h-auto max-h-[115px] sm:max-h-[160px] max-w-[85%] object-contain transition-transform group-hover:scale-105 drop-shadow-sm"
+                          />
                         </Link>
                       </div>
 
-                      {/* Ratings */}
-                      <div className="flex items-center gap-0.5 sm:gap-1">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <IconStar
-                            key={i}
-                            className="w-2.5 h-2.5 sm:w-3 sm:h-3"
-                            filled={i < Math.round(product.rating ?? 5)}
-                          />
-                        ))}
-                        <span className="text-[9.5px] sm:text-[11px] text-[#736E9B] font-medium ml-1">
-                          ({product.reviews ?? 0})
-                        </span>
-                      </div>
-
-                      {/* Price & Add to Cart Action Button */}
-                      <div className="pt-2 sm:pt-2.5 border-t border-[#F0EBF9] flex items-center justify-between gap-1.5 mt-auto">
-                        <div className="flex flex-col min-w-0">
-                          <span className="font-[family-name:var(--font-display)] font-extrabold text-[13px] sm:text-[16px] text-[#171136] leading-none truncate">
-                            {discountedPrice}
+                      {/* Card Content Details */}
+                      <div className="p-2.5 sm:p-4 flex flex-col flex-1 justify-between gap-1.5 sm:gap-2.5">
+                        <div>
+                          <span
+                            className="text-[8.5px] sm:text-[10px] font-bold tracking-wide uppercase block truncate"
+                            style={{ color: product.categoryColor || "#7B5CFF" }}
+                          >
+                            {product.category}
                           </span>
-                          {regularPrice && regularPrice !== discountedPrice && (
-                            <span className="text-[9.5px] sm:text-[11px] text-[#736E9B] line-through font-medium mt-0.5 truncate">
-                              {regularPrice}
-                            </span>
-                          )}
+                          <Link
+                            href={`/product/${product.slug || product.id}`}
+                            className="font-[family-name:var(--font-display)] font-extrabold text-[12px] sm:text-[14.5px] text-[#171136] hover:text-[#FF4D6D] transition-colors line-clamp-2 mt-0.5 leading-snug"
+                          >
+                            {product.name}
+                          </Link>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            addToCart(product, 1, true);
-                          }}
-                          aria-label={`Add ${product.name} to cart`}
-                          title={`Add ${product.name} to cart`}
-                          className="inline-flex items-center justify-center gap-1 sm:gap-1.5 bg-[#FF4D6D] hover:bg-[#E63956] text-white text-[11px] sm:text-[12.5px] font-bold px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl sm:rounded-full shadow-[0_3px_10px_rgba(255,77,109,0.28)] active:scale-95 transition-all cursor-pointer shrink-0"
-                        >
-                          <IconBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
-                          <span className="hidden min-[380px]:inline font-extrabold">Add</span>
-                        </button>
+                        {/* Ratings */}
+                        <div className="flex items-center gap-0.5 sm:gap-1">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <IconStar
+                              key={i}
+                              className="w-2.5 h-2.5 sm:w-3 sm:h-3"
+                              filled={i < Math.round(product.rating ?? 5)}
+                            />
+                          ))}
+                          <span className="text-[9.5px] sm:text-[11px] text-[#736E9B] font-medium ml-1">
+                            ({product.reviews ?? 0})
+                          </span>
+                        </div>
+
+                        {/* Price & Add to Cart Action Button */}
+                        <div className="pt-2 sm:pt-2.5 border-t border-[#F0EBF9] flex items-center justify-between gap-1.5 mt-auto">
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-[family-name:var(--font-display)] font-extrabold text-[13px] sm:text-[16px] text-[#171136] leading-none truncate">
+                              {discountedPrice}
+                            </span>
+                            {regularPrice && regularPrice !== discountedPrice && (
+                              <span className="text-[9.5px] sm:text-[11px] text-[#736E9B] line-through font-medium mt-0.5 truncate">
+                                {regularPrice}
+                              </span>
+                            )}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              addToCart(product, 1, true);
+                            }}
+                            aria-label={`Add ${product.name} to cart`}
+                            title={`Add ${product.name} to cart`}
+                            className="inline-flex items-center justify-center gap-1 sm:gap-1.5 bg-[#FF4D6D] hover:bg-[#E63956] text-white text-[11px] sm:text-[12.5px] font-bold px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl sm:rounded-full shadow-[0_3px_10px_rgba(255,77,109,0.28)] active:scale-95 transition-all cursor-pointer shrink-0"
+                          >
+                            <IconBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+                            <span className="hidden min-[380px]:inline font-extrabold">Add</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
+                  );
+                })}
+              </div>
+
+              {/* Shop Pagination Controls (20 Products per page) */}
+              {totalShopPages > 1 && (
+                <div className="mt-8 pt-6 border-t border-[#EAE3F7] flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <span className="text-xs text-[#736E9B] font-semibold order-2 sm:order-1">
+                    Showing <strong>{(currentShopPage - 1) * PRODUCTS_PER_PAGE + 1}</strong> - <strong>{Math.min(currentShopPage * PRODUCTS_PER_PAGE, filteredProducts.length)}</strong> of <strong>{filteredProducts.length}</strong> products
+                  </span>
+
+                  <div className="flex items-center gap-1.5 order-1 sm:order-2">
+                    <button
+                      type="button"
+                      onClick={() => setShopPage((p) => Math.max(1, p - 1))}
+                      disabled={currentShopPage <= 1}
+                      className="p-2.5 rounded-xl border border-[#EAE3F7] text-[#736E9B] hover:text-[#171136] hover:bg-white disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-2xs"
+                      title="Previous Page"
+                    >
+                      <IconChevronLeft className="w-4 h-4" />
+                    </button>
+
+                    {Array.from({ length: totalShopPages }, (_, i) => i + 1).map((pg) => {
+                      if (
+                        pg === 1 ||
+                        pg === totalShopPages ||
+                        (pg >= currentShopPage - 2 && pg <= currentShopPage + 2)
+                      ) {
+                        return (
+                          <button
+                            key={pg}
+                            type="button"
+                            onClick={() => setShopPage(pg)}
+                            className={`w-9 h-9 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
+                              currentShopPage === pg
+                                ? "bg-[#FF4D6D] text-white shadow-sm"
+                                : "bg-white border border-[#EAE3F7] text-[#171136] hover:border-[#FF4D6D] hover:text-[#FF4D6D]"
+                            }`}
+                          >
+                            {pg}
+                          </button>
+                        );
+                      }
+                      if (pg === currentShopPage - 3 || pg === currentShopPage + 3) {
+                        return (
+                          <span key={pg} className="px-1 text-[#8A84A6] text-xs">
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    })}
+
+                    <button
+                      type="button"
+                      onClick={() => setShopPage((p) => Math.min(totalShopPages, p + 1))}
+                      disabled={currentShopPage >= totalShopPages}
+                      className="p-2.5 rounded-xl border border-[#EAE3F7] text-[#736E9B] hover:text-[#171136] hover:bg-white disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-2xs"
+                      title="Next Page"
+                    >
+                      <IconChevronRight className="w-4 h-4" />
+                    </button>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 
