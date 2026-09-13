@@ -36,14 +36,29 @@ export function getApiBaseUrl(): string {
 
 export function getMediaUrl(path?: string | null): string {
   if (!path) return "/images/figure-samurai-red.svg";
-  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("blob:") || path.startsWith("data:")) {
+  if (
+    path.startsWith("http://") ||
+    path.startsWith("https://") ||
+    path.startsWith("blob:") ||
+    path.startsWith("data:")
+  ) {
     return path;
   }
+  if (path.startsWith("/images/")) {
+    return path;
+  }
+  const apiBase = getApiBaseUrl().replace(/\/api\/?$/, "");
   if (path.startsWith("/media/")) {
-    const apiBase = getApiBaseUrl().replace(/\/api\/?$/, "");
     return `${apiBase}${path}`;
   }
-  return path;
+  if (path.startsWith("media/")) {
+    return `${apiBase}/${path}`;
+  }
+  if (path.startsWith("/products/") || path.startsWith("products/")) {
+    const clean = path.startsWith("/") ? path : `/${path}`;
+    return `${apiBase}/media${clean}`;
+  }
+  return `${apiBase}/media/${path.replace(/^\/+/, "")}`;
 }
 
 const getApi = () => getApiBaseUrl();
