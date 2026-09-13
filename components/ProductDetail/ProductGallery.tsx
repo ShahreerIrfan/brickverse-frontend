@@ -84,9 +84,8 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
             className={`w-[70px] h-[70px] sm:w-[84px] sm:h-[84px] lg:w-[88px] lg:h-[88px] rounded-[18px] flex items-center justify-center relative overflow-hidden transition-all shrink-0 cursor-pointer p-1.5 ${
               activeThumb === idx
                 ? "border-[2.4px] border-[#FF4D6D] shadow-md scale-[1.02]"
-                : "border border-[#EAE3F7] hover:border-[#736E9B]/50 bg-white"
-            }`}
-            style={{ backgroundColor: activeThumb === idx ? thumb.bg : "#FFFFFF" }}
+                : "border border-[#EAE3F7] hover:border-[#736E9B]/50"
+            } bg-white`}
           >
             <div className="relative w-full h-full">
               <Image
@@ -104,35 +103,35 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
       {/* ------------------------------------------------------------- */}
       {/* Main Showcase Hero Display Card */}
       {/* ------------------------------------------------------------- */}
-      <div className="relative w-full max-w-[560px] h-[380px] sm:h-[480px] lg:h-[580px] rounded-[26px] overflow-hidden flex items-center justify-center select-none shadow-[0_12px_36px_rgba(23,17,54,0.06)] border border-[#EAE3F7]/80 bg-gradient-to-br from-[#FFE7EE] to-[#F3E6FF]">
-        {/* Glow circles & decorative backdrop */}
-        <div className="absolute w-[280px] sm:w-[380px] h-[280px] sm:h-[380px] rounded-full bg-white/40 pointer-events-none" />
-        <div className="absolute w-[320px] sm:w-[440px] h-[320px] sm:h-[440px] rounded-full border-2 border-white/50 pointer-events-none" />
-        
-        {/* Decorative sparkle stars */}
-        <span className="absolute left-8 top-16 text-white/80 text-xl select-none pointer-events-none">✦</span>
-        <span className="absolute right-12 bottom-20 text-white/80 text-lg select-none pointer-events-none">✦</span>
-
+      <div className="relative w-full max-w-[560px] aspect-square rounded-[26px] overflow-hidden flex items-center justify-center select-none shadow-[0_8px_24px_rgba(23,17,54,0.04)] border border-[#EAE3F7] bg-white">
         {/* Top-Left Discount Badge */}
-        <div className="absolute left-4 sm:left-6 top-4 sm:top-6 -rotate-8 z-10">
-          <span className="bg-[#FF4D6D] text-white text-xs sm:text-sm font-extrabold px-3.5 py-1.5 rounded-full shadow-md inline-block">
-            {product.discountPercent ? `-${product.discountPercent}%` : (product.badge || "-24%")}
-          </span>
-        </div>
+        {product.discountPercent ? (
+          <div className="absolute left-4 sm:left-6 top-4 sm:top-6 -rotate-8 z-10">
+            <span className="bg-[#FF4D6D] text-white text-xs sm:text-sm font-extrabold px-3.5 py-1.5 rounded-full shadow-md inline-block">
+              -{product.discountPercent}%
+            </span>
+          </div>
+        ) : product.badge ? (
+          <div className="absolute left-4 sm:left-6 top-4 sm:top-6 -rotate-8 z-10">
+            <span className="bg-[#FF4D6D] text-white text-xs sm:text-sm font-extrabold px-3.5 py-1.5 rounded-full shadow-md inline-block">
+              {product.badge}
+            </span>
+          </div>
+        ) : null}
 
         {/* Top-Right Action Floating Buttons */}
         <div className="absolute right-4 sm:right-6 top-4 sm:top-6 flex flex-col gap-2 z-10">
           <button
             onClick={() => setIsWishlisted(!isWishlisted)}
             aria-label="Add to wishlist"
-            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white shadow-md flex items-center justify-center text-[#736E9B] hover:text-[#FF4D6D] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white shadow-md flex items-center justify-center text-[#736E9B] hover:text-[#FF4D6D] hover:scale-105 active:scale-95 transition-all cursor-pointer border border-[#EAE3F7]"
           >
             <IconHeart className={`w-5 h-5 ${isWishlisted ? "text-[#FF4D6D] fill-[#FF4D6D]" : ""}`} />
           </button>
           <button
             onClick={handleShare}
             aria-label="Share product"
-            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white shadow-md flex items-center justify-center text-[#736E9B] hover:text-[#7B5CFF] hover:scale-105 active:scale-95 transition-all cursor-pointer relative"
+            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white shadow-md flex items-center justify-center text-[#736E9B] hover:text-[#7B5CFF] hover:scale-105 active:scale-95 transition-all cursor-pointer relative border border-[#EAE3F7]"
           >
             <IconSpark className="w-5 h-5" />
           </button>
@@ -144,13 +143,14 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
         </div>
 
         {/* Active Product Artwork Preview */}
-        <div className="relative w-[220px] sm:w-[320px] lg:w-[400px] h-[260px] sm:h-[360px] lg:h-[440px] z-10 transition-transform duration-300 hover:scale-105 flex items-center justify-center">
+        <div className="relative w-full h-full p-2 sm:p-4 z-0 transition-transform duration-300 hover:scale-102 flex items-center justify-center">
           <Image
             src={thumbs[activeThumb]?.src || thumbs[0]?.src}
             alt={product.name}
             fill
             priority
-            className="object-contain drop-shadow-[0_20px_24px_rgba(23,17,54,0.18)]"
+            sizes="(max-width: 1024px) 100vw, 560px"
+            className="object-contain"
           />
         </div>
 
@@ -158,7 +158,7 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
         <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 z-10">
           <button
             onClick={() => setZoomOpen(true)}
-            className="inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#171136] font-bold text-xs sm:text-[13px] px-3.5 sm:px-4 py-2 rounded-full shadow-md backdrop-blur-sm transition-all active:scale-95 cursor-pointer"
+            className="inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#171136] font-bold text-xs sm:text-[13px] px-3.5 sm:px-4 py-2 rounded-full shadow-md border border-[#EAE3F7] backdrop-blur-sm transition-all active:scale-95 cursor-pointer"
           >
             <IconZoomIn className="w-4 h-4 text-[#171136]" />
             <span>Zoom</span>
