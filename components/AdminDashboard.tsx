@@ -72,10 +72,12 @@ import {
   IconFilter,
   IconWallet,
   IconDots,
+  IconTerminal,
 } from "./icons";
 import PartnerStoresList from "./admin/PartnerStoresList";
 import PartnerStoreDetail from "./admin/PartnerStoreDetail";
 import PartnerStoreForm from "./admin/PartnerStoreForm";
+import AdminLogsView from "./admin/AdminLogsView";
 import { printOrderInvoice } from "@/lib/invoice";
 
 interface AdminDashboardProps {
@@ -95,7 +97,8 @@ type ActiveNav =
   | "users-all"
   | "stores-all"
   | "stores-single"
-  | "stores-form";
+  | "stores-form"
+  | "logs";
 
 export default function AdminDashboard({ user, initialNav, initialOrderId, initialStoreId }: AdminDashboardProps) {
   const { logout } = useAuth();
@@ -157,6 +160,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     "stores-all": "/en/admin/stores",
     "stores-form": "/en/admin/stores/new",
     "stores-single": "/en/admin/stores",
+    "logs": "/en/admin/logs",
   };
 
   const navigateTo = (nav: ActiveNav, customUrl?: string) => {
@@ -219,6 +223,8 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       } else if (path.includes("/stores")) {
         setActiveNav("stores-all");
         setStoresMenuOpen(true);
+      } else if (path.includes("/logs")) {
+        setActiveNav("logs");
       } else if (path.includes("/en/admin") || path.includes("/admin")) {
         setActiveNav("dashboard");
       }
@@ -1504,6 +1510,31 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                   </button>
                 </div>
               )}
+            </div>
+
+            {/* 6) Logs */}
+            <div className="space-y-1">
+              <button
+                onClick={() => navigateTo("logs")}
+                title="System & Request Logs"
+                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-bold text-xs sm:text-[13.5px] transition-all cursor-pointer relative ${
+                  activeNav === "logs"
+                    ? "bg-[#2A2159] text-white before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-sm before:bg-[#FF4D6D]"
+                    : "text-[#C7C0E8] hover:bg-[#2A2159]/60 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <IconTerminal className={`w-4 h-4 shrink-0 ${activeNav === "logs" ? "text-[#2ECC8F]" : "text-[#A79FD1]"}`} />
+                  {!sidebarCollapsed && <span>Logs</span>}
+                </div>
+                {!sidebarCollapsed && (
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full bg-[#2ECC8F]/20 text-[#2ECC8F] text-[10px] font-bold border border-[#2ECC8F]/30">
+                      LIVE
+                    </span>
+                  </div>
+                )}
+              </button>
             </div>
 
             {/* STORE Section (Matching SVG) */}
@@ -4064,6 +4095,13 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
               onCancel={() => navigateTo("stores-all")}
               showToast={showToast}
             />
+          )}
+
+          {/* ============================================================= */}
+          {/* VIEW: SYSTEM & REQUEST LOGS */}
+          {/* ============================================================= */}
+          {activeNav === "logs" && (
+            <AdminLogsView onBackToDashboard={() => navigateTo("dashboard")} />
           )}
         </main>
       </div>

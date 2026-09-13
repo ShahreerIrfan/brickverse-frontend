@@ -795,5 +795,114 @@ export async function getStoreSettlement(storeId: number | string) {
   }
 }
 
+// -------------------------------------------------------------
+// System Logs & Request Monitoring APIs
+// -------------------------------------------------------------
+export interface SystemLogItem {
+  id: number | string;
+  level: "INFO" | "WARNING" | "ERROR" | "CRITICAL" | "REQUEST";
+  source: string;
+  method?: string;
+  path?: string;
+  status_code?: number;
+  ip_address?: string;
+  user_agent?: string;
+  duration_ms?: number;
+  message: string;
+  details?: Record<string, any>;
+  traceback?: string;
+  created_at: string;
+}
 
+export interface SystemLogsResponse {
+  logs: SystemLogItem[];
+  metrics: {
+    total_logs: number;
+    error_count: number;
+    warning_count: number;
+    request_count: number;
+    avg_duration_ms: number;
+    uptime_seconds: number;
+    server_status: string;
+    python_version: string;
+    django_version: string;
+  };
+}
 
+export async function getSystemLogs(params?: {
+  level?: string;
+  status_code?: string;
+  method?: string;
+  search?: string;
+  limit?: number;
+}): Promise<SystemLogsResponse> {
+  try {
+    const searchParams = new URLSearchParams();
+    if (params?.level && params.level !== "all") searchParams.set("level", params.level);
+    if (params?.status_code && params.status_code !== "all") searchParams.set("status_code", params.status_code);
+    if (params?.method && params.method !== "all") searchParams.set("method", params.method);
+    if (params?.search) searchParams.set("search", params.search);
+    if (params?.limit) searchParams.set("limit", String(params.limit));
+
+    const qs = searchParams.toString() ? `?${searchParams.toString()}` : "";
+    const res = await fetch(`${getApiBaseUrl()}/logs/${qs}`, { cache: "no-store" });
+    if (!res.ok) {
+      return {
+        logs: [],
+        metrics: {
+          total_logs: 0,
+          error_count: 0,
+          warning_count: 0,
+          request_count: 0,
+          avg_duration_ms: 0,
+          uptime_seconds: 0,
+          server_status: "Offline",
+          python_version: "3.13",
+          django_version: "5.1",
+        },
+      };
+    }
+    return await res.json();
+  } catch (error) {
+    return {
+      logs: [],
+      metrics: {
+        total_logs: 0,
+        error_count: 0,
+        warning_count: 0,
+        request_count: 0,
+        avg_duration_ms: 0,
+        uptime_seconds: 0,
+        server_status: "Offline",
+        python_version: "3.13",
+        django_version: "5.1",
+      },
+    };
+  }
+}
+
+export async function clearSystemLogs(): Promise<{ success: boolean; message?: string }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/logs/clear/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    const data = await res.json().catch(() => null);
+    return { success: res.ok, message: data?.message };
+  } catch (error) {
+    return { success: false, message: "Network connection error" };
+  }
+}
+
+export async function generateTestLog(level: "INFO" | "WARNING" | "ERROR" = "INFO", message?: string): Promise<{ success: boolean }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/logs/test/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ level, message }),
+    });
+    return { success: res.ok };
+  } catch (error) {
+    return { success: false };
+  }
+}

@@ -32,7 +32,8 @@ export default function AdminRoutePage({ params }: PageProps) {
     | "users-all"
     | "stores-all"
     | "stores-single"
-    | "stores-form" = "dashboard";
+    | "stores-form"
+    | "logs" = "dashboard";
   let initialOrderId: string | undefined = undefined;
   let initialStoreId: string | undefined = undefined;
 
@@ -64,6 +65,8 @@ export default function AdminRoutePage({ params }: PageProps) {
     } else {
       initialNav = "stores-all";
     }
+  } else if (slug[0] === "logs") {
+    initialNav = "logs";
   }
 
   useEffect(() => {
