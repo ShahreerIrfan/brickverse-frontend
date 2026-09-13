@@ -1,15 +1,28 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { IconChevronRight, IconSearch, IconHeart, IconBag, IconUser } from "./icons";
 import MobileMenu from "./MobileMenu";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 
 export default function Navbar() {
+  const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState("");
   const { user, isAuthenticated, openLoginModal } = useAuth();
   const { totalItems, subtotalFormatted, openCart } = useCart();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      router.push(`/shop?search=${encodeURIComponent(searchTerm.trim())}`);
+    } else {
+      router.push("/shop");
+    }
+  };
 
   return (
     <div className="bg-white border-b border-[#EAE3F7] relative z-40">
@@ -20,7 +33,7 @@ export default function Navbar() {
           {/* Brand Logo & Mobile Menu */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             <MobileMenu />
-            <a href="/" className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            <Link href="/" className="flex items-center gap-2 sm:gap-2.5 shrink-0">
               <Image
                 src="/images/logo-mark.svg"
                 alt="Brickverse"
@@ -37,7 +50,7 @@ export default function Navbar() {
                   figures · bricks · code kits
                 </span>
               </span>
-            </a>
+            </Link>
           </div>
 
           {/* Mobile Right Action Icons (Row 1 Right on Mobile, Hidden on Desktop) */}
@@ -91,24 +104,33 @@ export default function Navbar() {
         </div>
 
         {/* Search Bar (Row 2 on Mobile, Center column on Desktop) */}
-        <div className="w-full lg:flex-1 lg:mx-4 flex items-center bg-[#F6F1FF] border border-[#EAE3F7] rounded-full h-11 sm:h-12.5 px-3.5 sm:px-5 gap-2 min-w-0">
-          <span className="hidden sm:flex items-center gap-1.5 text-[13px] font-semibold text-[#171136] shrink-0">
+        <form
+          onSubmit={handleSearch}
+          className="w-full lg:flex-1 lg:mx-4 flex items-center bg-[#F6F1FF] border border-[#EAE3F7] rounded-full h-11 sm:h-12.5 px-3.5 sm:px-5 gap-2 min-w-0"
+        >
+          <Link
+            href="/shop"
+            className="hidden sm:flex items-center gap-1.5 text-[13px] font-semibold text-[#171136] shrink-0 hover:text-[#FF4D6D] transition-colors"
+          >
             All categories
             <IconChevronRight className="w-3.5 h-3.5 text-[#736E9B]" />
-          </span>
+          </Link>
           <span className="hidden sm:block w-px h-6 bg-[#EAE3F7] shrink-0" />
           <IconSearch className="w-4 h-4 text-[#736E9B] shrink-0" />
           <input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search figures, brick sets, coding kits…"
             className="bg-transparent outline-none text-xs sm:text-[13.5px] text-[#3B3468] placeholder:text-[#736E9B] flex-1 min-w-0"
           />
           <button
+            type="submit"
             aria-label="Search"
             className="w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-full bg-[#FF4D6D] hover:bg-[#ff3358] flex items-center justify-center shrink-0 transition-colors cursor-pointer"
           >
             <IconSearch className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
           </button>
-        </div>
+        </form>
 
         {/* Desktop Right Action Icons (Hidden on Mobile, Displayed on Desktop) */}
         <div className="hidden lg:flex items-center gap-2.5 sm:gap-3 shrink-0 ml-auto">

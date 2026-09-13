@@ -17,20 +17,17 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
   const [sharedToast, setSharedToast] = useState(false);
 
   // Available thumbnail images / angles from product data and gallery
+  const primaryImg = getMediaUrl(product.image || product.image_file) || "/images/figure-samurai-red.svg";
+  const galleryItems = (product.gallery_images || []).map((g, idx) => ({
+    type: "image",
+    src: getMediaUrl(g.imageUrl || g.image_url),
+    label: `Gallery ${idx + 1}`,
+    bg: "#F4F1FD",
+  }));
+
   const thumbs = [
-    { type: "image", src: getMediaUrl(product.image || product.image_file), label: "Primary View", bg: "#FFEAF0" },
-    ...(product.gallery_images && product.gallery_images.length > 0
-      ? product.gallery_images.map((g, idx) => ({
-          type: "image",
-          src: getMediaUrl(g.imageUrl || g.image_url),
-          label: `Gallery ${idx + 1}`,
-          bg: "#F4F1FD",
-        }))
-      : [
-          { type: "image", src: "/images/figure-mecha-teal.svg", label: "Side Angle", bg: "#E4F7F8" },
-          { type: "image", src: "/images/toon-mascot.svg", label: "Chibi Mascot", bg: "#FFF4DA" },
-          { type: "image", src: "/images/bricks-stack-navy.svg", label: "Base Stand", bg: "#EFE9FF" },
-        ]),
+    { type: "image", src: primaryImg, label: "Primary View", bg: "#FFEAF0" },
+    ...galleryItems,
   ];
 
 

@@ -227,6 +227,9 @@ export default function CheckoutPage() {
       shipping_address: `${address}, ${district}`,
       total_amount: totalAmount,
       items: items.map((it) => ({
+        id: it.id,
+        productId: it.id,
+        product: it.id,
         name: it.name,
         price: it.price,
         quantity: it.quantity,
