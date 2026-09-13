@@ -913,3 +913,51 @@ export async function generateTestLog(level: "INFO" | "WARNING" | "ERROR" = "INF
     return { success: false };
   }
 }
+
+export async function getLogRetention(): Promise<{
+  retention_days: number;
+  is_auto_delete_enabled: boolean;
+  last_cleaned_at?: string;
+}> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/logs/retention/?_t=${Date.now()}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return { retention_days: 1, is_auto_delete_enabled: true };
+    return await res.json();
+  } catch {
+    return { retention_days: 1, is_auto_delete_enabled: true };
+  }
+}
+
+export async function updateLogRetention(
+  retention_days: number,
+  is_auto_delete_enabled: boolean = true
+): Promise<{ success: boolean; message?: string; pruned_count?: number }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/logs/retention/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ retention_days, is_auto_delete_enabled }),
+    });
+    const data = await res.json().catch(() => null);
+    return { success: res.ok, message: data?.message, pruned_count: data?.pruned_count };
+  } catch {
+    return { success: false, message: "Network connection error" };
+  }
+}
+
+export async function pruneLogs(days?: number): Promise<{ success: boolean; deleted_count: number; message?: string }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/logs/prune/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(days !== undefined ? { days } : {}),
+    });
+    const data = await res.json().catch(() => null);
+    return { success: res.ok, deleted_count: data?.deleted_count || 0, message: data?.message };
+  } catch {
+    return { success: false, deleted_count: 0, message: "Network error" };
+  }
+}
+

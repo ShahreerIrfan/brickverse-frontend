@@ -5,6 +5,9 @@ import {
   getSystemLogs,
   clearSystemLogs,
   generateTestLog,
+  getLogRetention,
+  updateLogRetention,
+  pruneLogs,
   SystemLogItem,
   SystemLogsResponse,
 } from "@/lib/api";
@@ -33,6 +36,15 @@ export default function AdminLogsView({ onBackToDashboard }: AdminLogsViewProps)
   const [selectedLog, setSelectedLog] = useState<SystemLogItem | null>(null);
   const [copiedId, setCopiedId] = useState<string | number | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Retention Policy State
+  const [retentionDays, setRetentionDays] = useState<number>(1);
+  const [isAutoDeleteEnabled, setIsAutoDeleteEnabled] = useState<boolean>(true);
+  const [isRetentionModalOpen, setIsRetentionModalOpen] = useState<boolean>(false);
+  const [selectedRetentionPreset, setSelectedRetentionPreset] = useState<string>("1");
+  const [customDaysInput, setCustomDaysInput] = useState<string>("1");
+  const [isSavingRetention, setIsSavingRetention] = useState<boolean>(false);
+  const [isPruningNow, setIsPruningNow] = useState<boolean>(false);
 
   // Filters
   const [levelFilter, setLevelFilter] = useState<string>("all");
@@ -124,9 +136,86 @@ export default function AdminLogsView({ onBackToDashboard }: AdminLogsViewProps)
     };
   }, []);
 
+  // Initial Retention Policy Loader
+  useEffect(() => {
+    const loadRetention = async () => {
+      try {
+        const res = await getLogRetention();
+        setRetentionDays(res.retention_days);
+        setIsAutoDeleteEnabled(res.is_auto_delete_enabled);
+        if ([1, 2, 3, 7, 14, 30].includes(res.retention_days)) {
+          setSelectedRetentionPreset(String(res.retention_days));
+        } else if (res.retention_days === 0 || !res.is_auto_delete_enabled) {
+          setSelectedRetentionPreset("0");
+        } else {
+          setSelectedRetentionPreset("custom");
+          setCustomDaysInput(String(res.retention_days));
+        }
+      } catch (e) {
+        console.warn("Could not load retention settings", e);
+      }
+    };
+    loadRetention();
+  }, []);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handleSaveRetention = async () => {
+    setIsSavingRetention(true);
+    let daysToSet = 1;
+    let autoDelete = true;
+
+    if (selectedRetentionPreset === "0") {
+      daysToSet = 0;
+      autoDelete = false;
+    } else if (selectedRetentionPreset === "custom") {
+      const parsed = parseInt(customDaysInput, 10);
+      daysToSet = isNaN(parsed) || parsed < 1 ? 1 : parsed;
+      autoDelete = true;
+    } else {
+      daysToSet = parseInt(selectedRetentionPreset, 10) || 1;
+      autoDelete = true;
+    }
+
+    const res = await updateLogRetention(daysToSet, autoDelete);
+    setIsSavingRetention(false);
+
+    if (res.success) {
+      setRetentionDays(daysToSet);
+      setIsAutoDeleteEnabled(autoDelete);
+      setIsRetentionModalOpen(false);
+      showToast(
+        autoDelete
+          ? `✓ Auto-delete updated: Logs older than ${daysToSet} day(s) will be deleted.`
+          : `✓ Auto-delete disabled: Logs will be kept indefinitely.`
+      );
+      fetchLogs(true);
+    } else {
+      alert("Failed to update retention policy. Please try again.");
+    }
+  };
+
+  const handlePruneNow = async () => {
+    setIsPruningNow(true);
+    let targetDays = retentionDays;
+    if (selectedRetentionPreset === "custom") {
+      targetDays = parseInt(customDaysInput, 10) || 1;
+    } else if (selectedRetentionPreset !== "0") {
+      targetDays = parseInt(selectedRetentionPreset, 10) || retentionDays;
+    }
+
+    const res = await pruneLogs(targetDays);
+    setIsPruningNow(false);
+
+    if (res.success) {
+      showToast(`✓ Pruned ${res.deleted_count} log(s) older than ${targetDays} day(s).`);
+      fetchLogs(true);
+    } else {
+      alert("Failed to prune logs.");
+    }
   };
 
   const handleClearLogs = async () => {
@@ -265,6 +354,21 @@ export default function AdminLogsView({ onBackToDashboard }: AdminLogsViewProps)
 
         {/* Action Controls */}
         <div className="flex flex-wrap items-center gap-2.5">
+          {/* Auto-Delete Retention Setting Button */}
+          <button
+            onClick={() => setIsRetentionModalOpen(true)}
+            title="Configure Auto-Delete Retention Period"
+            className="px-3.5 py-2 rounded-xl bg-white border border-[#EAE3F7] hover:border-[#FF4D6D] text-[#171136] text-xs font-bold flex items-center gap-1.5 shadow-2xs hover:bg-[#FFF5F7] transition-all cursor-pointer"
+          >
+            <span className="text-[#FF4D6D]">🕒</span>
+            <span>
+              Auto-delete:{" "}
+              <strong className="text-[#FF4D6D]">
+                {isAutoDeleteEnabled ? `${retentionDays} ${retentionDays === 1 ? "Day" : "Days"}` : "Disabled"}
+              </strong>
+            </span>
+          </button>
+
           {/* Auto-refresh Selector */}
           <div className="flex items-center gap-1.5 bg-[#F6F1FF] px-3 py-1.5 rounded-xl border border-[#EAE3F7] text-xs">
             <span className="w-2 h-2 rounded-full bg-[#2ECC8F] animate-pulse" />
@@ -792,6 +896,178 @@ export default function AdminLogsView({ onBackToDashboard }: AdminLogsViewProps)
               >
                 Close
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Log Retention Policy Modal */}
+      {isRetentionModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-[#171136]/70 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={() => setIsRetentionModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-[#EAE3F7] animate-in zoom-in-95 duration-150 space-y-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-[#EAE3F7] pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#FFEAF0] text-[#FF4D6D] flex items-center justify-center font-bold text-lg">
+                  🕒
+                </div>
+                <div>
+                  <h3 className="font-[family-name:var(--font-display)] font-extrabold text-xl text-[#171136]">
+                    Auto-Delete Log Retention
+                  </h3>
+                  <p className="text-xs text-[#736E9B] mt-0.5">
+                    Automatically purge older server & request logs
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsRetentionModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-[#F6F1FF] hover:bg-[#EFE9FF] flex items-center justify-center text-[#171136] transition-colors"
+              >
+                <IconClose className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Retention Preset Options */}
+            <div className="space-y-3">
+              <label className="text-xs font-bold uppercase tracking-wider text-[#736E9B] block">
+                Select Auto-Delete Timeframe
+              </label>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                {[
+                  { value: "1", label: "1 Day (24h)", badge: "Recommended" },
+                  { value: "2", label: "2 Days" },
+                  { value: "3", label: "3 Days" },
+                  { value: "7", label: "7 Days (1 Wk)" },
+                  { value: "14", label: "14 Days" },
+                  { value: "30", label: "30 Days (1 Mo)" },
+                ].map((preset) => {
+                  const isSelected = selectedRetentionPreset === preset.value;
+                  return (
+                    <button
+                      key={preset.value}
+                      type="button"
+                      onClick={() => setSelectedRetentionPreset(preset.value)}
+                      className={`p-3 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                        isSelected
+                          ? "border-[#FF4D6D] bg-[#FFF5F7] ring-2 ring-[#FF4D6D]/20 shadow-xs"
+                          : "border-[#EAE3F7] bg-[#FAF7FD] hover:border-[#7B5CFF]/50"
+                      }`}
+                    >
+                      <span className={`text-xs font-extrabold ${isSelected ? "text-[#FF4D6D]" : "text-[#171136]"}`}>
+                        {preset.label}
+                      </span>
+                      {preset.badge && (
+                        <span className="text-[10px] text-[#FF4D6D] font-bold mt-1">
+                          {preset.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Custom Days & Never Options */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                {/* Custom Days Card */}
+                <div
+                  onClick={() => setSelectedRetentionPreset("custom")}
+                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                    selectedRetentionPreset === "custom"
+                      ? "border-[#FF4D6D] bg-[#FFF5F7] ring-2 ring-[#FF4D6D]/20 shadow-xs"
+                      : "border-[#EAE3F7] bg-[#FAF7FD] hover:border-[#7B5CFF]/50"
+                  }`}
+                >
+                  <span className={`text-xs font-extrabold block mb-2 ${selectedRetentionPreset === "custom" ? "text-[#FF4D6D]" : "text-[#171136]"}`}>
+                    Custom Time (Days)
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      max="365"
+                      value={customDaysInput}
+                      onChange={(e) => {
+                        setSelectedRetentionPreset("custom");
+                        setCustomDaysInput(e.target.value);
+                      }}
+                      placeholder="e.g. 5"
+                      className="w-20 bg-white border border-[#EAE3F7] rounded-xl px-3 py-1.5 text-xs font-bold text-[#171136] outline-none focus:border-[#FF4D6D]"
+                    />
+                    <span className="text-xs text-[#736E9B] font-semibold">days</span>
+                  </div>
+                </div>
+
+                {/* Never Delete Card */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedRetentionPreset("0")}
+                  className={`p-3.5 rounded-2xl border text-left flex flex-col justify-center transition-all cursor-pointer ${
+                    selectedRetentionPreset === "0"
+                      ? "border-[#FF4D6D] bg-[#FFF5F7] ring-2 ring-[#FF4D6D]/20 shadow-xs"
+                      : "border-[#EAE3F7] bg-[#FAF7FD] hover:border-[#7B5CFF]/50"
+                  }`}
+                >
+                  <span className={`text-xs font-extrabold ${selectedRetentionPreset === "0" ? "text-[#FF4D6D]" : "text-[#171136]"}`}>
+                    Never Auto-Delete
+                  </span>
+                  <span className="text-[10.5px] text-[#736E9B] mt-1">
+                    Keep all history until cleared
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Explanatory Box */}
+            <div className="bg-[#FAF7FD] p-4 rounded-2xl border border-[#EAE3F7] text-xs text-[#736E9B] space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-[#171136]">
+                <span className="text-[#2ECC8F]">✓</span>
+                <span>Active Policy Behavior</span>
+              </div>
+              <p>
+                {selectedRetentionPreset === "0"
+                  ? "Logs will be retained permanently until manually cleared."
+                  : selectedRetentionPreset === "custom"
+                  ? `All server & request logs older than ${customDaysInput || 1} day(s) are automatically purged.`
+                  : `All server & request logs older than ${selectedRetentionPreset} day(s) are automatically purged.`}
+              </p>
+            </div>
+
+            {/* Modal Bottom Actions */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-[#EAE3F7]">
+              <button
+                type="button"
+                onClick={handlePruneNow}
+                disabled={isPruningNow}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-full bg-[#FAF7FD] hover:bg-[#F0EBF8] text-[#7B5CFF] text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>{isPruningNow ? "Pruning..." : "Prune Old Logs Now"}</span>
+              </button>
+
+              <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                <button
+                  type="button"
+                  onClick={() => setIsRetentionModalOpen(false)}
+                  className="px-4 py-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveRetention}
+                  disabled={isSavingRetention}
+                  className="px-5 py-2.5 rounded-full bg-[#FF4D6D] hover:bg-[#E6004C] text-white text-xs font-bold shadow-md shadow-[#FF4D6D]/20 transition-all cursor-pointer"
+                >
+                  {isSavingRetention ? "Saving..." : "Save Policy"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
