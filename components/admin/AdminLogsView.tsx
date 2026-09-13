@@ -40,24 +40,43 @@ export default function AdminLogsView({ onBackToDashboard }: AdminLogsViewProps)
   const [methodFilter, setMethodFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // Live Auto Refresh (Off, 3s, 5s, 10s)
-  const [autoRefreshSecs, setAutoRefreshSecs] = useState<number>(5);
+  // Live Auto Refresh (Off, 2s, 3s, 5s, 10s)
+  const [autoRefreshSecs, setAutoRefreshSecs] = useState<number>(3);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<"table" | "terminal">("table");
+  const [secondsUntilNext, setSecondsUntilNext] = useState<number>(3);
+
+  const filtersRef = useRef({
+    levelFilter,
+    statusFilter,
+    methodFilter,
+    searchQuery,
+  });
+
+  useEffect(() => {
+    filtersRef.current = {
+      levelFilter,
+      statusFilter,
+      methodFilter,
+      searchQuery,
+    };
+  }, [levelFilter, statusFilter, methodFilter, searchQuery]);
 
   // Fetch Logs
   const fetchLogs = async (isManual = false) => {
     if (isManual) setRefreshing(true);
     try {
+      const current = filtersRef.current;
       const res = await getSystemLogs({
-        level: levelFilter,
-        status_code: statusFilter,
-        method: methodFilter,
-        search: searchQuery,
+        level: current.levelFilter,
+        status_code: current.statusFilter,
+        method: current.methodFilter,
+        search: current.searchQuery,
         limit: 150,
       });
       setData(res);
       setLastUpdated(new Date());
+      setSecondsUntilNext(autoRefreshSecs);
     } catch (err) {
       console.error("Failed to fetch system logs:", err);
     } finally {
@@ -66,18 +85,44 @@ export default function AdminLogsView({ onBackToDashboard }: AdminLogsViewProps)
     }
   };
 
+  // Immediate fetch on filter change
   useEffect(() => {
-    fetchLogs();
+    fetchLogs(false);
   }, [levelFilter, statusFilter, methodFilter, searchQuery]);
 
-  // Polling timer
+  // 1-second interval ticker for smooth countdown and reliable auto-refresh
   useEffect(() => {
     if (autoRefreshSecs <= 0) return;
-    const interval = setInterval(() => {
-      fetchLogs(false);
-    }, autoRefreshSecs * 1000);
-    return () => clearInterval(interval);
-  }, [autoRefreshSecs, levelFilter, statusFilter, methodFilter, searchQuery]);
+
+    setSecondsUntilNext(autoRefreshSecs);
+    const ticker = setInterval(() => {
+      setSecondsUntilNext((prev) => {
+        if (prev <= 1) {
+          fetchLogs(false);
+          return autoRefreshSecs;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(ticker);
+  }, [autoRefreshSecs]);
+
+  // Window Focus & Tab Visibility Auto-Sync (Instantly syncs when tab is opened)
+  useEffect(() => {
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === "visible") {
+        fetchLogs(false);
+      }
+    };
+
+    window.addEventListener("focus", handleVisibilityOrFocus);
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+    return () => {
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+    };
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -222,7 +267,8 @@ export default function AdminLogsView({ onBackToDashboard }: AdminLogsViewProps)
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Auto-refresh Selector */}
           <div className="flex items-center gap-1.5 bg-[#F6F1FF] px-3 py-1.5 rounded-xl border border-[#EAE3F7] text-xs">
-            <span className="text-[#736E9B] font-semibold">Auto-refresh:</span>
+            <span className="w-2 h-2 rounded-full bg-[#2ECC8F] animate-pulse" />
+            <span className="text-[#736E9B] font-semibold">Live stream:</span>
             <select
               value={autoRefreshSecs}
               onChange={(e) => setAutoRefreshSecs(Number(e.target.value))}
@@ -230,11 +276,16 @@ export default function AdminLogsView({ onBackToDashboard }: AdminLogsViewProps)
               className="bg-transparent font-bold text-[#171136] outline-none cursor-pointer"
             >
               <option value={0}>Paused</option>
+              <option value={2}>2s</option>
               <option value={3}>3s</option>
               <option value={5}>5s</option>
               <option value={10}>10s</option>
-              <option value={30}>30s</option>
             </select>
+            {autoRefreshSecs > 0 && (
+              <span className="text-[10px] font-mono text-[#7B5CFF] font-bold">
+                ({secondsUntilNext}s)
+              </span>
+            )}
           </div>
 
           {/* Refresh Button */}

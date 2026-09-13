@@ -843,9 +843,16 @@ export async function getSystemLogs(params?: {
     if (params?.method && params.method !== "all") searchParams.set("method", params.method);
     if (params?.search) searchParams.set("search", params.search);
     if (params?.limit) searchParams.set("limit", String(params.limit));
+    searchParams.set("_t", Date.now().toString());
 
-    const qs = searchParams.toString() ? `?${searchParams.toString()}` : "";
-    const res = await fetch(`${getApiBaseUrl()}/logs/${qs}`, { cache: "no-store" });
+    const qs = `?${searchParams.toString()}`;
+    const res = await fetch(`${getApiBaseUrl()}/logs/${qs}`, {
+      cache: "no-store",
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+      },
+    });
     if (!res.ok) {
       return {
         logs: [],
