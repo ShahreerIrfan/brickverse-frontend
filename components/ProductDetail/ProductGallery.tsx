@@ -16,20 +16,51 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
   const [zoomOpen, setZoomOpen] = useState(false);
   const [sharedToast, setSharedToast] = useState(false);
 
-  // Available thumbnail images / angles from product data and gallery
-  const primaryImg = getMediaUrl(product.image || product.image_file) || "/images/figure-samurai-red.svg";
-  const galleryItems = (product.gallery_images || []).map((g, idx) => ({
-    type: "image",
-    src: getMediaUrl(g.imageUrl || g.image_url),
-    label: `Gallery ${idx + 1}`,
-    bg: "#F4F1FD",
-  }));
+  // Deduplicate and resolve primary + gallery images
+  const rawPrimary = getMediaUrl(product.image || product.image_file);
+  const isPlaceholder = !rawPrimary || rawPrimary.includes("figure-samurai-red.svg");
 
-  const thumbs = [
-    { type: "image", src: primaryImg, label: "Primary View", bg: "#FFEAF0" },
-    ...galleryItems,
-  ];
+  const galleryItems = (product.gallery_images || [])
+    .map((g, idx) => ({
+      type: "image" as const,
+      src: getMediaUrl(g.imageUrl || g.image_url),
+      label: `Gallery ${idx + 1}`,
+      bg: "#F4F1FD",
+    }))
+    .filter((g) => g.src && g.src !== "");
 
+  // Build clean thumbs list without duplicates
+  const allImages: { type: string; src: string; label: string; bg: string }[] = [];
+
+  if (!isPlaceholder && rawPrimary) {
+    allImages.push({
+      type: "image",
+      src: rawPrimary,
+      label: "Primary View",
+      bg: product.cardBg || "#FFEAF0",
+    });
+  }
+
+  galleryItems.forEach((item) => {
+    if (!allImages.some((existing) => existing.src === item.src)) {
+      allImages.push({
+        ...item,
+        label: allImages.length === 0 ? "Primary View" : `View ${allImages.length + 1}`,
+      });
+    }
+  });
+
+  // Fallback if no images exist at all
+  if (allImages.length === 0) {
+    allImages.push({
+      type: "image",
+      src: rawPrimary || "/images/figure-samurai-red.svg",
+      label: "Primary View",
+      bg: product.cardBg || "#FFEAF0",
+    });
+  }
+
+  const thumbs = allImages;
 
   const handleShare = () => {
     if (navigator.clipboard) {
@@ -50,20 +81,22 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
             key={idx}
             onClick={() => setActiveThumb(idx)}
             aria-label={`Select product preview ${idx + 1}: ${thumb.label}`}
-            className={`w-[70px] h-[70px] sm:w-[84px] sm:h-[84px] lg:w-[88px] lg:h-[88px] rounded-[18px] flex flex-col items-center justify-center relative overflow-hidden transition-all shrink-0 cursor-pointer ${
+            className={`w-[70px] h-[70px] sm:w-[84px] sm:h-[84px] lg:w-[88px] lg:h-[88px] rounded-[18px] flex items-center justify-center relative overflow-hidden transition-all shrink-0 cursor-pointer p-1.5 ${
               activeThumb === idx
                 ? "border-[2.4px] border-[#FF4D6D] shadow-md scale-[1.02]"
                 : "border border-[#EAE3F7] hover:border-[#736E9B]/50 bg-white"
             }`}
             style={{ backgroundColor: activeThumb === idx ? thumb.bg : "#FFFFFF" }}
           >
-            <Image
-              src={thumb.src}
-              alt={thumb.label}
-              width={56}
-              height={56}
-              className="w-[44px] sm:w-[54px] h-auto object-contain transition-transform group-hover:scale-105"
-            />
+            <div className="relative w-full h-full">
+              <Image
+                src={thumb.src}
+                alt={thumb.label}
+                fill
+                sizes="88px"
+                className="object-contain transition-transform group-hover:scale-105"
+              />
+            </div>
           </button>
         ))}
       </div>
@@ -111,9 +144,9 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
         </div>
 
         {/* Active Product Artwork Preview */}
-        <div className="relative w-[180px] sm:w-[260px] lg:w-[310px] h-[220px] sm:h-[320px] lg:h-[380px] z-10 transition-transform duration-300 hover:scale-105">
+        <div className="relative w-[220px] sm:w-[320px] lg:w-[400px] h-[260px] sm:h-[360px] lg:h-[440px] z-10 transition-transform duration-300 hover:scale-105 flex items-center justify-center">
           <Image
-            src={thumbs[activeThumb].src}
+            src={thumbs[activeThumb]?.src || thumbs[0]?.src}
             alt={product.name}
             fill
             priority
