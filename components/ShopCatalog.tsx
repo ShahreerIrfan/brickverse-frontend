@@ -490,7 +490,7 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
                       className="relative bg-white border border-[#EAE3F7] rounded-2xl sm:rounded-[20px] shadow-[0_10px_0_-5px_rgba(23,17,54,0.06)] hover:shadow-[0_16px_28px_-6px_rgba(23,17,54,0.12)] overflow-hidden flex flex-col group transition-all hover:-translate-y-1"
                     >
                       {/* Top Image Box */}
-                      <div className="relative h-[130px] sm:h-[180px] bg-[#FAF7FF] flex items-center justify-center p-2.5 sm:p-3 overflow-hidden">
+                      <div className="relative w-full aspect-square bg-[#FAF7FF] overflow-hidden">
                         {discountPercent ? (
                           <span className="absolute left-2 top-2 bg-[#FF4D6D] text-white text-[9px] sm:text-[10.5px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full z-10 shadow-xs">
                             -{discountPercent}%
@@ -522,14 +522,14 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
 
                         <Link
                           href={`/product/${product.slug || product.id}`}
-                          className="w-full h-full flex items-center justify-center p-1"
+                          className="w-full h-full block relative"
                         >
                           <Image
                             src={getMediaUrl(product.image || product.image_file)}
                             alt={product.name}
-                            width={140}
-                            height={160}
-                            className="w-auto h-auto max-h-[115px] sm:max-h-[160px] max-w-[85%] object-contain transition-transform group-hover:scale-105 drop-shadow-sm"
+                            fill
+                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                            className="object-cover transition-transform duration-300 group-hover:scale-105"
                           />
                         </Link>
                       </div>

@@ -58,12 +58,12 @@ export default function RelatedShelf({ products = [] }: RelatedShelfProps) {
             {/* Image Wrap */}
             <Link
               href={`/product/${item.id}`}
-              className="relative h-[130px] sm:h-[180px] flex items-center justify-center p-3"
+              className="relative w-full aspect-square flex items-center justify-center overflow-hidden"
               style={{ backgroundColor: item.cardBg || "#FAF8FE" }}
             >
               {item.badge && (
                 <span
-                  className="absolute left-3 top-3 text-white text-[9px] sm:text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-xs"
+                  className="absolute left-3 top-3 text-white text-[9px] sm:text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-xs z-10"
                   style={{ backgroundColor: item.badgeColor || item.accent }}
                 >
                   {item.badge}
@@ -73,7 +73,7 @@ export default function RelatedShelf({ products = [] }: RelatedShelfProps) {
               <button
                 type="button"
                 aria-label="Add to wishlist"
-                className="absolute right-3 top-3 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white flex items-center justify-center text-[#736E9B] hover:text-[#FF4D6D] transition-colors shadow-xs cursor-pointer"
+                className="absolute right-3 top-3 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white flex items-center justify-center text-[#736E9B] hover:text-[#FF4D6D] transition-colors shadow-xs cursor-pointer z-10"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -85,9 +85,9 @@ export default function RelatedShelf({ products = [] }: RelatedShelfProps) {
               <Image
                 src={item.image}
                 alt={item.name}
-                width={110}
-                height={130}
-                className="w-[68px] sm:w-[100px] h-auto object-contain transition-transform group-hover:scale-105"
+                fill
+                sizes="(max-width: 640px) 50vw, 25vw"
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
               />
             </Link>
 

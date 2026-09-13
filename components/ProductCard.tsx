@@ -33,12 +33,12 @@ export default function ProductCard({ product }: { product: Product }) {
     <div className="relative bg-white border border-[#EAE3F7] rounded-2xl sm:rounded-3xl shadow-[0_16px_0_-6px_rgba(23,17,54,0.09)] overflow-hidden flex flex-col group transition-transform hover:-translate-y-1">
       <Link
         href={`/product/${product.slug || product.id}`}
-        className="relative h-[130px] sm:h-[220px] flex items-center justify-center p-3"
+        className="relative w-full aspect-square flex items-center justify-center overflow-hidden"
         style={{ backgroundColor: product.cardBg || "#FFEAF0" }}
       >
         {discountPercent ? (
           <span
-            className="absolute left-2.5 sm:left-5 top-2.5 sm:top-4 -rotate-6 text-white text-[9px] sm:text-[11px] font-extrabold tracking-wide rounded-full px-2 sm:px-3 py-1 sm:py-1.5 z-10 bg-[#FF4D6D] shadow-xs"
+            className="absolute left-2.5 sm:left-4 top-2.5 sm:top-4 -rotate-6 text-white text-[9px] sm:text-[11px] font-extrabold tracking-wide rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 z-10 bg-[#FF4D6D] shadow-xs"
           >
             -{discountPercent}%
           </span>
@@ -46,7 +46,7 @@ export default function ProductCard({ product }: { product: Product }) {
         <button
           type="button"
           aria-label="Add to wishlist"
-          className="absolute right-2.5 sm:left-auto right-2.5 sm:right-5 top-2.5 sm:top-4 w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-white flex items-center justify-center z-10 text-[#736E9B] hover:text-[#FF4D6D] transition-colors shadow-xs cursor-pointer"
+          className="absolute right-2.5 sm:right-4 top-2.5 sm:top-4 w-7 h-7 sm:w-8.5 sm:h-8.5 rounded-full bg-white flex items-center justify-center z-10 text-[#736E9B] hover:text-[#FF4D6D] transition-colors shadow-xs cursor-pointer"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -57,9 +57,9 @@ export default function ProductCard({ product }: { product: Product }) {
         <Image
           src={imageSrc}
           alt={product.name}
-          width={140}
-          height={170}
-          className="w-auto h-auto max-h-[110px] sm:max-h-[180px] max-w-[85%] object-contain transition-transform group-hover:scale-105 drop-shadow-sm"
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
       </Link>
 
