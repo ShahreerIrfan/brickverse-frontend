@@ -30,6 +30,7 @@ import {
   createUser,
   deleteUser,
   getAllStores,
+  seedCatalogProducts,
 } from "@/lib/api";
 import {
   IconShield,
@@ -275,6 +276,8 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [isSeedingCatalog, setIsSeedingCatalog] = useState(false);
+  const [showSeedCatalogConfirm, setShowSeedCatalogConfirm] = useState(false);
   const PRODUCTS_PER_PAGE = 20;
 
   // Modals & Action Drawers
@@ -1084,6 +1087,24 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       fetchData();
     } else {
       alert("Could not delete product.");
+    }
+  };
+
+  const handleExecuteSeedCatalog = async () => {
+    setIsSeedingCatalog(true);
+    try {
+      const res = await seedCatalogProducts();
+      if (res.success) {
+        showToast(`✓ Catalog refreshed! Loaded ${res.seeded_product_count || 105} products with high quality SVGs!`);
+        setShowSeedCatalogConfirm(false);
+        await fetchData();
+      } else {
+        alert("Failed to seed catalog: " + (res.message || "Unknown error"));
+      }
+    } catch (err: any) {
+      alert("Error seeding catalog: " + (err?.message || "Network error"));
+    } finally {
+      setIsSeedingCatalog(false);
     }
   };
 
@@ -2229,10 +2250,20 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setShowSeedCatalogConfirm(true)}
+                    disabled={isSeedingCatalog}
+                    className="bg-gradient-to-r from-[#7B5CFF] to-[#6344E7] hover:from-[#6d4cf6] hover:to-[#5436d6] text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60 active:scale-95"
+                    title="Wipe old products and load 105 new curated Anime & Brick products with SVG images"
+                  >
+                    <span className="text-sm">⚡</span>
+                    <span>{isSeedingCatalog ? "Seeding 105 SVGs..." : "Seed 105 SVG Products"}</span>
+                  </button>
                   <button
                     onClick={openNewProductForm}
-                    className="bg-[#FF4D6D] hover:bg-[#ff3358] text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="bg-[#FF4D6D] hover:bg-[#ff3358] text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
                   >
                     <IconPlus className="w-4 h-4" />
                     <span>Add New Product</span>
@@ -4713,6 +4744,49 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* ============================================================= */}
+      {/* MODAL: SEED 105 SVG PRODUCTS CONFIRMATION */}
+      {/* ============================================================= */}
+      {showSeedCatalogConfirm && (
+        <div className="fixed inset-0 z-50 bg-[#171136]/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl text-center animate-in zoom-in-95">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#7B5CFF] to-[#FF4D6D] text-white flex items-center justify-center mx-auto mb-4 shadow-lg text-2xl">
+              ⚡
+            </div>
+            <h3 className="font-[family-name:var(--font-display)] font-extrabold text-xl text-[#171136] mb-2">
+              Seed 105 SVG Products?
+            </h3>
+            <p className="text-xs text-[#736E9B] leading-relaxed mb-6">
+              This will <strong>remove the old catalog</strong> and populate your store with <strong>105 new anime figures, brick sets, and robotic STEM kits</strong> using high-quality SVG images, authentic descriptions, categories, and BDT prices.
+            </p>
+            <div className="flex justify-center gap-3 text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => setShowSeedCatalogConfirm(false)}
+                disabled={isSeedingCatalog}
+                className="px-5 py-2.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer transition-all disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleExecuteSeedCatalog}
+                disabled={isSeedingCatalog}
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#7B5CFF] to-[#6344E7] hover:from-[#6d4cf6] hover:to-[#5436d6] text-white shadow-md cursor-pointer transition-all flex items-center gap-2 disabled:opacity-50"
+              >
+                {isSeedingCatalog ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span>Seeding Products...</span>
+                  </>
+                ) : (
+                  <span>Yes, Load 105 Products</span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
