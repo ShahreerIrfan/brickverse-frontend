@@ -443,9 +443,20 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     return stores.filter((s) => s.settlementStatus === "overdue").length;
   }, [stores]);
 
+  const hasFetchedData = useRef(false);
+
   useEffect(() => {
-    fetchData();
-  }, []);
+    // Skip heavy store/product/order fetching when on the logs view to keep logs clean
+    if (activeNav === "logs" && !hasFetchedData.current) {
+      setLoading(false);
+      return;
+    }
+
+    if (!hasFetchedData.current) {
+      hasFetchedData.current = true;
+      fetchData();
+    }
+  }, [activeNav]);
 
   // Sync initialOrderId from route slug with selectedOrder
   useEffect(() => {
