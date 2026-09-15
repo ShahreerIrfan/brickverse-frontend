@@ -151,6 +151,24 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     };
   }, [profileDropdownOpen]);
 
+  // Sidebar bottom profile card's own menu (Log out lives here now)
+  const [sidebarProfileMenuOpen, setSidebarProfileMenuOpen] = useState(false);
+  const sidebarProfileMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sidebarProfileMenuRef.current && !sidebarProfileMenuRef.current.contains(e.target as Node)) {
+        setSidebarProfileMenuOpen(false);
+      }
+    };
+    if (sidebarProfileMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [sidebarProfileMenuOpen]);
+
   // URL Slug mapping for Admin routing
   const navToUrlMap: Record<ActiveNav, string> = {
     "dashboard": "/en/admin",
@@ -1573,19 +1591,26 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                 <IconStore className="w-4 h-4 text-[#A79FD1]" />
                 {!sidebarCollapsed && <span>View storefront</span>}
               </Link>
-              <button
-                onClick={logout}
-                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-[#C7C0E8] hover:text-white hover:bg-[#2A2159]/60 transition-colors cursor-pointer"
-              >
-                <IconLogOut className="w-4 h-4 text-[#A79FD1]" />
-                {!sidebarCollapsed && <span>Log out</span>}
-              </button>
             </div>
           </div>
         </div>
 
         {/* Profile Card at bottom (Matching SVG) */}
-        <div className="p-3 border-t border-[#2E2760]">
+        <div className="p-3 border-t border-[#2E2760] relative" ref={sidebarProfileMenuRef}>
+          {sidebarProfileMenuOpen && !sidebarCollapsed && (
+            <div className="absolute bottom-full left-3 right-3 mb-2 bg-[#241D54] border border-[#2E2760] rounded-2xl shadow-2xl p-1.5 animate-in fade-in zoom-in-95 duration-150">
+              <button
+                onClick={() => {
+                  setSidebarProfileMenuOpen(false);
+                  logout();
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#FF6B85] hover:bg-[#2A2159] transition-colors cursor-pointer text-left"
+              >
+                <IconLogOut className="w-4 h-4" />
+                <span>Log out</span>
+              </button>
+            </div>
+          )}
           <div className="bg-[#241D54] rounded-2xl p-3 flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-9 h-9 rounded-full bg-[#FF4D6D] text-white flex items-center justify-center font-extrabold text-sm shrink-0">
@@ -1604,7 +1629,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
             </div>
             {!sidebarCollapsed && (
               <button
-                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                onClick={() => setSidebarProfileMenuOpen(!sidebarProfileMenuOpen)}
                 className="text-[#A79FD1] hover:text-white p-1 transition-colors cursor-pointer"
                 title="Account menu"
               >
