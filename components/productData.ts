@@ -43,19 +43,16 @@ export type Product = {
 };
 
 
-export type SubCategory = {
-  id: string;
-  categoryId?: string;
-  label: string;
-  slug?: string;
-  description?: string;
-  image?: string;
-  order?: number;
-};
-
+// A category tree node. Categories are self-referential now (parent can be
+// any other category, to any depth) rather than a fixed Category/SubCategory
+// split, so this one type covers both a top-level category and any of its
+// nested children.
 export type Category = {
   id: string;
   label: string;
+  slug?: string;
+  parent?: string | null;
+  parentLabel?: string | null;
   color: string;
   icon_type?: string;
   category_icon?: string;
@@ -63,11 +60,17 @@ export type Category = {
   category_icon_file?: string | null;
   featured?: boolean;
   order?: number;
+  is_active?: boolean;
   show_in_mega_menu?: boolean;
   mega_menu_order?: number;
-  subcategories?: SubCategory[];
+  subcategories?: Category[];
+  childrenCount?: number;
   productCount?: number;
 };
+
+// Kept as an alias: a product's `subcategory` and a category's immediate
+// `subcategories` are just Category rows one level down.
+export type SubCategory = Category;
 
 export type UserRole = "admin" | "customer";
 

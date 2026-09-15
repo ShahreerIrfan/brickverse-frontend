@@ -141,16 +141,18 @@ export async function getCategories(apiBaseOverride?: string): Promise<Category[
   }
 }
 
-export async function getSubCategories(categoryId?: string) {
+// Admin: every category at every depth, flat (each row carries its own
+// `parent` id) - used to build the full tree view and the parent picker.
+export async function getCategoryTree(): Promise<Category[]> {
   try {
-    const url = categoryId
-      ? `${getApiBaseUrl()}/subcategories/?category=${encodeURIComponent(categoryId)}`
-      : `${getApiBaseUrl()}/subcategories/`;
-    const res = await fetch(url, { next: { revalidate: 30 } });
+    const res = await fetch(`${getApiBaseUrl()}/products/categories/all/`, {
+      cache: "no-store",
+    });
     if (!res.ok) return [];
-    return await res.json();
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.warn("[API] Subcategories API unreachable:", error);
+    console.warn("[API] Category tree API unreachable:", error);
     return [];
   }
 }
@@ -568,44 +570,6 @@ export async function deleteCategory(id: string) {
   }
 }
 
-export async function createSubCategory(data: any) {
-  try {
-    const res = await fetch(`${getApiBaseUrl()}/products/subcategories/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    const result = await res.json();
-    return { success: res.ok, data: result };
-  } catch (error) {
-    return { success: false, error: "Failed to create subcategory" };
-  }
-}
-
-export async function updateSubCategory(id: string, data: any) {
-  try {
-    const res = await fetch(`${getApiBaseUrl()}/products/subcategories/${encodeURIComponent(id)}/`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    const result = await res.json();
-    return { success: res.ok, data: result };
-  } catch (error) {
-    return { success: false, error: "Failed to update subcategory" };
-  }
-}
-
-export async function deleteSubCategory(id: string) {
-  try {
-    const res = await fetch(`${getApiBaseUrl()}/products/subcategories/${encodeURIComponent(id)}/`, {
-      method: "DELETE",
-    });
-    return { success: res.ok };
-  } catch (error) {
-    return { success: false };
-  }
-}
 
 export async function getAllUsers(role?: string, search?: string) {
   try {
