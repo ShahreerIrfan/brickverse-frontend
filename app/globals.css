@@ -54,6 +54,14 @@ body {
   background: linear-gradient(90deg, #171136 0%, #3e1c86 100%);
 }
 
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 @media print {
   @page {
     size: A4 portrait;

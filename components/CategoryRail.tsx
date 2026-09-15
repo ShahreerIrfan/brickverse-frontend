@@ -157,7 +157,7 @@ export default function CategoryRail({ initialCategories }: { initialCategories?
         </div>
 
         {/* Categories List */}
-        <ul className="p-2.5 flex-1 min-h-0 overflow-y-auto">
+        <ul className="p-2.5 flex-1 min-h-0 overflow-y-auto scrollbar-hide">
           {displayCategories.length === 0 ? (
             <li className="py-8 px-4 text-center text-xs text-[#736E9B]">
               Categories will appear here once products are created.
