@@ -4,6 +4,7 @@ import { useState, useRef, useLayoutEffect } from "react";
 import Link from "next/link";
 import { IconChevronRight, IconGrid, IconArrowRight } from "./icons";
 import { categories as defaultCategories, Category } from "./productData";
+import { getMediaUrl } from "@/lib/api";
 
 export function CategoryGlyph({
   id,
@@ -26,7 +27,7 @@ export function CategoryGlyph({
   ) {
     return (
       <img
-        src={iconSrc}
+        src={getMediaUrl(iconSrc)}
         alt=""
         className="w-4 h-4 object-contain shrink-0"
         onError={(e) => {

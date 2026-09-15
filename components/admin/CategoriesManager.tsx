@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { getCategoryTree, createCategory, updateCategory, deleteCategory } from "@/lib/api";
+import { getCategoryTree, createCategory, updateCategory, deleteCategory, getMediaUrl } from "@/lib/api";
 import type { Category } from "../productData";
 import { CategoryGlyph } from "../CategoryRail";
 import {
@@ -239,7 +239,8 @@ export default function CategoriesManager({ onChanged }: CategoriesManagerProps)
     setOrder(cat.order ?? 0);
     setIsActive(cat.is_active !== false);
     setIconFile(null);
-    setIconPreview(cat.category_icon || cat.categoryIcon || null);
+    const existingIcon = cat.category_icon || cat.categoryIcon;
+    setIconPreview(existingIcon ? getMediaUrl(existingIcon) : null);
     setModal({ mode: "edit", category: cat });
   };
 
