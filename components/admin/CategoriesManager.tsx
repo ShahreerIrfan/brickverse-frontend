@@ -184,7 +184,6 @@ export default function CategoriesManager({ onChanged }: CategoriesManagerProps)
   const [parentId, setParentId] = useState("");
   const [order, setOrder] = useState(0);
   const [isActive, setIsActive] = useState(true);
-  const [featured, setFeatured] = useState(false);
   const [iconFile, setIconFile] = useState<File | null>(null);
   const [iconPreview, setIconPreview] = useState<string | null>(null);
 
@@ -221,7 +220,6 @@ export default function CategoriesManager({ onChanged }: CategoriesManagerProps)
     setParentId(parent || "");
     setOrder(0);
     setIsActive(true);
-    setFeatured(false);
     setIconFile(null);
     setIconPreview(null);
     setModal({ mode: "create" });
@@ -234,7 +232,6 @@ export default function CategoriesManager({ onChanged }: CategoriesManagerProps)
     setParentId(cat.parent || "");
     setOrder(cat.order ?? 0);
     setIsActive(cat.is_active !== false);
-    setFeatured(!!cat.featured);
     setIconFile(null);
     setIconPreview(cat.category_icon || cat.categoryIcon || null);
     setModal({ mode: "edit", category: cat });
@@ -261,7 +258,6 @@ export default function CategoriesManager({ onChanged }: CategoriesManagerProps)
     data.append("parent", parentId || "");
     data.append("order", String(order));
     data.append("is_active", String(isActive));
-    data.append("featured", String(featured));
     if (iconFile) data.append("category_icon_file", iconFile);
 
     let res;
@@ -361,8 +357,7 @@ export default function CategoriesManager({ onChanged }: CategoriesManagerProps)
                 visibleRows.map((cat) => (
                   <tr key={cat.id} className="border-b border-[#F5F1FB] last:border-b-0 hover:bg-[#FAF8FE] transition-colors">
                     <td className="px-5 py-3">
-                      <div className="flex items-center gap-2.5" style={{ paddingLeft: `${cat.depth * 20}px` }}>
-                        {cat.depth > 0 && <span className="text-[#D9CEEE] shrink-0">{"—".repeat(cat.depth)}</span>}
+                      <div className="flex items-center gap-2.5">
                         <span
                           className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border border-[#EAE3F7]/70"
                           style={{ backgroundColor: `${cat.color || "#FF4D6D"}1c` }}
@@ -370,7 +365,10 @@ export default function CategoriesManager({ onChanged }: CategoriesManagerProps)
                           <CategoryGlyph id={cat.id} color={cat.color || "#FF4D6D"} icon={cat.category_icon || cat.categoryIcon || cat.icon_type} />
                         </span>
                         <div className="min-w-0">
-                          <p className="font-bold text-[#171136] truncate">{cat.label}</p>
+                          <p className="font-bold text-[#171136] truncate">
+                            {cat.depth > 0 && <span className="text-[#C7C0E8] font-normal">{"- ".repeat(cat.depth)}</span>}
+                            {cat.label}
+                          </p>
                           <p className="text-[10.5px] text-[#8A84A6] font-mono truncate">{cat.slug || cat.id}</p>
                         </div>
                       </div>
@@ -391,13 +389,6 @@ export default function CategoriesManager({ onChanged }: CategoriesManagerProps)
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => openCreate(cat.id)}
-                          title="Add subcategory under this"
-                          className="w-7 h-7 rounded-lg bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] flex items-center justify-center cursor-pointer"
-                        >
-                          <IconPlus className="w-3.5 h-3.5" />
-                        </button>
                         <button
                           onClick={() => openEdit(cat)}
                           title="Edit"
@@ -515,10 +506,6 @@ export default function CategoriesManager({ onChanged }: CategoriesManagerProps)
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="accent-[#FF4D6D]" />
                     <span className="font-semibold text-[#171136]">Active</span>
-                  </label>
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} className="accent-[#FF4D6D]" />
-                    <span className="font-semibold text-[#171136]">Featured</span>
                   </label>
                 </div>
               </div>
