@@ -156,7 +156,7 @@ function ParentPicker({
                   }`}
                   style={{ paddingLeft: `${12 + c.depth * 16}px` }}
                 >
-                  {c.depth > 0 && <span className="text-[#C7C0E8] mr-1">{"—".repeat(c.depth)}</span>}
+                  {c.depth > 0 && <span className="text-[#7B5CFF] font-extrabold mr-1.5">{"-".repeat(c.depth)}</span>}
                   {c.label}
                 </button>
               ))
@@ -366,7 +366,9 @@ export default function CategoriesManager({ onChanged }: CategoriesManagerProps)
                         </span>
                         <div className="min-w-0">
                           <p className="font-bold text-[#171136] truncate">
-                            {cat.depth > 0 && <span className="text-[#C7C0E8] font-normal">{"- ".repeat(cat.depth)}</span>}
+                            {cat.depth > 0 && (
+                              <span className="text-[#7B5CFF] font-extrabold text-sm mr-1.5">{"- ".repeat(cat.depth).trim()}</span>
+                            )}
                             {cat.label}
                           </p>
                           <p className="text-[10.5px] text-[#8A84A6] font-mono truncate">{cat.slug || cat.id}</p>
