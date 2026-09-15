@@ -1,4 +1,4 @@
-import { ProductSection, Category, Product } from "@/components/productData";
+import { ProductSection, Category, Product, HeroSlide } from "@/components/productData";
 
 // Single source of truth for mapping a site hostname to its backend API base.
 // Used by both the browser (client components) and the server (via
@@ -138,6 +138,74 @@ export async function getCategories(apiBaseOverride?: string): Promise<Category[
   } catch (error) {
     console.warn("[API] Categories API unreachable:", error);
     return [];
+  }
+}
+
+// Public: active hero carousel slides, in display order.
+export async function getHeroSlides(apiBaseOverride?: string): Promise<HeroSlide[]> {
+  try {
+    const base = apiBaseOverride || getApiBaseUrl();
+    const res = await fetch(`${base}/marketing/hero-slides/`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.warn("[API] Hero slides API unreachable:", error);
+    return [];
+  }
+}
+
+// Admin: every hero slide, active or not.
+export async function getHeroSlidesAdmin(): Promise<HeroSlide[]> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/marketing/hero-slides/all/`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.warn("[API] Hero slides API unreachable:", error);
+    return [];
+  }
+}
+
+export async function createHeroSlide(data: FormData) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/marketing/hero-slides/all/`, {
+      method: "POST",
+      body: data,
+    });
+    const result = await res.json();
+    return { success: res.ok, data: result };
+  } catch (error) {
+    return { success: false, error: "Failed to create hero slide" };
+  }
+}
+
+export async function updateHeroSlide(id: number, data: FormData) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/marketing/hero-slides/${id}/`, {
+      method: "PATCH",
+      body: data,
+    });
+    const result = await res.json();
+    return { success: res.ok, data: result };
+  } catch (error) {
+    return { success: false, error: "Failed to update hero slide" };
+  }
+}
+
+export async function deleteHeroSlide(id: number) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/marketing/hero-slides/${id}/`, {
+      method: "DELETE",
+    });
+    return { success: res.ok };
+  } catch (error) {
+    return { success: false };
   }
 }
 

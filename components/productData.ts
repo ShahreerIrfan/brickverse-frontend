@@ -98,4 +98,17 @@ export type ProductSection = {
 
 export const productSections: ProductSection[] = [];
 
+export type HeroSlide = {
+  id: number;
+  title: string;
+  subtitle?: string;
+  button_text?: string;
+  buttonText?: string;
+  button_link?: string;
+  buttonLink?: string;
+  image?: string | null;
+  order?: number;
+  is_active?: boolean;
+};
+
 export const categories: Category[] = [];

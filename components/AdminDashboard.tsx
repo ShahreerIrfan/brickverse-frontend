@@ -78,6 +78,7 @@ import PartnerStoreDetail from "./admin/PartnerStoreDetail";
 import PartnerStoreForm from "./admin/PartnerStoreForm";
 import AdminLogsView from "./admin/AdminLogsView";
 import CategoriesManager from "./admin/CategoriesManager";
+import HeroSlidesManager from "./admin/HeroSlidesManager";
 import CategoryTreePicker, { findRootCategoryId } from "./admin/CategoryTreePicker";
 import { printOrderInvoice } from "@/lib/invoice";
 
@@ -94,6 +95,7 @@ type ActiveNav =
   | "products-form"
   | "products-taxonomy"
   | "appearance-mega-menu"
+  | "appearance-hero-slides"
   | "orders-all"
   | "orders-single"
   | "users-all"
@@ -176,6 +178,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     "products-form": "/en/admin/products/new",
     "products-taxonomy": "/en/admin/products/taxonomy",
     "appearance-mega-menu": "/en/admin/appearance/mega-menu",
+    "appearance-hero-slides": "/en/admin/appearance/hero-slides",
     "orders-all": "/en/admin/orders",
     "orders-single": "/en/admin/orders",
     "users-all": "/en/admin/users",
@@ -225,6 +228,9 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       } else if (path.includes("/products/taxonomy")) {
         setActiveNav("products-taxonomy");
         setProductsMenuOpen(true);
+      } else if (path.includes("/appearance/hero-slides")) {
+        setActiveNav("appearance-hero-slides");
+        setAppearanceMenuOpen(true);
       } else if (path.includes("/appearance/mega-menu")) {
         setActiveNav("appearance-mega-menu");
         setAppearanceMenuOpen(true);
@@ -1410,6 +1416,17 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-current" />
                     <span>Homepage Mega Menu</span>
+                  </button>
+                  <button
+                    onClick={() => navigateTo("appearance-hero-slides")}
+                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                      activeNav === "appearance-hero-slides"
+                        ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
+                        : "text-[#A79FD1] hover:text-white hover:bg-[#2A2159]/40"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    <span>Hero Slide</span>
                   </button>
                 </div>
               )}
@@ -3272,6 +3289,11 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
               </div>
             </div>
           )}
+
+          {/* ========================================================= */}
+          {/* 3c) VIEW: APPEARANCE -> HERO SLIDES */}
+          {/* ========================================================= */}
+          {activeNav === "appearance-hero-slides" && <HeroSlidesManager />}
 
           {/* ========================================================= */}
           {/* 4) VIEW: ORDERS -> ALL ORDERS */}

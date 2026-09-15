@@ -9,13 +9,14 @@ import PromoBanner from "@/components/PromoBanner";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
-import { getProductSections, getCategories, getServerApiBaseUrl } from "@/lib/api";
+import { getProductSections, getCategories, getHeroSlides, getServerApiBaseUrl } from "@/lib/api";
 
 export default async function Home() {
   const apiBase = await getServerApiBaseUrl();
-  const [sections, categories] = await Promise.all([
+  const [sections, categories, heroSlides] = await Promise.all([
     getProductSections(apiBase),
     getCategories(apiBase),
+    getHeroSlides(apiBase),
   ]);
 
   const megaMenuCategories = categories
@@ -31,7 +32,7 @@ export default async function Home() {
         <div className="flex flex-col lg:flex-row items-start gap-4 sm:gap-6">
           <CategoryRail initialCategories={megaMenuCategories} />
           <div className="flex-1 w-full min-w-0 flex flex-col gap-3 sm:gap-4">
-            <Hero />
+            <Hero slides={heroSlides} />
             <PromoColumns />
           </div>
         </div>
