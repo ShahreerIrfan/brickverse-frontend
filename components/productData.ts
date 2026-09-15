@@ -63,6 +63,8 @@ export type Category = {
   category_icon_file?: string | null;
   featured?: boolean;
   order?: number;
+  show_in_mega_menu?: boolean;
+  mega_menu_order?: number;
   subcategories?: SubCategory[];
   productCount?: number;
 };

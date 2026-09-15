@@ -20,6 +20,7 @@ export default function AdminRoutePage({ params }: PageProps) {
   // /en/admin/products              -> products-all
   // /en/admin/products/new          -> products-form
   // /en/admin/products/taxonomy     -> products-taxonomy
+  // /en/admin/appearance/mega-menu  -> appearance-mega-menu
   // /en/admin/orders                -> orders-all
   // /en/admin/users                 -> users-all
   let initialNav:
@@ -27,6 +28,7 @@ export default function AdminRoutePage({ params }: PageProps) {
     | "products-all"
     | "products-form"
     | "products-taxonomy"
+    | "appearance-mega-menu"
     | "orders-all"
     | "orders-single"
     | "users-all"
@@ -47,6 +49,8 @@ export default function AdminRoutePage({ params }: PageProps) {
     }
   } else if (slug.length === 1 && slug[0] === "products") {
     initialNav = "products-all";
+  } else if (slug[0] === "appearance" && slug[1] === "mega-menu") {
+    initialNav = "appearance-mega-menu";
   } else if (slug[0] === "orders") {
     if (slug.length >= 2) {
       initialNav = "orders-single";

@@ -513,6 +513,20 @@ export async function updateCategory(id: string, data: any) {
   }
 }
 
+export async function reorderMegaMenuCategories(ids: string[]) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/products/categories/mega-menu/reorder/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+    const result = await res.json().catch(() => null);
+    return { success: res.ok, data: result };
+  } catch (error) {
+    return { success: false, error: "Failed to save mega menu order" };
+  }
+}
+
 export async function deleteCategory(id: string) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/products/categories/${encodeURIComponent(id)}/`, {

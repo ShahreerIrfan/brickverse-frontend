@@ -681,6 +681,31 @@ export function IconActivity({ className, style }: IconProps) {
   );
 }
 
+export function IconPalette({ className, style }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} style={style} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.9 1.8-2 0-.5-.2-1-.5-1.3-.3-.3-.5-.8-.5-1.2 0-1.1.9-2 2-2H16a4 4 0 0 0 4-4c0-4.4-3.6-7.5-8-7.5Z" />
+      <circle cx="7.2" cy="12" r="1" fill="currentColor" stroke="none" />
+      <circle cx="9" cy="7.8" r="1" fill="currentColor" stroke="none" />
+      <circle cx="14" cy="7" r="1" fill="currentColor" stroke="none" />
+      <circle cx="17" cy="10.5" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function IconGripVertical({ className, style }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} style={style} fill="currentColor" stroke="none">
+      <circle cx="9" cy="6" r="1.4" />
+      <circle cx="9" cy="12" r="1.4" />
+      <circle cx="9" cy="18" r="1.4" />
+      <circle cx="15" cy="6" r="1.4" />
+      <circle cx="15" cy="12" r="1.4" />
+      <circle cx="15" cy="18" r="1.4" />
+    </svg>
+  );
+}
+
 
 
 

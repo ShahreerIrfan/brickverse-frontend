@@ -17,6 +17,10 @@ export default async function Home() {
     getCategories(),
   ]);
 
+  const megaMenuCategories = categories
+    .filter((c) => c.show_in_mega_menu !== false)
+    .sort((a, b) => (a.mega_menu_order ?? 0) - (b.mega_menu_order ?? 0));
+
   return (
     <div className="flex flex-col flex-1 bg-[#FFF6EE] pb-16 lg:pb-0">
       <Navbar />
@@ -24,7 +28,7 @@ export default async function Home() {
 
       <main className="max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex flex-col gap-5 sm:gap-10">
         <div className="flex flex-col lg:flex-row items-start gap-4 sm:gap-6">
-          <CategoryRail initialCategories={categories} />
+          <CategoryRail initialCategories={megaMenuCategories} />
           <div className="flex-1 w-full min-w-0 flex flex-col gap-3 sm:gap-4">
             <Hero />
             <PromoColumns />

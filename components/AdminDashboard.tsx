@@ -19,6 +19,7 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
+  reorderMegaMenuCategories,
   createSubCategory,
   updateSubCategory,
   deleteSubCategory,
@@ -74,6 +75,8 @@ import {
   IconWallet,
   IconDots,
   IconTerminal,
+  IconPalette,
+  IconGripVertical,
 } from "./icons";
 import PartnerStoresList from "./admin/PartnerStoresList";
 import PartnerStoreDetail from "./admin/PartnerStoreDetail";
@@ -93,6 +96,7 @@ type ActiveNav =
   | "products-all"
   | "products-form"
   | "products-taxonomy"
+  | "appearance-mega-menu"
   | "orders-all"
   | "orders-single"
   | "users-all"
@@ -125,6 +129,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [activeNav, setActiveNav] = useState<ActiveNav>(initialNav || "dashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [productsMenuOpen, setProductsMenuOpen] = useState(initialNav ? initialNav.startsWith("products") : false);
+  const [appearanceMenuOpen, setAppearanceMenuOpen] = useState(initialNav ? initialNav.startsWith("appearance") : false);
   const [ordersMenuOpen, setOrdersMenuOpen] = useState(initialNav ? initialNav.startsWith("orders") : false);
   const [usersMenuOpen, setUsersMenuOpen] = useState(initialNav ? initialNav.startsWith("users") : false);
   const [storesMenuOpen, setStoresMenuOpen] = useState(initialNav ? initialNav.startsWith("stores") : false);
@@ -155,6 +160,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     "products-all": "/en/admin/products",
     "products-form": "/en/admin/products/new",
     "products-taxonomy": "/en/admin/products/taxonomy",
+    "appearance-mega-menu": "/en/admin/appearance/mega-menu",
     "orders-all": "/en/admin/orders",
     "orders-single": "/en/admin/orders",
     "users-all": "/en/admin/users",
@@ -167,6 +173,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const navigateTo = (nav: ActiveNav, customUrl?: string) => {
     setActiveNav(nav);
     if (nav.startsWith("products")) setProductsMenuOpen(true);
+    if (nav.startsWith("appearance")) setAppearanceMenuOpen(true);
     if (nav.startsWith("orders")) setOrdersMenuOpen(true);
     if (nav.startsWith("users")) setUsersMenuOpen(true);
     if (nav.startsWith("stores")) setStoresMenuOpen(true);
@@ -180,6 +187,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     if (initialNav) {
       setActiveNav(initialNav);
       if (initialNav.startsWith("products")) setProductsMenuOpen(true);
+      if (initialNav.startsWith("appearance")) setAppearanceMenuOpen(true);
       if (initialNav.startsWith("orders")) setOrdersMenuOpen(true);
       if (initialNav.startsWith("users")) setUsersMenuOpen(true);
       if (initialNav.startsWith("stores")) setStoresMenuOpen(true);
@@ -202,6 +210,9 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       } else if (path.includes("/products/taxonomy")) {
         setActiveNav("products-taxonomy");
         setProductsMenuOpen(true);
+      } else if (path.includes("/appearance/mega-menu")) {
+        setActiveNav("appearance-mega-menu");
+        setAppearanceMenuOpen(true);
       } else if (path.includes("/products")) {
         setActiveNav("products-all");
         setProductsMenuOpen(true);
@@ -291,6 +302,11 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [isAddSubCategoryOpen, setIsAddSubCategoryOpen] = useState(false);
   const [selectedParentCatId, setSelectedParentCatId] = useState("");
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+
+  // Homepage Mega Menu (Appearance) State
+  const [megaMenuSelection, setMegaMenuSelection] = useState<string[]>([]);
+  const [megaMenuDragIndex, setMegaMenuDragIndex] = useState<number | null>(null);
+  const [savingMegaMenu, setSavingMegaMenu] = useState(false);
 
   // Category Icon File Upload State
   const [categoryIconFile, setCategoryIconFile] = useState<File | null>(null);
@@ -437,6 +453,70 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  // Seed the mega menu draft selection whenever the admin opens that tab
+  useEffect(() => {
+    if (activeNav === "appearance-mega-menu") {
+      const inMenu = categories
+        .filter((c) => c.show_in_mega_menu !== false)
+        .sort((a, b) => (a.mega_menu_order ?? 0) - (b.mega_menu_order ?? 0))
+        .map((c) => c.id);
+      setMegaMenuSelection(inMenu);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeNav]);
+
+  const megaMenuAvailable = useMemo(
+    () => categories.filter((c) => !megaMenuSelection.includes(c.id)),
+    [categories, megaMenuSelection]
+  );
+
+  const addToMegaMenu = (id: string) => {
+    setMegaMenuSelection((prev) => (prev.includes(id) ? prev : [...prev, id]));
+  };
+
+  const removeFromMegaMenu = (id: string) => {
+    setMegaMenuSelection((prev) => prev.filter((catId) => catId !== id));
+  };
+
+  const moveMegaMenuItem = (index: number, direction: -1 | 1) => {
+    setMegaMenuSelection((prev) => {
+      const next = [...prev];
+      const target = index + direction;
+      if (target < 0 || target >= next.length) return prev;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
+  const reorderMegaMenuDrag = (fromIndex: number, toIndex: number) => {
+    setMegaMenuSelection((prev) => {
+      if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next;
+    });
+  };
+
+  const saveMegaMenu = async () => {
+    setSavingMegaMenu(true);
+    try {
+      const result = await reorderMegaMenuCategories(megaMenuSelection);
+      if (result.success) {
+        showToast("✓ Homepage mega menu updated!");
+        const cats = await getCategories();
+        if (cats && Array.isArray(cats)) setCategories(cats);
+      } else {
+        showToast("✗ Failed to save mega menu order");
+      }
+    } catch (err) {
+      console.error("Failed saving mega menu order:", err);
+      showToast("✗ Failed to save mega menu order");
+    } finally {
+      setSavingMegaMenu(false);
     }
   };
 
@@ -1383,6 +1463,47 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-current" />
                     <span>Category as taxonomy</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 2b) Appearance Accordion */}
+            <div className="space-y-1">
+              <button
+                onClick={() => setAppearanceMenuOpen(!appearanceMenuOpen)}
+                title="Appearance"
+                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-bold text-xs sm:text-[13.5px] transition-all cursor-pointer relative ${
+                  activeNav.startsWith("appearance")
+                    ? "bg-[#2A2159] text-white before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-sm before:bg-[#FF4D6D]"
+                    : "text-[#C7C0E8] hover:bg-[#2A2159]/60 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <IconPalette className={`w-4 h-4 shrink-0 ${activeNav.startsWith("appearance") ? "text-white" : "text-[#A79FD1]"}`} />
+                  {!sidebarCollapsed && <span>Appearance</span>}
+                </div>
+                {!sidebarCollapsed && (
+                  <IconChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      appearanceMenuOpen ? "rotate-0 text-white" : "-rotate-90 text-[#A79FD1]"
+                    }`}
+                  />
+                )}
+              </button>
+
+              {appearanceMenuOpen && !sidebarCollapsed && (
+                <div className="pl-8 pr-1 py-1 space-y-1">
+                  <button
+                    onClick={() => navigateTo("appearance-mega-menu")}
+                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                      activeNav === "appearance-mega-menu"
+                        ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
+                        : "text-[#A79FD1] hover:text-white hover:bg-[#2A2159]/40"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    <span>Homepage Mega Menu</span>
                   </button>
                 </div>
               )}
@@ -3232,6 +3353,172 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* 3b) VIEW: APPEARANCE -> HOMEPAGE MEGA MENU */}
+          {/* ========================================================= */}
+          {activeNav === "appearance-mega-menu" && (
+            <div className="space-y-6">
+              <div>
+                <h1 className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-3xl text-[#171136] tracking-tight">
+                  Manage Mega Menu
+                </h1>
+                <p className="text-xs sm:text-sm text-[#736E9B]">
+                  Choose which top-level categories appear in the hero mega menu and set their display order.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* In Mega Menu */}
+                <div className="bg-white rounded-3xl border border-[#EAE3F7] shadow-xs p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="w-2 h-2 rounded-full bg-[#2ECC8F]" />
+                    <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
+                      In Mega Menu ({megaMenuSelection.length})
+                    </h2>
+                  </div>
+
+                  {megaMenuSelection.length === 0 ? (
+                    <p className="text-xs text-[#8A84A6] py-6 text-center">
+                      No categories selected yet. Add categories from the right.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {megaMenuSelection.map((id, index) => {
+                        const cat = categories.find((c) => c.id === id);
+                        if (!cat) return null;
+                        return (
+                          <div
+                            key={id}
+                            draggable
+                            onDragStart={() => setMegaMenuDragIndex(index)}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={() => {
+                              if (megaMenuDragIndex !== null) {
+                                reorderMegaMenuDrag(megaMenuDragIndex, index);
+                              }
+                              setMegaMenuDragIndex(null);
+                            }}
+                            onDragEnd={() => setMegaMenuDragIndex(null)}
+                            className={`flex items-center gap-3 rounded-2xl border border-[#EAE3F7] px-3 py-2.5 bg-[#FAF8FE] transition-opacity cursor-grab active:cursor-grabbing ${
+                              megaMenuDragIndex === index ? "opacity-40" : "opacity-100"
+                            }`}
+                          >
+                            <IconGripVertical className="w-4 h-4 text-[#C7C0E8] shrink-0" />
+                            <span className="w-6 h-6 rounded-full bg-[#171136] text-white text-[11px] font-extrabold flex items-center justify-center shrink-0">
+                              {index + 1}
+                            </span>
+                            <span
+                              className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                              style={{ backgroundColor: `${cat.color || "#FF4D6D"}20` }}
+                            >
+                              <CategoryGlyph id={cat.id} color={cat.color || "#FF4D6D"} icon={cat.category_icon || cat.categoryIcon || cat.icon_type} />
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[13px] font-bold text-[#171136] truncate">{cat.label}</p>
+                              <p className="text-[10.5px] text-[#8A84A6]">
+                                {cat.subcategories?.length || 0} subcategories
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                onClick={() => moveMegaMenuItem(index, -1)}
+                                disabled={index === 0}
+                                title="Move up"
+                                className="w-7 h-7 rounded-lg bg-white border border-[#EAE3F7] hover:bg-[#F6F1FF] disabled:opacity-30 disabled:cursor-not-allowed text-[#7B5CFF] flex items-center justify-center cursor-pointer"
+                              >
+                                <IconChevronRight className="w-3.5 h-3.5 -rotate-90" />
+                              </button>
+                              <button
+                                onClick={() => moveMegaMenuItem(index, 1)}
+                                disabled={index === megaMenuSelection.length - 1}
+                                title="Move down"
+                                className="w-7 h-7 rounded-lg bg-white border border-[#EAE3F7] hover:bg-[#F6F1FF] disabled:opacity-30 disabled:cursor-not-allowed text-[#7B5CFF] flex items-center justify-center cursor-pointer"
+                              >
+                                <IconChevronRight className="w-3.5 h-3.5 rotate-90" />
+                              </button>
+                              <button
+                                onClick={() => removeFromMegaMenu(id)}
+                                title="Remove from mega menu"
+                                className="w-7 h-7 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center cursor-pointer"
+                              >
+                                <IconClose className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Available Categories */}
+                <div className="bg-white rounded-3xl border border-[#EAE3F7] shadow-xs p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="w-2 h-2 rounded-full bg-[#8A84A6]" />
+                    <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
+                      Available Categories ({megaMenuAvailable.length})
+                    </h2>
+                  </div>
+
+                  {megaMenuAvailable.length === 0 ? (
+                    <p className="text-xs text-[#8A84A6] py-6 text-center">
+                      Every category is already in the mega menu.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {megaMenuAvailable.map((cat) => (
+                        <div
+                          key={cat.id}
+                          className="flex items-center gap-3 rounded-2xl border border-[#EAE3F7] px-3 py-2.5"
+                        >
+                          <span
+                            className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                            style={{ backgroundColor: `${cat.color || "#FF4D6D"}20` }}
+                          >
+                            <CategoryGlyph id={cat.id} color={cat.color || "#FF4D6D"} icon={cat.category_icon || cat.categoryIcon || cat.icon_type} />
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-bold text-[#171136] truncate">{cat.label}</p>
+                            <p className="text-[10.5px] text-[#8A84A6]">
+                              {cat.subcategories?.length || 0} subcategories
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => addToMegaMenu(cat.id)}
+                            className="shrink-0 bg-[#FF4D6D] hover:bg-[#ff3358] text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+                          >
+                            <IconPlus className="w-3.5 h-3.5" />
+                            <span>Add</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={saveMegaMenu}
+                  disabled={savingMegaMenu}
+                  className="bg-[#171136] hover:bg-[#251c4a] disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-bold px-6 py-3 rounded-2xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  {savingMegaMenu ? (
+                    <>
+                      <IconRefresh className="w-4 h-4 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <IconCheck className="w-4 h-4" />
+                      <span>Save Changes</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           )}
