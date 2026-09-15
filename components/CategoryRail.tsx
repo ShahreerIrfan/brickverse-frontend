@@ -147,9 +147,9 @@ export default function CategoryRail({ initialCategories }: { initialCategories?
       className="hidden lg:block w-[280px] relative shrink-0 z-30"
       onMouseLeave={handleMouseLeave}
     >
-      <div className="bg-white border border-[#EAE3F7] rounded-[22px] shadow-[0_16px_0_-4px_rgba(23,17,54,0.06)] overflow-hidden">
+      <div className="bg-white border border-[#EAE3F7] rounded-[22px] shadow-[0_16px_0_-4px_rgba(23,17,54,0.06)] overflow-hidden flex flex-col lg:h-[556px] xl:h-[571px]">
         {/* Header */}
-        <div className="bg-grad-menuhead px-6 py-4 flex items-center gap-3">
+        <div className="bg-grad-menuhead px-6 py-4 flex items-center gap-3 shrink-0">
           <IconGrid className="w-5 h-5 text-white" />
           <h3 className="font-[family-name:var(--font-display)] font-bold text-white text-[14.5px]">
             Browse categories
@@ -157,7 +157,7 @@ export default function CategoryRail({ initialCategories }: { initialCategories?
         </div>
 
         {/* Categories List */}
-        <ul className="p-2.5">
+        <ul className="p-2.5 flex-1 min-h-0 overflow-y-auto">
           {displayCategories.length === 0 ? (
             <li className="py-8 px-4 text-center text-xs text-[#736E9B]">
               Categories will appear here once products are created.
@@ -212,7 +212,7 @@ export default function CategoryRail({ initialCategories }: { initialCategories?
 
         {/* Footer Link */}
         {displayCategories.length > 0 && (
-          <div className="border-t border-[#EAE3F7] px-6 py-4">
+          <div className="border-t border-[#EAE3F7] px-6 py-4 shrink-0">
             <a
               href="/products"
               className="inline-flex items-center gap-2 text-[13px] font-bold text-[#FF4D6D] hover:underline"
