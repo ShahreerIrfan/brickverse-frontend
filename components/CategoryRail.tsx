@@ -147,7 +147,7 @@ export default function CategoryRail({ initialCategories }: { initialCategories?
       className="hidden lg:block w-[280px] relative shrink-0 z-30"
       onMouseLeave={handleMouseLeave}
     >
-      <div className="bg-white border border-[#EAE3F7] rounded-[22px] shadow-[0_16px_0_-4px_rgba(23,17,54,0.06)] overflow-hidden flex flex-col lg:h-[556px] xl:h-[571px]">
+      <div className="bg-white border border-[#EAE3F7] rounded-[22px] shadow-[0_16px_0_-4px_rgba(23,17,54,0.06)] overflow-hidden flex flex-col lg:h-[676px] xl:h-[696px]">
         {/* Header */}
         <div className="bg-grad-menuhead px-6 py-4 flex items-center gap-3 shrink-0">
           <IconGrid className="w-5 h-5 text-white" />
