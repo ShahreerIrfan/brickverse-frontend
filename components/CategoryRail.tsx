@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
 import Link from "next/link";
 import { IconChevronRight, IconGrid, IconArrowRight } from "./icons";
 import { categories as defaultCategories, Category } from "./productData";
@@ -126,10 +126,16 @@ export function CategoryGlyph({
 export default function CategoryRail({ initialCategories }: { initialCategories?: Category[] }) {
   const displayCategories = initialCategories && initialCategories.length > 0 ? initialCategories : defaultCategories;
   const [hoveredCatId, setHoveredCatId] = useState<string | null>(null);
+  const [flyoutTop, setFlyoutTop] = useState(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const asideRef = useRef<HTMLElement>(null);
+  const flyoutRef = useRef<HTMLDivElement>(null);
+  const preferredTopRef = useRef(0);
 
-  const handleMouseEnter = (catId: string) => {
+  const handleMouseEnter = (catId: string, e: React.MouseEvent<HTMLLIElement>) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    preferredTopRef.current = e.currentTarget.offsetTop;
+    setFlyoutTop(e.currentTarget.offsetTop);
     setHoveredCatId(catId);
   };
 
@@ -142,8 +148,22 @@ export default function CategoryRail({ initialCategories }: { initialCategories?
   const activeCategory = displayCategories.find((c) => c.id === hoveredCatId);
   const activeSubcategories = activeCategory?.subcategories || [];
 
+  // Keep the flyout aligned with the hovered row, but pull it up if that
+  // would push it past the bottom of the category rail - otherwise a row
+  // near the bottom (e.g. the last category) opens a flyout anchored near
+  // the top, leaving a gap the cursor has to cross diagonally and closing
+  // the menu (via handleMouseLeave's timeout) before it gets there.
+  useLayoutEffect(() => {
+    if (!hoveredCatId || !asideRef.current || !flyoutRef.current) return;
+    const asideHeight = asideRef.current.offsetHeight;
+    const flyoutHeight = flyoutRef.current.offsetHeight;
+    const maxTop = Math.max(0, asideHeight - flyoutHeight);
+    setFlyoutTop(Math.min(preferredTopRef.current, maxTop));
+  }, [hoveredCatId, activeSubcategories.length]);
+
   return (
     <aside
+      ref={asideRef}
       className="hidden lg:block w-[280px] relative shrink-0 z-30"
       onMouseLeave={handleMouseLeave}
     >
@@ -170,7 +190,7 @@ export default function CategoryRail({ initialCategories }: { initialCategories?
               return (
                 <li
                   key={cat.id}
-                  onMouseEnter={() => handleMouseEnter(cat.id)}
+                  onMouseEnter={(e) => handleMouseEnter(cat.id, e)}
                   className="relative"
                 >
                   <a
@@ -227,11 +247,13 @@ export default function CategoryRail({ initialCategories }: { initialCategories?
       {/* Flyout Subcategories Mega Menu */}
       {activeCategory && activeSubcategories.length > 0 && (
         <div
+          ref={flyoutRef}
           onMouseEnter={() => {
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
           }}
           onMouseLeave={handleMouseLeave}
-          className="absolute left-[calc(100%+12px)] top-0 z-50 w-[340px] xl:w-[380px] bg-white/98 backdrop-blur-xl border border-[#EAE3F7] rounded-[24px] shadow-[0_20px_50px_-10px_rgba(23,17,54,0.18)] p-5 animate-in fade-in zoom-in-95 duration-150 before:absolute before:-left-4 before:top-0 before:bottom-0 before:w-4 before:content-['']"
+          style={{ top: flyoutTop }}
+          className="absolute left-[calc(100%+12px)] z-50 w-[340px] xl:w-[380px] bg-white/98 backdrop-blur-xl border border-[#EAE3F7] rounded-[24px] shadow-[0_20px_50px_-10px_rgba(23,17,54,0.18)] p-5 animate-in fade-in zoom-in-95 duration-150 before:absolute before:-left-4 before:top-0 before:bottom-0 before:w-4 before:content-['']"
         >
           {/* Flyout Header */}
           <div className="flex items-center justify-between pb-3.5 border-b border-[#F0EBF9]">
