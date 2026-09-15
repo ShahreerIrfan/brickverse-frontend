@@ -16,6 +16,7 @@ import {
   bulkDeleteProducts,
   getMediaUrl,
   getCategories,
+  getCategoryTree,
   reorderMegaMenuCategories,
   getAllOrders,
   updateOrderStatus,
@@ -77,6 +78,7 @@ import PartnerStoreDetail from "./admin/PartnerStoreDetail";
 import PartnerStoreForm from "./admin/PartnerStoreForm";
 import AdminLogsView from "./admin/AdminLogsView";
 import CategoriesManager from "./admin/CategoriesManager";
+import CategoryTreePicker, { findRootCategoryId } from "./admin/CategoryTreePicker";
 import { printOrderInvoice } from "@/lib/invoice";
 
 interface AdminDashboardProps {
@@ -265,6 +267,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [statsData, setStatsData] = useState<any>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [categoryTree, setCategoryTree] = useState<Category[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [usersList, setUsersList] = useState<any[]>([]);
   const [stores, setStores] = useState<any[]>([]);
@@ -420,10 +423,11 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const fetchData = async () => {
     setRefreshing(true);
     try {
-      const [stats, prods, cats, ords, usrs, strs] = await Promise.all([
+      const [stats, prods, cats, tree, ords, usrs, strs] = await Promise.all([
         getAdminStats(),
         getAllProducts(),
         getCategories(),
+        getCategoryTree(),
         getAllOrders(),
         getAllUsers(),
         getAllStores(),
@@ -431,6 +435,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       if (stats) setStatsData(stats);
       if (prods && Array.isArray(prods)) setProducts(prods);
       if (cats && Array.isArray(cats)) setCategories(cats);
+      if (tree && Array.isArray(tree)) setCategoryTree(tree);
       if (ords && Array.isArray(ords)) setOrders(ords);
       if (usrs && Array.isArray(usrs)) setUsersList(usrs);
       if (strs && Array.isArray(strs)) setStores(strs);
@@ -986,7 +991,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   // -------------------------------------------------------------
   const openNewProductForm = () => {
     setEditingProduct(null);
-    setFormCategory(categories[0]?.id || "figures");
+    setFormCategory(categories[0]?.id || "");
     setFormName("");
     setFormSlug("");
     setFormSku(generateRandomSku());
@@ -1005,7 +1010,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
 
   const openEditProductForm = (prod: Product) => {
     setEditingProduct(prod);
-    setFormCategory(prod.category || categories[0]?.id || "figures");
+    setFormCategory(prod.subcategoryId || prod.subcategory?.id || prod.category || categories[0]?.id || "");
     setFormName(prod.name || "");
     setFormSlug(prod.slug || prod.id || "");
     setFormSku(prod.sku || `KS-${prod.id.toUpperCase().slice(0, 6)}`);
@@ -1074,6 +1079,10 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
 
   const handleSaveProduct = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!formCategory) {
+      alert("Please select a category.");
+      return;
+    }
     setSubmittingProduct(true);
     const formElement = e.currentTarget;
     const form = new FormData(formElement);
@@ -1082,8 +1091,8 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     const slug = (formSlug.trim() || generateSlug(name)) || `prod-${Date.now()}`;
     const id = editingProduct ? editingProduct.id : slug;
     const sku = formSku.trim() || generateRandomSku(name);
-    const category = (form.get("category") as string) || formCategory;
-    const subcategoryId = form.get("subcategoryId") as string;
+    const subcategoryId = formCategory;
+    const category = findRootCategoryId(categoryTree, formCategory) || formCategory;
     const description = (form.get("description") as string) || "";
     const regularPrice = formRegularPrice.startsWith("৳") ? formRegularPrice : `৳${formRegularPrice}`;
     const discountedPrice = formDiscountedPrice.startsWith("৳") ? formDiscountedPrice : `৳${formDiscountedPrice}`;
@@ -2614,50 +2623,16 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                    <div>
+                    <div className="lg:col-span-2">
                       <div className="flex items-center gap-1.5 mb-1.5">
                         <label className="font-bold text-xs text-[#171136]">
                           Category <span className="text-[#FF4D6D]">*</span>
                         </label>
-                        <span title="Main parent category taxonomy" className="text-[#8A84A6] hover:text-[#171136] cursor-help">
+                        <span title="Pick any category, subcategory, or sub-subcategory" className="text-[#8A84A6] hover:text-[#171136] cursor-help">
                           <IconInfo className="w-3.5 h-3.5" />
                         </span>
                       </div>
-                      <select
-                        name="category"
-                        value={formCategory}
-                        onChange={(e) => setFormCategory(e.target.value)}
-                        className="w-full px-4 py-3 rounded-2xl border border-[#EAE3F7] bg-[#FAF8FD] focus:bg-white text-xs font-semibold text-[#171136] focus:outline-none focus:border-[#FF4D6D] transition-all cursor-pointer"
-                      >
-                        {categories.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <label className="font-bold text-xs text-[#171136]">Subcategory</label>
-                        <span title="Child taxonomy within department" className="text-[#8A84A6] hover:text-[#171136] cursor-help">
-                          <IconInfo className="w-3.5 h-3.5" />
-                        </span>
-                      </div>
-                      <select
-                        name="subcategoryId"
-                        defaultValue={editingProduct?.subcategoryId || editingProduct?.subcategory?.id || ""}
-                        className="w-full px-4 py-3 rounded-2xl border border-[#EAE3F7] bg-[#FAF8FD] focus:bg-white text-xs font-semibold text-[#171136] focus:outline-none focus:border-[#FF4D6D] transition-all cursor-pointer"
-                      >
-                        <option value="">General / Default</option>
-                        {categories
-                          .find((c) => c.id === formCategory)
-                          ?.subcategories?.map((sub: any) => (
-                            <option key={sub.id} value={sub.id}>
-                              {sub.label}
-                            </option>
-                          ))}
-                      </select>
+                      <CategoryTreePicker categories={categoryTree} value={formCategory} onChange={setFormCategory} />
                     </div>
 
                     {/* Auto-generated SKU Field */}
