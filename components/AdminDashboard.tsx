@@ -456,17 +456,26 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     }
   };
 
-  // Seed the mega menu draft selection whenever the admin opens that tab
+  // Seed the mega menu draft selection once categories have actually loaded
+  // for this visit to the tab. Waiting on categories.length (not just
+  // activeNav) matters: fetchData() is async, so navigating straight to
+  // this tab on page load could otherwise seed the draft from a still-empty
+  // categories array, show "In Mega Menu (0)", and - if Save is then
+  // clicked - wipe show_in_mega_menu to false for every real category.
+  const megaMenuSeededRef = useRef(false);
   useEffect(() => {
-    if (activeNav === "appearance-mega-menu") {
-      const inMenu = categories
-        .filter((c) => c.show_in_mega_menu !== false)
-        .sort((a, b) => (a.mega_menu_order ?? 0) - (b.mega_menu_order ?? 0))
-        .map((c) => c.id);
-      setMegaMenuSelection(inMenu);
+    if (activeNav !== "appearance-mega-menu") {
+      megaMenuSeededRef.current = false;
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeNav]);
+    if (megaMenuSeededRef.current || categories.length === 0) return;
+    const inMenu = categories
+      .filter((c) => c.show_in_mega_menu !== false)
+      .sort((a, b) => (a.mega_menu_order ?? 0) - (b.mega_menu_order ?? 0))
+      .map((c) => c.id);
+    setMegaMenuSelection(inMenu);
+    megaMenuSeededRef.current = true;
+  }, [activeNav, categories]);
 
   const megaMenuAvailable = useMemo(
     () => categories.filter((c) => !megaMenuSelection.includes(c.id)),
@@ -502,6 +511,12 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   };
 
   const saveMegaMenu = async () => {
+    if (megaMenuSelection.length === 0 && categories.length > 0) {
+      const confirmed = window.confirm(
+        "No categories are selected for the mega menu. Saving now will hide the whole \"Browse categories\" panel on the homepage. Continue?"
+      );
+      if (!confirmed) return;
+    }
     setSavingMegaMenu(true);
     try {
       const result = await reorderMegaMenuCategories(megaMenuSelection);

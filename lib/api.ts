@@ -1,22 +1,32 @@
 import { ProductSection, Category, Product } from "@/components/productData";
 
+// Single source of truth for mapping a site hostname to its backend API base.
+// Used by both the browser (client components) and the server (via
+// getServerApiBaseUrl, which reads the real request Host header) so a
+// visitor always hits the same backend no matter where the fetch runs -
+// avoids SSR and client code silently talking to two different backends
+// (and therefore two different databases) when NEXT_PUBLIC_API_URL doesn't
+// match the domain actually being served.
+function resolveApiBaseFromHost(host: string): string {
+  if (host.includes("kawaiisubete.com")) {
+    return "https://api.kawaiisubete.com/api";
+  }
+  if (host.includes("brickverse.eezzymart.tech") || host.includes("eezzymart.tech")) {
+    return "https://brickbackend.eezzymart.tech/api";
+  }
+  if (host === "localhost" || host === "127.0.0.1" || host.startsWith("localhost:") || host.startsWith("127.0.0.1:")) {
+    return process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+  }
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "");
+  }
+  return "https://api.kawaiisubete.com/api";
+}
+
 export function getApiBaseUrl(): string {
   // 1. Client-side browser runtime dynamic detection
   if (typeof window !== "undefined") {
-    const host = window.location.hostname;
-    if (host.includes("kawaiisubete.com")) {
-      return "https://api.kawaiisubete.com/api";
-    }
-    if (host.includes("brickverse.eezzymart.tech") || host.includes("eezzymart.tech")) {
-      return "https://brickbackend.eezzymart.tech/api";
-    }
-    if (host === "localhost" || host === "127.0.0.1") {
-      return process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
-    }
-    if (process.env.NEXT_PUBLIC_API_URL) {
-      return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "");
-    }
-    return "https://api.kawaiisubete.com/api";
+    return resolveApiBaseFromHost(window.location.hostname);
   }
 
   // 2. Explicit NEXT_PUBLIC_API_URL environment variable
@@ -32,6 +42,24 @@ export function getApiBaseUrl(): string {
 
   // 4. Default for local development
   return envUrl || "http://127.0.0.1:8000/api";
+}
+
+// Server-only: resolves the API base from the actual incoming request's
+// Host header, so a Server Component's fetch targets the same backend the
+// visitor's browser would (per resolveApiBaseFromHost), instead of trusting
+// a NEXT_PUBLIC_API_URL build-time env var that may not match the domain
+// this deployment is actually being served under. Falls back to
+// getApiBaseUrl() if headers() isn't available (e.g. outside a request).
+export async function getServerApiBaseUrl(): Promise<string> {
+  try {
+    const { headers } = await import("next/headers");
+    const h = await headers();
+    const host = h.get("host");
+    if (host) return resolveApiBaseFromHost(host);
+  } catch {
+    // not in a request context (e.g. build-time) - fall through
+  }
+  return getApiBaseUrl();
 }
 
 export function getMediaUrl(path?: string | null): string {
@@ -83,9 +111,10 @@ export async function seedCatalogProducts(): Promise<{ success: boolean; message
   }
 }
 
-export async function getProductSections(): Promise<ProductSection[]> {
+export async function getProductSections(apiBaseOverride?: string): Promise<ProductSection[]> {
   try {
-    const res = await fetch(`${getApiBaseUrl()}/sections/`, {
+    const base = apiBaseOverride || getApiBaseUrl();
+    const res = await fetch(`${base}/sections/`, {
       next: { revalidate: 30 },
     });
     if (!res.ok) return [];
@@ -97,9 +126,10 @@ export async function getProductSections(): Promise<ProductSection[]> {
   }
 }
 
-export async function getCategories(): Promise<Category[]> {
+export async function getCategories(apiBaseOverride?: string): Promise<Category[]> {
   try {
-    const res = await fetch(`${getApiBaseUrl()}/categories/`, {
+    const base = apiBaseOverride || getApiBaseUrl();
+    const res = await fetch(`${base}/categories/`, {
       cache: "no-store",
     });
     if (!res.ok) return [];

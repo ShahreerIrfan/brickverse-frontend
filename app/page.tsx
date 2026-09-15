@@ -9,12 +9,13 @@ import PromoBanner from "@/components/PromoBanner";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
-import { getProductSections, getCategories } from "@/lib/api";
+import { getProductSections, getCategories, getServerApiBaseUrl } from "@/lib/api";
 
 export default async function Home() {
+  const apiBase = await getServerApiBaseUrl();
   const [sections, categories] = await Promise.all([
-    getProductSections(),
-    getCategories(),
+    getProductSections(apiBase),
+    getCategories(apiBase),
   ]);
 
   const megaMenuCategories = categories

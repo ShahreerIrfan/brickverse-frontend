@@ -4,14 +4,15 @@ import ShopCatalog from "@/components/ShopCatalog";
 import TrustStrip from "@/components/TrustStrip";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
-import { getAllProducts, getCategories } from "@/lib/api";
+import { getAllProducts, getCategories, getServerApiBaseUrl } from "@/lib/api";
 
 export const revalidate = 30;
 
 export default async function ShopPage() {
+  const apiBase = await getServerApiBaseUrl();
   const [products, categories] = await Promise.all([
     getAllProducts(),
-    getCategories(),
+    getCategories(apiBase),
   ]);
 
   return (
