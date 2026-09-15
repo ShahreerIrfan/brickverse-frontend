@@ -151,12 +151,18 @@ function ParentPicker({
                     setOpen(false);
                     setQuery("");
                   }}
-                  className={`w-full text-left px-3 py-2 text-xs cursor-pointer ${
+                  className={`w-full flex items-center gap-2 text-left px-3 py-2 text-xs cursor-pointer ${
                     value === c.id ? "bg-[#FFF1F4] text-[#FF4D6D] font-semibold" : "text-[#171136] hover:bg-[#FAF8FE]"
                   }`}
                   style={{ paddingLeft: `${12 + c.depth * 16}px` }}
                 >
-                  {c.depth > 0 && <span className="text-[#7B5CFF] font-extrabold mr-1.5">{"-".repeat(c.depth)}</span>}
+                  {c.depth > 0 && (
+                    <span className="flex items-center gap-1 shrink-0">
+                      {Array.from({ length: c.depth }).map((_, i) => (
+                        <span key={i} className="h-[2px] w-2 bg-[#7B5CFF] rounded-full" />
+                      ))}
+                    </span>
+                  )}
                   {c.label}
                 </button>
               ))
@@ -365,12 +371,16 @@ export default function CategoriesManager({ onChanged }: CategoriesManagerProps)
                           <CategoryGlyph id={cat.id} color={cat.color || "#FF4D6D"} icon={cat.category_icon || cat.categoryIcon || cat.icon_type} />
                         </span>
                         <div className="min-w-0">
-                          <p className="font-bold text-[#171136] truncate">
+                          <div className="flex items-center gap-2 truncate">
                             {cat.depth > 0 && (
-                              <span className="text-[#7B5CFF] font-extrabold text-sm mr-1.5">{"- ".repeat(cat.depth).trim()}</span>
+                              <span className="flex items-center gap-1 shrink-0">
+                                {Array.from({ length: cat.depth }).map((_, i) => (
+                                  <span key={i} className="h-[2px] w-2 bg-[#7B5CFF] rounded-full" />
+                                ))}
+                              </span>
                             )}
-                            {cat.label}
-                          </p>
+                            <p className="font-bold text-[#171136] truncate">{cat.label}</p>
+                          </div>
                           <p className="text-[10.5px] text-[#8A84A6] font-mono truncate">{cat.slug || cat.id}</p>
                         </div>
                       </div>
