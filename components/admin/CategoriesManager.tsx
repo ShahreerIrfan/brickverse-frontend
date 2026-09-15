@@ -159,7 +159,7 @@ function ParentPicker({
                   {c.depth > 0 && (
                     <span className="flex items-center gap-1 shrink-0">
                       {Array.from({ length: c.depth }).map((_, i) => (
-                        <span key={i} className="h-[2px] w-2 bg-[#7B5CFF] rounded-full" />
+                        <span key={i} className="h-[2px] w-[15px] bg-[#7B5CFF] rounded-full" />
                       ))}
                     </span>
                   )}
@@ -375,7 +375,7 @@ export default function CategoriesManager({ onChanged }: CategoriesManagerProps)
                             {cat.depth > 0 && (
                               <span className="flex items-center gap-1 shrink-0">
                                 {Array.from({ length: cat.depth }).map((_, i) => (
-                                  <span key={i} className="h-[2px] w-2 bg-[#7B5CFF] rounded-full" />
+                                  <span key={i} className="h-[2px] w-[15px] bg-[#7B5CFF] rounded-full" />
                                 ))}
                               </span>
                             )}
