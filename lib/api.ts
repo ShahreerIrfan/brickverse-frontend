@@ -100,7 +100,7 @@ export async function getProductSections(): Promise<ProductSection[]> {
 export async function getCategories(): Promise<Category[]> {
   try {
     const res = await fetch(`${getApiBaseUrl()}/categories/`, {
-      next: { revalidate: 30 },
+      cache: "no-store",
     });
     if (!res.ok) return [];
     const data = await res.json();
