@@ -21,6 +21,10 @@ export const metadata: Metadata = {
   title: "Brickverse — figures, bricks, code kits",
   description:
     "Anime figures, cartoon collectibles, brick sets and coding kits — shipped from Melbourne in 48 hours.",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

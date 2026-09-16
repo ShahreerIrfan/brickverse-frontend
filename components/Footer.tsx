@@ -24,7 +24,7 @@ export default function Footer() {
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14 grid grid-cols-1 lg:grid-cols-[280px_1fr_1fr_1fr_220px] gap-6 sm:gap-10">
         <div>
           <div className="flex items-center gap-2.5">
-            <Image src="/images/logo-mark.svg" alt="Brickverse" width={40} height={40} />
+            <Image src="/logo.png" alt="Brickverse" width={40} height={40} className="w-10 h-10 object-contain" />
             <span className="flex flex-col leading-tight">
               <span className="font-[family-name:var(--font-display)] font-extrabold text-xl tracking-tight text-white">
                 Brickverse

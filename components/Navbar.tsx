@@ -35,11 +35,11 @@ export default function Navbar() {
             <MobileMenu />
             <Link href="/" className="flex items-center gap-2 sm:gap-2.5 shrink-0">
               <Image
-                src="/images/logo-mark.svg"
+                src="/logo.png"
                 alt="Brickverse"
-                width={36}
-                height={36}
-                className="w-8 h-8 sm:w-10 sm:h-10"
+                width={40}
+                height={40}
+                className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
                 priority
               />
               <span className="flex flex-col leading-tight">

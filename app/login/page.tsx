@@ -107,7 +107,7 @@ function LoginForm() {
       {/* Top Header */}
       <header className="max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5">
-          <Image src="/images/logo-mark.svg" alt="Brickverse" width={36} height={36} />
+          <Image src="/logo.png" alt="Brickverse" width={36} height={36} className="w-8 h-8 sm:w-9 sm:h-9 object-contain" />
           <span className="font-[family-name:var(--font-display)] font-extrabold text-xl tracking-tight text-[#171136]">
             Brickverse
           </span>
@@ -127,7 +127,7 @@ function LoginForm() {
           {/* Brand Logo Header */}
           <div className="flex flex-col items-center justify-center mb-5">
             <div className="flex items-center gap-2.5">
-              <Image src="/images/logo-mark.svg" alt="Brickverse" width={38} height={38} />
+              <Image src="/logo.png" alt="Brickverse" width={38} height={38} className="w-9 h-9 sm:w-10 sm:h-10 object-contain" />
               <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl tracking-tight text-[#171136]">
                 Brickverse
               </span>

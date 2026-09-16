@@ -1280,16 +1280,14 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
           {/* Brand Header */}
           <div className="p-4 sm:p-5 flex items-center justify-between border-b border-[#2E2760]">
             <Link href="/" className="flex items-center gap-3 overflow-hidden">
-              {/* Brickverse Logo Icon matching SVG */}
-              <div className="relative w-9 h-8 rounded-xl bg-[#FF4D6D] flex flex-col items-center justify-center shrink-0 shadow-md shadow-[#FF4D6D]/30">
-                <span className="absolute -top-1 left-1.5 w-2.5 h-1.5 rounded-xs bg-[#FF4D6D]" />
-                <span className="absolute -top-1 right-1.5 w-2.5 h-1.5 rounded-xs bg-[#FF4D6D]" />
-                <div className="flex items-center gap-2">
-                  <span className="w-1 h-1 rounded-full bg-white" />
-                  <span className="w-1 h-1 rounded-full bg-white" />
-                </div>
-                <div className="w-2.5 h-0.5 border-b-2 border-white rounded-full mt-0.5" />
-              </div>
+              {/* Brickverse Brand Logo */}
+              <Image
+                src="/logo.png"
+                alt="Brickverse"
+                width={36}
+                height={36}
+                className="w-9 h-9 object-contain shrink-0"
+              />
 
               {!sidebarCollapsed && (
                 <div className="flex flex-col">
