@@ -1279,26 +1279,15 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
         <div>
           {/* Brand Header */}
           <div className="p-4 sm:p-5 flex items-center justify-between border-b border-[#2E2760]">
-            <Link href="/" className="flex items-center gap-3 overflow-hidden">
+            <Link href="/" className="flex items-center overflow-hidden">
               {/* Brickverse Brand Logo */}
               <Image
                 src="/logo.png"
                 alt="Brickverse"
-                width={36}
-                height={36}
-                className="w-9 h-9 object-contain shrink-0"
+                width={130}
+                height={40}
+                className={sidebarCollapsed ? "w-8 h-8 object-contain shrink-0" : "h-9 w-auto object-contain shrink-0"}
               />
-
-              {!sidebarCollapsed && (
-                <div className="flex flex-col">
-                  <span className="font-[family-name:var(--font-display)] font-extrabold text-lg tracking-tight text-white flex items-center gap-1.5">
-                    Brickverse
-                  </span>
-                  <span className="text-[10px] font-medium text-[#B9B2DA] tracking-wide">
-                    figures · bricks · code kits
-                  </span>
-                </div>
-              )}
             </Link>
 
             <button

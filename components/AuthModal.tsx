@@ -127,15 +127,7 @@ export default function AuthModal() {
 
         {/* Brand Logo Header */}
         <div className="flex flex-col items-center justify-center mb-5">
-          <div className="flex items-center gap-2.5">
-            <Image src="/logo.png" alt="Brickverse" width={38} height={38} className="w-9 h-9 object-contain" />
-            <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl tracking-tight text-[#171136]">
-              Brickverse
-            </span>
-          </div>
-          <span className="font-[family-name:var(--font-body)] text-[11px] font-medium text-[#736E9B] mt-0.5">
-            figures · bricks · code kits
-          </span>
+          <Image src="/logo.png" alt="Brickverse" width={140} height={44} className="h-11 w-auto object-contain" />
         </div>
 
         {/* Tab Headers: Sign In & Sign Up with Brickverse Pink Underline */}

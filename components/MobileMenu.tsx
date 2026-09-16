@@ -70,11 +70,8 @@ export default function MobileMenu() {
         }`}
       >
         <div className="flex items-center justify-between gap-3 bg-white px-5 py-4 border-b border-[#EAE3F7] shrink-0">
-          <a href="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
-            <Image src="/logo.png" alt="Brickverse" width={34} height={34} className="w-8 h-8 object-contain" />
-            <span className="font-[family-name:var(--font-display)] font-extrabold text-lg tracking-tight text-[#171136]">
-              Brickverse
-            </span>
+          <a href="/" className="flex items-center" onClick={() => setOpen(false)}>
+            <Image src="/logo.png" alt="Brickverse" width={120} height={38} className="h-8 w-auto object-contain" />
           </a>
           <button
             aria-label="Close menu"

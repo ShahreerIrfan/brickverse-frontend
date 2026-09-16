@@ -182,16 +182,8 @@ export default function CustomerDashboard({
       <header className="bg-white border-b border-[#EAE3F7] sticky top-0 z-30 shadow-xs">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center gap-2.5">
-              <Image src="/logo.png" alt="Brickverse" width={38} height={38} className="w-9 h-9 sm:w-10 sm:h-10 object-contain" />
-              <div className="flex flex-col leading-tight">
-                <span className="font-[family-name:var(--font-display)] font-extrabold text-xl tracking-tight text-[#171136]">
-                  Brickverse
-                </span>
-                <span className="text-[10.5px] font-medium text-[#736E9B]">
-                  Customer Member Area
-                </span>
-              </div>
+            <Link href="/" className="flex items-center">
+              <Image src="/logo.png" alt="Brickverse" width={130} height={40} className="h-8 sm:h-9 w-auto object-contain" />
             </Link>
 
             <span className="hidden sm:inline-flex items-center gap-1 px-3 py-1 bg-[#FFF1F4] text-[#FF4D6D] text-xs font-bold rounded-full border border-[#FF4D6D]/20">

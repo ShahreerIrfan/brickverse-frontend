@@ -106,11 +106,8 @@ function LoginForm() {
     <div className="min-h-screen bg-[#FFF6EE] flex flex-col justify-between p-4">
       {/* Top Header */}
       <header className="max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5">
-          <Image src="/logo.png" alt="Brickverse" width={36} height={36} className="w-8 h-8 sm:w-9 sm:h-9 object-contain" />
-          <span className="font-[family-name:var(--font-display)] font-extrabold text-xl tracking-tight text-[#171136]">
-            Brickverse
-          </span>
+        <Link href="/" className="flex items-center">
+          <Image src="/logo.png" alt="Brickverse" width={120} height={38} className="h-8 sm:h-9 w-auto object-contain" />
         </Link>
         <Link
           href="/"
@@ -126,15 +123,7 @@ function LoginForm() {
         <div className="relative w-full max-w-[400px] bg-white rounded-[28px] shadow-2xl p-6 sm:p-7 border border-[#EAE3F7]">
           {/* Brand Logo Header */}
           <div className="flex flex-col items-center justify-center mb-5">
-            <div className="flex items-center gap-2.5">
-              <Image src="/logo.png" alt="Brickverse" width={38} height={38} className="w-9 h-9 sm:w-10 sm:h-10 object-contain" />
-              <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl tracking-tight text-[#171136]">
-                Brickverse
-              </span>
-            </div>
-            <span className="font-[family-name:var(--font-body)] text-[11px] font-medium text-[#736E9B] mt-0.5">
-              figures · bricks · code kits
-            </span>
+            <Image src="/logo.png" alt="Brickverse" width={130} height={42} className="h-10 sm:h-11 w-auto object-contain" />
           </div>
 
           {/* Tab Headers: Sign In & Sign Up */}

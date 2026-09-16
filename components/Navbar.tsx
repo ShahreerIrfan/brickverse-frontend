@@ -33,23 +33,15 @@ export default function Navbar() {
           {/* Brand Logo & Mobile Menu */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             <MobileMenu />
-            <Link href="/" className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            <Link href="/" className="flex items-center shrink-0">
               <Image
                 src="/logo.png"
                 alt="Brickverse"
-                width={40}
-                height={40}
-                className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
+                width={130}
+                height={42}
+                className="h-8 sm:h-10 w-auto object-contain"
                 priority
               />
-              <span className="flex flex-col leading-tight">
-                <span className="font-[family-name:var(--font-display)] font-extrabold text-lg sm:text-xl tracking-tight text-[#171136]">
-                  Brickverse
-                </span>
-                <span className="hidden xs:block font-[family-name:var(--font-body)] text-[9px] sm:text-[10.5px] font-medium text-[#736E9B]">
-                  figures · bricks · code kits
-                </span>
-              </span>
             </Link>
           </div>
 

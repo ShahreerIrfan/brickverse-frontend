@@ -23,16 +23,8 @@ export default function Footer() {
     <footer className="bg-[#171136]">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14 grid grid-cols-1 lg:grid-cols-[280px_1fr_1fr_1fr_220px] gap-6 sm:gap-10">
         <div>
-          <div className="flex items-center gap-2.5">
-            <Image src="/logo.png" alt="Brickverse" width={40} height={40} className="w-10 h-10 object-contain" />
-            <span className="flex flex-col leading-tight">
-              <span className="font-[family-name:var(--font-display)] font-extrabold text-xl tracking-tight text-white">
-                Brickverse
-              </span>
-              <span className="text-[10.5px] font-medium text-[#B9B2DA]">
-                figures · bricks · code kits
-              </span>
-            </span>
+          <div className="flex items-center">
+            <Image src="/logo.png" alt="Brickverse" width={140} height={44} className="h-10 sm:h-12 w-auto object-contain" />
           </div>
           <p className="text-[13px] text-[#B9B2DA] leading-relaxed mt-6">
             Authentic anime figures, cartoon collectibles, brick sets and coding
