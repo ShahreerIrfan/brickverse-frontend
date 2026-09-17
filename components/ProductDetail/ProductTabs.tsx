@@ -135,18 +135,6 @@ export default function ProductTabs({ product }: ProductTabsProps) {
             <span className="absolute bottom-0 left-0 right-0 h-1 bg-[#FF4D6D] rounded-full" />
           )}
         </button>
-
-        <button
-          onClick={() => setActiveTab("shipping")}
-          className={`pb-3.5 font-[family-name:var(--font-display)] font-extrabold text-sm sm:text-base transition-all relative cursor-pointer ${
-            activeTab === "shipping" ? "text-[#171136]" : "text-[#736E9B] hover:text-[#171136]"
-          }`}
-        >
-          Shipping & Returns
-          {activeTab === "shipping" && (
-            <span className="absolute bottom-0 left-0 right-0 h-1 bg-[#FF4D6D] rounded-full" />
-          )}
-        </button>
       </div>
 
       {/* ------------------------------------------------------------- */}
