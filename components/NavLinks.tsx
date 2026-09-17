@@ -8,7 +8,7 @@ const links = [
   { label: "Cartoon toys", href: "/shop?category=cartoon-characters" },
   { label: "Bricks & sets", href: "/shop?category=bricks-building-sets" },
   { label: "Deals", href: "/shop?deals=true", hot: true },
-  { label: "Blog", href: "/shop" },
+  { label: "Blog", href: "/blog" },
 ];
 
 export default function NavLinks() {

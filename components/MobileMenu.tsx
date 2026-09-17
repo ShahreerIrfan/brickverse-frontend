@@ -18,14 +18,13 @@ import { useAuth } from "@/context/AuthContext";
 import { getApiBaseUrl } from "@/lib/api";
 
 const navLinks = [
-  { label: "Home", active: true },
-  { label: "Shop all" },
-  { label: "Anime figures" },
-  { label: "Cartoon toys" },
-  { label: "Bricks & sets" },
-  { label: "Coding kits" },
-  { label: "Deals", hot: true },
-  { label: "Blog" },
+  { label: "Home", href: "/", active: true },
+  { label: "Shop all", href: "/shop" },
+  { label: "Anime figures", href: "/shop?category=anime-figures" },
+  { label: "Cartoon toys", href: "/shop?category=cartoon-characters" },
+  { label: "Bricks & sets", href: "/shop?category=bricks-building-sets" },
+  { label: "Deals", href: "/shop?deals=true", hot: true },
+  { label: "Blog", href: "/blog" },
 ];
 
 export default function MobileMenu() {
@@ -203,7 +202,7 @@ export default function MobileMenu() {
             {navLinks.map((link) => (
               <a
                 key={link.label}
-                href="#"
+                href={link.href}
                 onClick={() => setOpen(false)}
                 className={`flex items-center gap-2 text-[14px] ${
                   link.active ? "font-bold text-[#FF4D6D]" : "font-medium text-[#3B3468]"
