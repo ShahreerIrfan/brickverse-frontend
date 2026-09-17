@@ -20,9 +20,6 @@ import { getApiBaseUrl } from "@/lib/api";
 const navLinks = [
   { label: "Home", href: "/", active: true },
   { label: "Shop all", href: "/shop" },
-  { label: "Anime figures", href: "/shop?category=anime-figures" },
-  { label: "Cartoon toys", href: "/shop?category=cartoon-characters" },
-  { label: "Bricks & sets", href: "/shop?category=bricks-building-sets" },
   { label: "Deals", href: "/shop?deals=true", hot: true },
   { label: "Blog", href: "/blog" },
 ];
