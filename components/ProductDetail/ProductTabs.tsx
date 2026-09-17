@@ -7,6 +7,96 @@ interface ProductTabsProps {
   product: Product;
 }
 
+type DescriptionBlock =
+  | { type: "heading"; text: string }
+  | { type: "bullets"; items: string[] }
+  | { type: "paragraph"; text: string };
+
+function parseDescription(text: string): DescriptionBlock[] {
+  const blocks: DescriptionBlock[] = [];
+  let bulletBuffer: string[] = [];
+  let paraBuffer: string[] = [];
+
+  const flushBullets = () => {
+    if (bulletBuffer.length) {
+      blocks.push({ type: "bullets", items: bulletBuffer });
+      bulletBuffer = [];
+    }
+  };
+  const flushPara = () => {
+    if (paraBuffer.length) {
+      blocks.push({ type: "paragraph", text: paraBuffer.join(" ") });
+      paraBuffer = [];
+    }
+  };
+
+  for (const raw of text.split("\n")) {
+    const line = raw.trim();
+    if (!line) {
+      // A blank line ends a paragraph, but not a bullet list - product
+      // descriptions from the admin editor often have a blank line between
+      // individual bullets, which should still render as one list.
+      flushPara();
+      continue;
+    }
+    const bulletMatch = line.match(/^[•\-*]\s+(.*)/);
+    if (bulletMatch) {
+      flushPara();
+      bulletBuffer.push(bulletMatch[1]);
+      continue;
+    }
+    flushBullets();
+    const isHeading = line.length <= 60 && line === line.toUpperCase() && /[A-Z]/.test(line);
+    if (isHeading) {
+      flushPara();
+      blocks.push({ type: "heading", text: line });
+    } else {
+      paraBuffer.push(line);
+    }
+  }
+  flushBullets();
+  flushPara();
+
+  return blocks;
+}
+
+function FormattedDescription({ text }: { text: string }) {
+  const blocks = parseDescription(text);
+
+  return (
+    <div className="space-y-4">
+      {blocks.map((block, i) => {
+        if (block.type === "heading") {
+          return (
+            <h3
+              key={i}
+              className="font-[family-name:var(--font-display)] font-bold text-sm sm:text-base text-[#171136] tracking-wide"
+            >
+              {block.text}
+            </h3>
+          );
+        }
+        if (block.type === "bullets") {
+          return (
+            <ul key={i} className="list-disc pl-5 space-y-1.5">
+              {block.items.map((item, j) => (
+                <li key={j} className="text-xs sm:text-sm text-[#3B3468] leading-relaxed">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          );
+        }
+        return (
+          <p key={i} className="text-xs sm:text-sm text-[#3B3468] leading-relaxed">
+            {block.text}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function ProductTabs({ product }: ProductTabsProps) {
   const [activeTab, setActiveTab] = useState<"description" | "shipping">("description");
 
@@ -50,20 +140,20 @@ export default function ProductTabs({ product }: ProductTabsProps) {
             <h2 className="font-[family-name:var(--font-display)] font-extrabold text-xl sm:text-2xl text-[#171136] tracking-tight mb-3">
               About this product
             </h2>
-            <div className="text-xs sm:text-sm text-[#3B3468] leading-relaxed space-y-3 max-w-4xl font-normal">
-              <p>
-                {product.description ||
-                  `${product.name} is crafted with precision and premium quality materials. Each piece is thoroughly inspected to ensure top-notch finish and durability before delivery.`}
-              </p>
+            <div className="max-w-4xl font-normal">
+              <FormattedDescription
+                text={
+                  product.description ||
+                  `${product.name} is crafted with precision and premium quality materials. Each piece is thoroughly inspected to ensure top-notch finish and durability before delivery.`
+                }
+              />
             </div>
           </div>
         </div>
       )}
 
       {/* ------------------------------------------------------------- */}
-      {/* TAB 3: REVIEWS */}
-      {/* ------------------------------------------------------------- */}
-      {/* TAB 4: SHIPPING & RETURNS */}
+      {/* TAB 2: SHIPPING & RETURNS */}
       {/* ------------------------------------------------------------- */}
       {activeTab === "shipping" && (
         <div className="pt-6 sm:pt-8 animate-in fade-in space-y-4 max-w-3xl text-xs sm:text-sm text-[#3B3468]">
