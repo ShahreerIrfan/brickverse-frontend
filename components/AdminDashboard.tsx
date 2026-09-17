@@ -83,6 +83,7 @@ import CategoryTreePicker, { findRootCategoryId } from "./admin/CategoryTreePick
 import BlogPostsList from "./admin/BlogPostsList";
 import BlogPostEditor from "./admin/BlogPostEditor";
 import BlogTaxonomyManager from "./admin/BlogTaxonomyManager";
+import RichTextEditor from "./admin/RichTextEditor";
 import { printOrderInvoice } from "@/lib/invoice";
 
 interface AdminDashboardProps {
@@ -2721,12 +2722,11 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                         <IconInfo className="w-3.5 h-3.5" />
                       </span>
                     </div>
-                    <textarea
+                    <RichTextEditor
+                      key={editingProduct?.id || "new"}
                       name="description"
-                      rows={4}
-                      defaultValue={editingProduct?.description || ""}
+                      initialValue={editingProduct?.description || ""}
                       placeholder="Write a detailed product description, collectible lore, ingredients or specifications..."
-                      className="w-full px-4 py-3 rounded-2xl border border-[#EAE3F7] bg-[#FAF8FD] focus:bg-white text-xs text-[#171136] focus:outline-none focus:border-[#FF4D6D] transition-all resize-y"
                     />
                   </div>
                 </div>
