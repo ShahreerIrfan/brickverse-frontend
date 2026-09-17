@@ -4,6 +4,12 @@ import { useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
+import { TextStyle, FontSize } from "@tiptap/extension-text-style";
+
+const BASE_FONT_SIZE = 12;
+const MIN_FONT_SIZE = 10;
+const MAX_FONT_SIZE = 32;
+const FONT_SIZE_STEP = 2;
 
 function ToolbarButton({
   active,
@@ -53,10 +59,13 @@ export default function RichTextEditor({
       Placeholder.configure({
         placeholder: placeholder || "Write a detailed product description...",
       }),
+      TextStyle,
+      FontSize,
     ],
     content: initialValue || "",
     immediatelyRender: false,
     onUpdate: ({ editor }) => setHtml(editor.getHTML()),
+    onSelectionUpdate: ({ editor }) => setHtml(editor.getHTML()),
     editorProps: {
       attributes: {
         class:
@@ -64,6 +73,17 @@ export default function RichTextEditor({
       },
     },
   });
+
+  const currentFontSize = (() => {
+    const raw = editor?.getAttributes("textStyle")?.fontSize as string | undefined;
+    const parsed = raw ? parseFloat(raw) : NaN;
+    return Number.isFinite(parsed) ? parsed : BASE_FONT_SIZE;
+  })();
+
+  const applyFontSize = (next: number) => {
+    const clamped = Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, next));
+    editor?.chain().focus().setFontSize(`${clamped}px`).run();
+  };
 
   return (
     <div className="rounded-2xl border border-[#EAE3F7] bg-[#FAF8FD] focus-within:border-[#FF4D6D] focus-within:bg-white transition-all overflow-hidden">
@@ -81,6 +101,24 @@ export default function RichTextEditor({
           onClick={() => editor?.chain().focus().toggleItalic().run()}
         >
           <span className="italic">I</span>
+        </ToolbarButton>
+        <span className="w-px h-5 bg-[#EAE3F7] mx-1" />
+        <ToolbarButton
+          label="Decrease font size"
+          disabled={currentFontSize <= MIN_FONT_SIZE}
+          onClick={() => applyFontSize(currentFontSize - FONT_SIZE_STEP)}
+        >
+          A<span className="text-[10px]">−</span>
+        </ToolbarButton>
+        <span className="min-w-[30px] text-center text-[11px] font-semibold text-[#736E9B] select-none">
+          {currentFontSize}px
+        </span>
+        <ToolbarButton
+          label="Increase font size"
+          disabled={currentFontSize >= MAX_FONT_SIZE}
+          onClick={() => applyFontSize(currentFontSize + FONT_SIZE_STEP)}
+        >
+          A<span className="text-sm">+</span>
         </ToolbarButton>
         <span className="w-px h-5 bg-[#EAE3F7] mx-1" />
         <ToolbarButton
