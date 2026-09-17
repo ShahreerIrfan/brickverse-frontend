@@ -3,15 +3,14 @@ import NavLinks from "@/components/NavLinks";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import BlogIndexClient from "@/components/blog/BlogIndexClient";
-import { getBlogPosts, getBlogCategories, getBlogTags } from "@/lib/api";
+import { getBlogPosts, getBlogCategories } from "@/lib/api";
 
 export const revalidate = 30;
 
 export default async function BlogIndexPage() {
-  const [postsRes, categories, tags] = await Promise.all([
+  const [postsRes, categories] = await Promise.all([
     getBlogPosts({ page: 1 }),
     getBlogCategories(),
-    getBlogTags(),
   ]);
 
   return (
@@ -24,7 +23,6 @@ export default async function BlogIndexPage() {
           initialPosts={postsRes.results}
           initialCount={postsRes.count}
           categories={categories}
-          tags={tags}
         />
       </main>
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getBlogPosts } from "@/lib/api";
-import type { BlogPost, BlogCategoryRef, BlogTagRef } from "@/lib/blogTypes";
+import type { BlogPost, BlogCategoryRef } from "@/lib/blogTypes";
 import BlogPostCard from "./BlogPostCard";
 import { IconSearch, IconChevronLeft, IconChevronRight } from "@/components/icons";
 
@@ -10,32 +10,29 @@ export default function BlogIndexClient({
   initialPosts,
   initialCount,
   categories,
-  tags,
 }: {
   initialPosts: BlogPost[];
   initialCount: number;
   categories: BlogCategoryRef[];
-  tags: BlogTagRef[];
 }) {
   const [posts, setPosts] = useState<BlogPost[]>(initialPosts);
   const [count, setCount] = useState(initialCount);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
-  const [tag, setTag] = useState("");
   const [page, setPage] = useState(1);
 
   const pageSize = initialPosts.length || 12;
   const totalPages = Math.max(1, Math.ceil(count / (pageSize || 1)));
 
   useEffect(() => {
-    const isFirstLoad = page === 1 && !search && !category && !tag;
+    const isFirstLoad = page === 1 && !search && !category;
     if (isFirstLoad) return;
 
     let active = true;
     setLoading(true);
     const handle = setTimeout(async () => {
-      const res = await getBlogPosts({ category, tag, search, page });
+      const res = await getBlogPosts({ category, search, page });
       if (!active) return;
       setPosts(res.results);
       setCount(res.count);
@@ -45,7 +42,7 @@ export default function BlogIndexClient({
       active = false;
       clearTimeout(handle);
     };
-  }, [search, category, tag, page]);
+  }, [search, category, page]);
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -57,13 +54,8 @@ export default function BlogIndexClient({
     setPage(1);
   };
 
-  const handleTagChange = (value: string) => {
-    setTag(value);
-    setPage(1);
-  };
-
   return (
-    <div className="max-w-[1200px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-12">
+    <div className="max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
       <div className="mb-6 sm:mb-10">
         <p className="text-[10.5px] sm:text-xs font-bold tracking-wide text-[#FF4D6D]">BRICKVERSE JOURNAL</p>
         <h1 className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-4xl text-[#171136] tracking-tight mt-1">
@@ -96,18 +88,6 @@ export default function BlogIndexClient({
             </option>
           ))}
         </select>
-        <select
-          value={tag}
-          onChange={(e) => handleTagChange(e.target.value)}
-          className="px-3.5 py-2.5 rounded-2xl bg-white border border-[#EAE3F7] text-xs sm:text-sm text-[#171136] focus:outline-none focus:border-[#FF4D6D]"
-        >
-          <option value="">All tags</option>
-          {tags.map((t) => (
-            <option key={t.id} value={t.slug}>
-              #{t.name}
-            </option>
-          ))}
-        </select>
       </div>
 
       {loading ? (
@@ -121,7 +101,7 @@ export default function BlogIndexClient({
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-6">
             {posts.map((post) => (
               <BlogPostCard key={post.id} post={post} />
             ))}
