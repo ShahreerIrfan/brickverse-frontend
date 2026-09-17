@@ -80,6 +80,9 @@ import AdminLogsView from "./admin/AdminLogsView";
 import CategoriesManager from "./admin/CategoriesManager";
 import HeroSlidesManager from "./admin/HeroSlidesManager";
 import CategoryTreePicker, { findRootCategoryId } from "./admin/CategoryTreePicker";
+import BlogPostsList from "./admin/BlogPostsList";
+import BlogPostEditor from "./admin/BlogPostEditor";
+import BlogTaxonomyManager from "./admin/BlogTaxonomyManager";
 import { printOrderInvoice } from "@/lib/invoice";
 
 interface AdminDashboardProps {
@@ -87,6 +90,7 @@ interface AdminDashboardProps {
   initialNav?: ActiveNav;
   initialOrderId?: string;
   initialStoreId?: string;
+  initialBlogPostId?: string;
 }
 
 type ActiveNav =
@@ -102,9 +106,12 @@ type ActiveNav =
   | "stores-all"
   | "stores-single"
   | "stores-form"
+  | "blog-all"
+  | "blog-form"
+  | "blog-taxonomy"
   | "logs";
 
-export default function AdminDashboard({ user, initialNav, initialOrderId, initialStoreId }: AdminDashboardProps) {
+export default function AdminDashboard({ user, initialNav, initialOrderId, initialStoreId, initialBlogPostId }: AdminDashboardProps) {
   const { logout } = useAuth();
 
   // Dynamic user display name & avatar resolution (First Name, Last Name, Avatar initial)
@@ -132,7 +139,9 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [ordersMenuOpen, setOrdersMenuOpen] = useState(initialNav ? initialNav.startsWith("orders") : false);
   const [usersMenuOpen, setUsersMenuOpen] = useState(initialNav ? initialNav.startsWith("users") : false);
   const [storesMenuOpen, setStoresMenuOpen] = useState(initialNav ? initialNav.startsWith("stores") : false);
+  const [blogMenuOpen, setBlogMenuOpen] = useState(initialNav ? initialNav.startsWith("blog") : false);
   const [currentStoreId, setCurrentStoreId] = useState<string | undefined>(initialStoreId);
+  const [editingBlogPostId, setEditingBlogPostId] = useState<string | number | undefined>(undefined);
 
   // Profile Dropdown Popover
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -185,6 +194,9 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     "stores-all": "/en/admin/stores",
     "stores-form": "/en/admin/stores/new",
     "stores-single": "/en/admin/stores",
+    "blog-all": "/en/admin/blog",
+    "blog-form": "/en/admin/blog/new",
+    "blog-taxonomy": "/en/admin/blog/taxonomy",
     "logs": "/en/admin/logs",
   };
 
@@ -195,6 +207,8 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     if (nav.startsWith("orders")) setOrdersMenuOpen(true);
     if (nav.startsWith("users")) setUsersMenuOpen(true);
     if (nav.startsWith("stores")) setStoresMenuOpen(true);
+    if (nav.startsWith("blog")) setBlogMenuOpen(true);
+    if (nav !== "blog-form") setEditingBlogPostId(undefined);
     const targetUrl = customUrl || navToUrlMap[nav] || "/en/admin";
     if (typeof window !== "undefined" && window.location.pathname !== targetUrl) {
       window.history.pushState(null, "", targetUrl);
@@ -209,6 +223,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       if (initialNav.startsWith("orders")) setOrdersMenuOpen(true);
       if (initialNav.startsWith("users")) setUsersMenuOpen(true);
       if (initialNav.startsWith("stores")) setStoresMenuOpen(true);
+      if (initialNav.startsWith("blog")) setBlogMenuOpen(true);
     }
   }, [initialNav]);
 
@@ -217,6 +232,12 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       setCurrentStoreId(initialStoreId);
     }
   }, [initialStoreId]);
+
+  useEffect(() => {
+    if (initialBlogPostId) {
+      setEditingBlogPostId(initialBlogPostId);
+    }
+  }, [initialBlogPostId]);
 
   // Handle browser back/forward buttons
   useEffect(() => {
@@ -258,6 +279,15 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
         setStoresMenuOpen(true);
       } else if (path.includes("/logs")) {
         setActiveNav("logs");
+      } else if (path.includes("/blog/new") || path.includes("/blog/edit")) {
+        setActiveNav("blog-form");
+        setBlogMenuOpen(true);
+      } else if (path.includes("/blog/taxonomy")) {
+        setActiveNav("blog-taxonomy");
+        setBlogMenuOpen(true);
+      } else if (path.includes("/blog")) {
+        setActiveNav("blog-all");
+        setBlogMenuOpen(true);
       } else if (path.includes("/en/admin") || path.includes("/admin")) {
         setActiveNav("dashboard");
       }
@@ -1414,6 +1444,72 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-current" />
                     <span>Hero Slide</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 2c) Blog Accordion */}
+            <div className="space-y-1">
+              <button
+                onClick={() => setBlogMenuOpen(!blogMenuOpen)}
+                title="Blog"
+                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-bold text-xs sm:text-[13.5px] transition-all cursor-pointer relative ${
+                  activeNav.startsWith("blog")
+                    ? "bg-[#2A2159] text-white before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-sm before:bg-[#FF4D6D]"
+                    : "text-[#C7C0E8] hover:bg-[#2A2159]/60 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <IconLayers className={`w-4 h-4 shrink-0 ${activeNav.startsWith("blog") ? "text-white" : "text-[#A79FD1]"}`} />
+                  {!sidebarCollapsed && <span>Blog</span>}
+                </div>
+                {!sidebarCollapsed && (
+                  <IconChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      blogMenuOpen ? "rotate-0 text-white" : "-rotate-90 text-[#A79FD1]"
+                    }`}
+                  />
+                )}
+              </button>
+
+              {blogMenuOpen && !sidebarCollapsed && (
+                <div className="pl-8 pr-1 py-1 space-y-1">
+                  <button
+                    onClick={() => navigateTo("blog-all")}
+                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                      activeNav === "blog-all"
+                        ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
+                        : "text-[#A79FD1] hover:text-white hover:bg-[#2A2159]/40"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    <span>All Posts</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingBlogPostId(undefined);
+                      navigateTo("blog-form");
+                    }}
+                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                      activeNav === "blog-form"
+                        ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
+                        : "text-[#A79FD1] hover:text-white hover:bg-[#2A2159]/40"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    <span>New Post</span>
+                  </button>
+                  <button
+                    onClick={() => navigateTo("blog-taxonomy")}
+                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                      activeNav === "blog-taxonomy"
+                        ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
+                        : "text-[#A79FD1] hover:text-white hover:bg-[#2A2159]/40"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    <span>Categories &amp; Tags</span>
                   </button>
                 </div>
               )}
@@ -3281,6 +3377,34 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
           {/* 3c) VIEW: APPEARANCE -> HERO SLIDES */}
           {/* ========================================================= */}
           {activeNav === "appearance-hero-slides" && <HeroSlidesManager />}
+
+          {/* ========================================================= */}
+          {/* 3d) VIEW: BLOG -> ALL POSTS */}
+          {/* ========================================================= */}
+          {activeNav === "blog-all" && (
+            <BlogPostsList
+              onCreate={() => {
+                setEditingBlogPostId(undefined);
+                navigateTo("blog-form");
+              }}
+              onEdit={(id) => {
+                setEditingBlogPostId(id);
+                navigateTo("blog-form", `/en/admin/blog/edit/${id}`);
+              }}
+            />
+          )}
+
+          {/* ========================================================= */}
+          {/* 3e) VIEW: BLOG -> POST FORM */}
+          {/* ========================================================= */}
+          {activeNav === "blog-form" && (
+            <BlogPostEditor postId={editingBlogPostId} onDone={() => navigateTo("blog-all")} />
+          )}
+
+          {/* ========================================================= */}
+          {/* 3f) VIEW: BLOG -> TAXONOMY */}
+          {/* ========================================================= */}
+          {activeNav === "blog-taxonomy" && <BlogTaxonomyManager />}
 
           {/* ========================================================= */}
           {/* 4) VIEW: ORDERS -> ALL ORDERS */}

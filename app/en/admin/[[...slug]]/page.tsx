@@ -37,9 +37,13 @@ export default function AdminRoutePage({ params }: PageProps) {
     | "stores-all"
     | "stores-single"
     | "stores-form"
+    | "blog-all"
+    | "blog-form"
+    | "blog-taxonomy"
     | "logs" = "dashboard";
   let initialOrderId: string | undefined = undefined;
   let initialStoreId: string | undefined = undefined;
+  let initialBlogPostId: string | undefined = undefined;
 
   if (slug.length >= 2 && slug[0] === "products") {
     if (slug[1] === "new" || slug[1] === "edit" || slug[1] === "add") {
@@ -75,6 +79,17 @@ export default function AdminRoutePage({ params }: PageProps) {
     }
   } else if (slug[0] === "logs") {
     initialNav = "logs";
+  } else if (slug[0] === "blog") {
+    if (slug.length >= 2 && (slug[1] === "new" || slug[1] === "add")) {
+      initialNav = "blog-form";
+    } else if (slug.length >= 3 && slug[1] === "edit") {
+      initialNav = "blog-form";
+      initialBlogPostId = slug[2];
+    } else if (slug.length >= 2 && slug[1] === "taxonomy") {
+      initialNav = "blog-taxonomy";
+    } else {
+      initialNav = "blog-all";
+    }
   }
 
   useEffect(() => {
@@ -106,6 +121,7 @@ export default function AdminRoutePage({ params }: PageProps) {
       initialNav={initialNav}
       initialOrderId={initialOrderId}
       initialStoreId={initialStoreId}
+      initialBlogPostId={initialBlogPostId}
     />
   );
 }

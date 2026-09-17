@@ -1,4 +1,5 @@
 import { ProductSection, Category, Product, HeroSlide } from "@/components/productData";
+import type { BlogPost, BlogPostListResponse, BlogPostDraft, BlogCategoryRef, BlogTagRef } from "@/lib/blogTypes";
 
 // Single source of truth for mapping a site hostname to its backend API base.
 // Used by both the browser (client components) and the server (via
@@ -1059,6 +1060,308 @@ export async function pruneLogs(days?: number): Promise<{ success: boolean; dele
     return { success: res.ok, deleted_count: data?.deleted_count || 0, message: data?.message };
   } catch {
     return { success: false, deleted_count: 0, message: "Network error" };
+  }
+}
+
+// -------------------------------------------------------------
+// Blog App APIs
+// -------------------------------------------------------------
+
+function blogQueryString(params?: Record<string, string | number | undefined>): string {
+  if (!params) return "";
+  const parts = Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== null && v !== "")
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`);
+  return parts.length ? `?${parts.join("&")}` : "";
+}
+
+export async function getBlogPosts(params?: {
+  category?: string;
+  tag?: string;
+  search?: string;
+  page?: number;
+}): Promise<BlogPostListResponse> {
+  const empty: BlogPostListResponse = { count: 0, next: null, previous: null, results: [] };
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/blog/posts/${blogQueryString(params)}`, {
+      next: { revalidate: 30 },
+    });
+    if (!res.ok) return empty;
+    const data = await res.json();
+    if (Array.isArray(data)) return { count: data.length, next: null, previous: null, results: data };
+    return {
+      count: data?.count ?? 0,
+      next: data?.next ?? null,
+      previous: data?.previous ?? null,
+      results: data?.results ?? [],
+    };
+  } catch (error) {
+    console.warn("[API] Failed to fetch blog posts:", error);
+    return empty;
+  }
+}
+
+export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/blog/posts/${encodeURIComponent(slug)}/`, {
+      next: { revalidate: 30 },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.warn("[API] Failed to fetch blog post by slug:", error);
+    return null;
+  }
+}
+
+export async function getBlogCategories(): Promise<BlogCategoryRef[]> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/blog/categories/`, { next: { revalidate: 60 } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : data?.results ?? [];
+  } catch (error) {
+    console.warn("[API] Failed to fetch blog categories:", error);
+    return [];
+  }
+}
+
+export async function getBlogTags(): Promise<BlogTagRef[]> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/blog/tags/`, { next: { revalidate: 60 } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : data?.results ?? [];
+  } catch (error) {
+    console.warn("[API] Failed to fetch blog tags:", error);
+    return [];
+  }
+}
+
+export async function getBlogPostsAdmin(params?: {
+  status?: string;
+  search?: string;
+  page?: number;
+}): Promise<BlogPostListResponse> {
+  const empty: BlogPostListResponse = { count: 0, next: null, previous: null, results: [] };
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/blog/admin/posts/${blogQueryString(params)}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return empty;
+    const data = await res.json();
+    if (Array.isArray(data)) return { count: data.length, next: null, previous: null, results: data };
+    return {
+      count: data?.count ?? 0,
+      next: data?.next ?? null,
+      previous: data?.previous ?? null,
+      results: data?.results ?? [],
+    };
+  } catch (error) {
+    console.warn("[API] Failed to fetch admin blog posts:", error);
+    return empty;
+  }
+}
+
+export async function getBlogPostAdmin(id: string | number): Promise<BlogPost | null> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/blog/admin/posts/${encodeURIComponent(String(id))}/`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.warn("[API] Failed to fetch admin blog post:", error);
+    return null;
+  }
+}
+
+// Isolated on purpose: this is the one place that decides how category/tag
+// foreign keys are written to the backend. Nested read serializers return
+// full objects (`category: {id, name, slug}`), but DRF writable nested FKs
+// usually expect plain ids under a distinct key - if the backend agent's
+// admin serializer expects a different key (e.g. plain `category` id instead
+// of `category_id`), this is the only function that needs to change.
+function toBlogPostWritePayload(draft: BlogPostDraft) {
+  return {
+    title: draft.title,
+    slug: draft.slug,
+    excerpt: draft.excerpt,
+    featuredImage: draft.featuredImage || null,
+    status: draft.status,
+    categoryId: draft.categoryId || null,
+    tagIds: draft.tagIds || [],
+    blocks: (draft.blocks || []).map((b, index) => {
+      const isRealId = b.id !== undefined && b.id !== null && !String(b.id).startsWith("tmp-");
+      return {
+        ...(isRealId ? { id: b.id } : {}),
+        order: index,
+        blockType: b.blockType,
+        data: b.data,
+      };
+    }),
+  };
+}
+
+export async function createBlogPost(draft: BlogPostDraft): Promise<{ success: boolean; data?: BlogPost; error?: string }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/blog/admin/posts/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(toBlogPostWritePayload(draft)),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) return { success: false, error: data?.detail || data?.message || "Failed to create post" };
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: "Failed to create post" };
+  }
+}
+
+export async function updateBlogPost(
+  id: string | number,
+  draft: BlogPostDraft
+): Promise<{ success: boolean; data?: BlogPost; error?: string }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/blog/admin/posts/${encodeURIComponent(String(id))}/`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(toBlogPostWritePayload(draft)),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) return { success: false, error: data?.detail || data?.message || "Failed to update post" };
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: "Failed to update post" };
+  }
+}
+
+export async function deleteBlogPost(id: string | number): Promise<{ success: boolean }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/blog/admin/posts/${encodeURIComponent(String(id))}/`, {
+      method: "DELETE",
+    });
+    return { success: res.ok };
+  } catch (error) {
+    return { success: false };
+  }
+}
+
+export async function getBlogCategoriesAdmin(): Promise<BlogCategoryRef[]> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/blog/admin/categories/`, { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : data?.results ?? [];
+  } catch (error) {
+    console.warn("[API] Failed to fetch admin blog categories:", error);
+    return [];
+  }
+}
+
+export async function createBlogCategory(payload: { name: string; slug?: string }) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/blog/admin/categories/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => null);
+    return { success: res.ok, data, error: !res.ok ? data?.detail || "Failed to create category" : undefined };
+  } catch (error) {
+    return { success: false, error: "Failed to create category" };
+  }
+}
+
+export async function updateBlogCategory(id: string | number, payload: { name?: string; slug?: string }) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/blog/admin/categories/${encodeURIComponent(String(id))}/`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => null);
+    return { success: res.ok, data, error: !res.ok ? data?.detail || "Failed to update category" : undefined };
+  } catch (error) {
+    return { success: false, error: "Failed to update category" };
+  }
+}
+
+export async function deleteBlogCategory(id: string | number): Promise<{ success: boolean }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/blog/admin/categories/${encodeURIComponent(String(id))}/`, {
+      method: "DELETE",
+    });
+    return { success: res.ok };
+  } catch (error) {
+    return { success: false };
+  }
+}
+
+export async function getBlogTagsAdmin(): Promise<BlogTagRef[]> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/blog/admin/tags/`, { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : data?.results ?? [];
+  } catch (error) {
+    console.warn("[API] Failed to fetch admin blog tags:", error);
+    return [];
+  }
+}
+
+export async function createBlogTag(payload: { name: string; slug?: string }) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/blog/admin/tags/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => null);
+    return { success: res.ok, data, error: !res.ok ? data?.detail || "Failed to create tag" : undefined };
+  } catch (error) {
+    return { success: false, error: "Failed to create tag" };
+  }
+}
+
+export async function updateBlogTag(id: string | number, payload: { name?: string; slug?: string }) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/blog/admin/tags/${encodeURIComponent(String(id))}/`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => null);
+    return { success: res.ok, data, error: !res.ok ? data?.detail || "Failed to update tag" : undefined };
+  } catch (error) {
+    return { success: false, error: "Failed to update tag" };
+  }
+}
+
+export async function deleteBlogTag(id: string | number): Promise<{ success: boolean }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/blog/admin/tags/${encodeURIComponent(String(id))}/`, {
+      method: "DELETE",
+    });
+    return { success: res.ok };
+  } catch (error) {
+    return { success: false };
+  }
+}
+
+export async function uploadBlogMedia(file: File): Promise<{ success: boolean; url?: string; error?: string }> {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch(`${getApiBaseUrl()}/blog/media/upload/`, {
+      method: "POST",
+      body: formData,
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.url) return { success: false, error: data?.detail || "Failed to upload file" };
+    return { success: true, url: data.url };
+  } catch (error) {
+    return { success: false, error: "Failed to upload file" };
   }
 }
 
