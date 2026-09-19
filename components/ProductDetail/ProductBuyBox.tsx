@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { IconHeart, IconBag, IconStar, IconCheck } from "../icons";
+import { IconHeart, IconBag, IconCheck } from "../icons";
 import type { Product } from "../productData";
 import { useCart } from "@/context/CartContext";
 
@@ -18,9 +18,6 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
 
   const priceFormatted = product.discountedPrice || product.price || "৳34.99";
   const originalPriceFormatted = product.regularPrice || product.originalPrice || "৳46.00";
-  const rating = product.rating || 4.8;
-  const reviewsCount = product.reviews || 128;
-  const fullStars = Math.floor(rating);
 
   const discountPercent = product.discountPercent || (() => {
     const reg = parseFloat(originalPriceFormatted.replace(/[^\d.]/g, ""));
@@ -53,20 +50,8 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
         {product.name}
       </h1>
 
-      {/* Rating & SKU */}
+      {/* SKU */}
       <div className="flex items-center gap-2 sm:gap-3 mt-3.5 flex-wrap text-xs sm:text-[13px]">
-        {/* Stars */}
-        <div className="flex items-center gap-0.5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <IconStar key={i} className="w-4 h-4" filled={i < fullStars} />
-          ))}
-          <span className="font-extrabold text-[#171136] ml-1">{rating.toFixed(1)}</span>
-          <span className="text-[#736E9B] ml-0.5">({reviewsCount} reviews)</span>
-        </div>
-
-        <span className="w-1 h-1 rounded-full bg-[#EAE3F7]" />
-
-        {/* SKU */}
         <span className="text-xs text-[#736E9B]">
           SKU <strong className="text-[#171136] font-mono font-bold">{product.sku || product.id}</strong>
         </span>
