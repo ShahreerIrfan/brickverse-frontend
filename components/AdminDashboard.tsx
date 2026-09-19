@@ -78,6 +78,7 @@ import PartnerStoreForm from "./admin/PartnerStoreForm";
 import AdminLogsView from "./admin/AdminLogsView";
 import CategoriesManager from "./admin/CategoriesManager";
 import HeroSlidesManager from "./admin/HeroSlidesManager";
+import HomepageSectionsManager from "./admin/HomepageSectionsManager";
 import CategoryTreePicker, { findRootCategoryId } from "./admin/CategoryTreePicker";
 import BlogPostsList from "./admin/BlogPostsList";
 import BlogPostEditor from "./admin/BlogPostEditor";
@@ -100,6 +101,7 @@ type ActiveNav =
   | "products-taxonomy"
   | "appearance-mega-menu"
   | "appearance-hero-slides"
+  | "appearance-homepage-sections"
   | "orders-all"
   | "orders-single"
   | "users-all"
@@ -188,6 +190,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     "products-taxonomy": "/en/admin/products/taxonomy",
     "appearance-mega-menu": "/en/admin/appearance/mega-menu",
     "appearance-hero-slides": "/en/admin/appearance/hero-slides",
+    "appearance-homepage-sections": "/en/admin/appearance/homepage-sections",
     "orders-all": "/en/admin/orders",
     "orders-single": "/en/admin/orders",
     "users-all": "/en/admin/users",
@@ -251,6 +254,9 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
         setProductsMenuOpen(true);
       } else if (path.includes("/appearance/hero-slides")) {
         setActiveNav("appearance-hero-slides");
+        setAppearanceMenuOpen(true);
+      } else if (path.includes("/appearance/homepage-sections")) {
+        setActiveNav("appearance-homepage-sections");
         setAppearanceMenuOpen(true);
       } else if (path.includes("/appearance/mega-menu")) {
         setActiveNav("appearance-mega-menu");
@@ -1433,6 +1439,17 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-current" />
                     <span>Homepage Mega Menu</span>
+                  </button>
+                  <button
+                    onClick={() => navigateTo("appearance-homepage-sections")}
+                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                      activeNav === "appearance-homepage-sections"
+                        ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
+                        : "text-[#A79FD1] hover:text-white hover:bg-[#2A2159]/40"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    <span>Homepage Sections</span>
                   </button>
                   <button
                     onClick={() => navigateTo("appearance-hero-slides")}
@@ -3376,6 +3393,11 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
           {/* 3c) VIEW: APPEARANCE -> HERO SLIDES */}
           {/* ========================================================= */}
           {activeNav === "appearance-hero-slides" && <HeroSlidesManager />}
+
+          {/* ========================================================= */}
+          {/* 3c-2) VIEW: APPEARANCE -> HOMEPAGE CATEGORY SECTIONS */}
+          {/* ========================================================= */}
+          {activeNav === "appearance-homepage-sections" && <HomepageSectionsManager />}
 
           {/* ========================================================= */}
           {/* 3d) VIEW: BLOG -> ALL POSTS */}

@@ -18,18 +18,21 @@ export default function ProductGrid({ section }: { section: ProductSection }) {
     categoryParam = "code";
   }
 
-  const shopUrl = categoryParam ? `/shop?category=${encodeURIComponent(categoryParam)}` : "/shop";
+  const shopUrl =
+    section.href || (categoryParam ? `/shop?category=${encodeURIComponent(categoryParam)}` : "/shop");
 
   return (
     <section>
       <div className="flex flex-wrap items-end justify-between gap-3 sm:gap-4 mb-4 sm:mb-8">
         <div className="border-l-4 pl-3 sm:pl-4" style={{ borderColor: section.accent }}>
-          <p
-            className="text-[10px] sm:text-[11.5px] font-bold tracking-wide"
-            style={{ color: section.eyebrowColor }}
-          >
-            {section.eyebrow.toUpperCase()}
-          </p>
+          {section.eyebrow && (
+            <p
+              className="text-[10px] sm:text-[11.5px] font-bold tracking-wide"
+              style={{ color: section.eyebrowColor }}
+            >
+              {section.eyebrow.toUpperCase()}
+            </p>
+          )}
           <div className="flex items-baseline gap-2 sm:gap-3 mt-1 flex-wrap">
             <h2 className="font-[family-name:var(--font-display)] font-extrabold text-lg sm:text-[27px] text-[#171136] tracking-tight">
               {section.title}

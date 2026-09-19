@@ -110,6 +110,34 @@ export async function getProductSections(apiBaseOverride?: string): Promise<Prod
   }
 }
 
+// Storefront: admin-selected top-level categories as homepage sections, each
+// with its newest products, mapped onto the ProductSection shape ProductGrid
+// already renders. Empty when the admin hasn't picked any (callers then fall
+// back to the fixed sections).
+export async function getHomepageSections(apiBaseOverride?: string): Promise<ProductSection[]> {
+  try {
+    const base = apiBaseOverride || getApiBaseUrl();
+    const res = await fetch(`${base}/products/homepage-sections/`, { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!Array.isArray(data)) return [];
+    type HomepageSectionPayload = { id: string; label: string; color: string; productCount: number; products?: Product[] };
+    return (data as HomepageSectionPayload[]).map((s) => ({
+      id: s.id,
+      eyebrow: "",
+      eyebrowColor: s.color,
+      title: s.label,
+      itemCount: `${s.productCount} items`,
+      accent: s.color,
+      products: s.products || [],
+      href: `/shop?category=${encodeURIComponent(s.id)}`,
+    }));
+  } catch (error) {
+    console.warn("[API] Homepage sections API unreachable:", error);
+    return [];
+  }
+}
+
 export async function getCategories(apiBaseOverride?: string): Promise<Category[]> {
   try {
     const base = apiBaseOverride || getApiBaseUrl();
@@ -619,6 +647,20 @@ export async function reorderMegaMenuCategories(ids: string[]) {
     return { success: res.ok, data: result };
   } catch (error) {
     return { success: false, error: "Failed to save mega menu order" };
+  }
+}
+
+export async function reorderHomepageSections(ids: string[]) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/products/categories/homepage-sections/reorder/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+    const result = await res.json().catch(() => null);
+    return { success: res.ok, data: result };
+  } catch (error) {
+    return { success: false, error: "Failed to save homepage sections" };
   }
 }
 

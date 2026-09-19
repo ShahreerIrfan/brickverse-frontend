@@ -63,6 +63,9 @@ export type Category = {
   is_active?: boolean;
   show_in_mega_menu?: boolean;
   mega_menu_order?: number;
+  show_on_homepage?: boolean;
+  homepage_order?: number;
+  subtreeProductCount?: number;
   subcategories?: Category[];
   childrenCount?: number;
   productCount?: number;
@@ -94,6 +97,7 @@ export type ProductSection = {
   itemCount: string;
   accent: string;
   products: Product[];
+  href?: string;
 };
 
 export const productSections: ProductSection[] = [];
