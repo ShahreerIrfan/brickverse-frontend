@@ -79,7 +79,7 @@ export default function Footer() {
             </div>
             <div className="flex items-center gap-2.5">
               <IconPhone className="w-4 h-4 text-[#FF4D6D] shrink-0" />
-              <span>1800 246 010</span>
+              <span>01402494401</span>
             </div>
             <div className="flex items-center gap-2.5">
               <IconMail className="w-4 h-4 text-[#FF4D6D] shrink-0" />

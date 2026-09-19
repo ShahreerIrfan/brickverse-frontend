@@ -218,7 +218,7 @@ export default function MobileMenu() {
         <div className="shrink-0 border-t border-[#EAE3F7] bg-white px-5 py-4 flex flex-col gap-3">
           <div className="flex items-center gap-2">
             <IconPhone className="w-4 h-4 text-[#FF4D6D]" />
-            <span className="text-[13px] font-semibold text-[#3B3468]">1800 246 010</span>
+            <span className="text-[13px] font-semibold text-[#3B3468]">01402494401</span>
           </div>
         </div>
       </div>

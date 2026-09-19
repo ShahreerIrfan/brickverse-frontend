@@ -31,7 +31,7 @@ export default function NavLinks() {
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <IconPhone className="w-4 h-4 text-[#FF4D6D]" />
-            <span className="text-[13px] font-semibold text-[#3B3468]">1800 246 010</span>
+            <span className="text-[13px] font-semibold text-[#3B3468]">01402494401</span>
           </div>
         </div>
       </div>
