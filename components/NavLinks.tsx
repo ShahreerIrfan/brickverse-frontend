@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { IconPhone, IconTruck } from "./icons";
+import { IconPhone } from "./icons";
 
 const links = [
   { label: "Home", href: "/" },
@@ -32,11 +32,6 @@ export default function NavLinks() {
           <div className="flex items-center gap-2">
             <IconPhone className="w-4 h-4 text-[#FF4D6D]" />
             <span className="text-[13px] font-semibold text-[#3B3468]">1800 246 010</span>
-          </div>
-          <span className="w-px h-6 bg-[#EAE3F7]" />
-          <div className="flex items-center gap-2 text-[#736E9B]">
-            <IconTruck className="w-4 h-4" />
-            <span className="text-[13px] font-medium">Track order</span>
           </div>
         </div>
       </div>
