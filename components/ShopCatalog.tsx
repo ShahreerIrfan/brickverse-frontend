@@ -49,7 +49,6 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
   const [appliedMinPrice, setAppliedMinPrice] = useState<number | null>(null);
   const [appliedMaxPrice, setAppliedMaxPrice] = useState<number | null>(null);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
-  const [inStockOnly, setInStockOnly] = useState<boolean>(false);
   const [onSaleOnly, setOnSaleOnly] = useState<boolean>(false);
   const [sortBy, setSortBy] = useState<string>("newest");
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
@@ -110,7 +109,6 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
     setAppliedMinPrice(null);
     setAppliedMaxPrice(null);
     setSelectedRating(null);
-    setInStockOnly(false);
     setOnSaleOnly(false);
     setSortBy("newest");
     setMobileFilterOpen(false);
@@ -183,11 +181,6 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
         }
       }
 
-      // 6. Stock Filter
-      if (inStockOnly && (product.stock ?? 1) <= 0) {
-        return false;
-      }
-
       // 7. On Sale Filter
       if (onSaleOnly) {
         const regular = parsePrice(product.regularPrice || product.originalPrice);
@@ -225,7 +218,6 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
     appliedMinPrice,
     appliedMaxPrice,
     selectedRating,
-    inStockOnly,
     onSaleOnly,
     sortBy,
   ]);
@@ -244,7 +236,6 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
     appliedMinPrice,
     appliedMaxPrice,
     selectedRating,
-    inStockOnly,
     onSaleOnly,
     sortBy,
   ]);
@@ -266,7 +257,6 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
     (selectedSubcategory !== "all" ? 1 : 0) +
     (appliedMinPrice !== null || appliedMaxPrice !== null ? 1 : 0) +
     (selectedRating !== null ? 1 : 0) +
-    (inStockOnly ? 1 : 0) +
     (onSaleOnly ? 1 : 0) +
     (searchQuery.trim() ? 1 : 0);
 
@@ -361,8 +351,6 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
             handleApplyPrice={handleApplyPrice}
             selectedRating={selectedRating}
             setSelectedRating={setSelectedRating}
-            inStockOnly={inStockOnly}
-            setInStockOnly={setInStockOnly}
             onSaleOnly={onSaleOnly}
             setOnSaleOnly={setOnSaleOnly}
             handleResetFilters={handleResetFilters}
@@ -422,14 +410,6 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
                 </span>
               )}
 
-              {inStockOnly && (
-                <span className="inline-flex items-center gap-1.5 bg-white border border-[#EAE3F7] text-[#171136] text-xs font-bold px-2.5 py-1 rounded-full shadow-xs">
-                  In Stock Only
-                  <button onClick={() => setInStockOnly(false)} className="hover:opacity-75">
-                    <IconX className="w-3 h-3" />
-                  </button>
-                </span>
-              )}
 
               {onSaleOnly && (
                 <span className="inline-flex items-center gap-1.5 bg-white border border-[#EAE3F7] text-[#171136] text-xs font-bold px-2.5 py-1 rounded-full shadow-xs">
@@ -708,8 +688,6 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
               handleApplyPrice={handleApplyPrice}
               selectedRating={selectedRating}
               setSelectedRating={setSelectedRating}
-              inStockOnly={inStockOnly}
-              setInStockOnly={setInStockOnly}
               onSaleOnly={onSaleOnly}
               setOnSaleOnly={setOnSaleOnly}
               handleResetFilters={handleResetFilters}
@@ -814,8 +792,6 @@ function FilterSidebarContent({
   handleApplyPrice,
   selectedRating,
   setSelectedRating,
-  inStockOnly,
-  setInStockOnly,
   onSaleOnly,
   setOnSaleOnly,
   handleResetFilters,
@@ -998,16 +974,6 @@ function FilterSidebarContent({
           AVAILABILITY
         </h4>
         <div className="space-y-2.5">
-          <label className="flex items-center gap-2.5 cursor-pointer text-xs">
-            <input
-              type="checkbox"
-              checked={inStockOnly}
-              onChange={(e) => setInStockOnly(e.target.checked)}
-              className="w-4 h-4 rounded text-[#FF4D6D] accent-[#FF4D6D] cursor-pointer"
-            />
-            <span className="text-[#3B3468] font-semibold text-[12px]">In Stock only</span>
-          </label>
-
           <label className="flex items-center gap-2.5 cursor-pointer text-xs">
             <input
               type="checkbox"

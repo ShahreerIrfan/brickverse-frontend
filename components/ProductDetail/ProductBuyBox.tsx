@@ -53,7 +53,7 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
         {product.name}
       </h1>
 
-      {/* Rating, Stock Status & SKU */}
+      {/* Rating & SKU */}
       <div className="flex items-center gap-2 sm:gap-3 mt-3.5 flex-wrap text-xs sm:text-[13px]">
         {/* Stars */}
         <div className="flex items-center gap-0.5">
@@ -63,14 +63,6 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
           <span className="font-extrabold text-[#171136] ml-1">{rating.toFixed(1)}</span>
           <span className="text-[#736E9B] ml-0.5">({reviewsCount} reviews)</span>
         </div>
-
-        <span className="w-1 h-1 rounded-full bg-[#EAE3F7]" />
-
-        {/* Stock Badge */}
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11.5px] font-bold bg-[#2ECC8F]/15 text-[#1E9B6C]">
-          <span className="w-2 h-2 rounded-full bg-[#2ECC8F]" />
-          {(product.stock ?? 10) > 0 ? `${product.stock ?? 100} in stock` : "Out of stock"}
-        </span>
 
         <span className="w-1 h-1 rounded-full bg-[#EAE3F7]" />
 
@@ -101,7 +93,7 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
 
       <hr className="my-4 border-[#EAE3F7]" />
 
-      {/* Quantity Stepper & Urgency Notice */}
+      {/* Quantity Stepper */}
       <div className="flex flex-col gap-2">
         <label className="text-xs sm:text-sm font-bold text-[#171136]">Quantity</label>
         <div className="flex items-center gap-3 flex-wrap">
@@ -124,11 +116,6 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
               +
             </button>
           </div>
-
-          {/* Urgency Pill */}
-          <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#FFC93C]/25 text-[#9A6B00]">
-            Only 6 left in stock
-          </span>
         </div>
       </div>
 
