@@ -95,23 +95,6 @@ const getApi = () => getApiBaseUrl();
 // -------------------------------------------------------------
 // Products App APIs
 // -------------------------------------------------------------
-export async function seedCatalogProducts(): Promise<{ success: boolean; message?: string; seeded_product_count?: number }> {
-  try {
-    const res = await fetch(`${getApiBaseUrl()}/products/seed-catalog/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-    });
-    const data = await res.json().catch(() => null);
-    return {
-      success: res.ok,
-      message: data?.message || (res.ok ? "Catalog seeded successfully!" : "Failed to seed catalog"),
-      seeded_product_count: data?.seeded_product_count,
-    };
-  } catch (error) {
-    return { success: false, message: "Network connection error" };
-  }
-}
-
 export async function getProductSections(apiBaseOverride?: string): Promise<ProductSection[]> {
   try {
     const base = apiBaseOverride || getApiBaseUrl();

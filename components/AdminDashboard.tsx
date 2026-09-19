@@ -26,7 +26,6 @@ import {
   createUser,
   deleteUser,
   getAllStores,
-  seedCatalogProducts,
 } from "@/lib/api";
 import {
   IconShield,
