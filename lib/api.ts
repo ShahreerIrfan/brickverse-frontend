@@ -506,6 +506,17 @@ export async function getAllProducts(params?: { category?: string; subcategory?:
   }
 }
 
+// DRF returns validation failures as {field: ["message"]}; flatten that so the
+// admin sees why a save failed instead of a generic "check fields".
+function describeApiError(data: unknown): string | undefined {
+  if (!data || typeof data !== "object") return undefined;
+  const parts = Object.entries(data as Record<string, unknown>).map(([field, msg]) => {
+    const text = Array.isArray(msg) ? msg.join(" ") : String(msg);
+    return field === "detail" || field === "error" ? text : `${field}: ${text}`;
+  });
+  return parts.length ? parts.join(" | ") : undefined;
+}
+
 export async function createProduct(productData: any) {
   try {
     const isFormData = typeof FormData !== "undefined" && productData instanceof FormData;
@@ -515,7 +526,7 @@ export async function createProduct(productData: any) {
       body: isFormData ? productData : JSON.stringify(productData),
     });
     const data = await res.json();
-    return { success: res.ok, data };
+    return { success: res.ok, data, error: res.ok ? undefined : describeApiError(data) };
   } catch (error) {
     return { success: false, error: "Failed to create product" };
   }
@@ -530,7 +541,7 @@ export async function updateProduct(id: string, productData: any) {
       body: isFormData ? productData : JSON.stringify(productData),
     });
     const data = await res.json();
-    return { success: res.ok, data };
+    return { success: res.ok, data, error: res.ok ? undefined : describeApiError(data) };
   } catch (error) {
     return { success: false, error: "Failed to update product" };
   }
