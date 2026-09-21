@@ -18,7 +18,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Brickverse — figures, bricks, code kits",
+  title: "kawaiisubete",
   description:
     "Anime figures, cartoon collectibles, brick sets and coding kits — shipped from Melbourne in 48 hours.",
   icons: {
