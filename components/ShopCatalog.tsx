@@ -134,6 +134,25 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
     return isNaN(num) ? 0 : num;
   };
 
+  // Sticky sidebar: a panel taller than the window can't stay fully in view, so it
+  // scrolls with the page until its bottom edge reaches the bottom of the window
+  // and then stays pinned there (top goes negative). A shorter panel pins at the top.
+  const asideRef = useRef<HTMLElement | null>(null);
+  const [stickyTop, setStickyTop] = useState(16);
+  useEffect(() => {
+    const node = asideRef.current;
+    if (!node) return;
+    const update = () => setStickyTop(Math.min(16, Math.round(window.innerHeight - node.offsetHeight - 16)));
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    window.addEventListener("resize", update);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
   // Server-driven infinite scroll: the first page arrives with the HTML, every
   // later page is requested only when the visitor scrolls near the bottom.
   const PAGE_SIZE = 20;
@@ -327,7 +346,7 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
       <div className="flex flex-col lg:flex-row items-start gap-6 xl:gap-8">
         
         {/* Desktop Sidebar (Left filter system) */}
-        <aside className="hidden lg:block lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:[scrollbar-width:none] lg:[&::-webkit-scrollbar]:hidden w-[280px] shrink-0 bg-white border border-[#EAE3F7] rounded-[22px] shadow-[0_16px_0_-4px_rgba(23,17,54,0.06)] p-5 space-y-6">
+        <aside ref={asideRef} style={{ top: stickyTop }} className="hidden lg:block lg:sticky w-[280px] shrink-0 bg-white border border-[#EAE3F7] rounded-[22px] shadow-[0_16px_0_-4px_rgba(23,17,54,0.06)] p-5 space-y-6">
           <FilterSidebarContent
             categories={initialCategories}
             totalCount={initialCount}
