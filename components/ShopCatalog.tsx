@@ -327,7 +327,7 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
       <div className="flex flex-col lg:flex-row items-start gap-6 xl:gap-8">
         
         {/* Desktop Sidebar (Left filter system) */}
-        <aside className="hidden lg:block w-[280px] shrink-0 bg-white border border-[#EAE3F7] rounded-[22px] shadow-[0_16px_0_-4px_rgba(23,17,54,0.06)] p-5 space-y-6">
+        <aside className="hidden lg:block lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto w-[280px] shrink-0 bg-white border border-[#EAE3F7] rounded-[22px] shadow-[0_16px_0_-4px_rgba(23,17,54,0.06)] p-5 space-y-6">
           <FilterSidebarContent
             categories={initialCategories}
             totalCount={initialCount}
