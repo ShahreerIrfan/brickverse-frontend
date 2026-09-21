@@ -306,6 +306,9 @@ export default function CartPage() {
                           >
                             {item.name}
                           </Link>
+                          {item.preorder && (
+                            <span className="inline-block px-2 py-0.5 rounded-full bg-[#FFF1D6] text-[#B76E00] text-[10px] font-extrabold uppercase tracking-wide">Pre-order</span>
+                          )}
 
                           <p className="text-xs sm:text-[13px] text-[#736E9B] line-clamp-1 font-normal">
                             {item.subtitle || `${item.category || "Collector Series"} · Official edition`}

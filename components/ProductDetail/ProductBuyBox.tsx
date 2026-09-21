@@ -28,7 +28,8 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
     return null;
   })();
 
-  const stockLimit = typeof product.stock === "number" ? Math.max(0, product.stock) : undefined;
+  const isPreorder = product.stock === 0 && product.productType !== "grouped";
+  const stockLimit = typeof product.stock === "number" && !isPreorder ? Math.max(0, product.stock) : undefined;
   const inCart = items.find((i) => i.id === String(product.id || product.slug))?.quantity ?? 0;
   const maxQty = stockLimit !== undefined ? Math.max(1, stockLimit - inCart) : Infinity;
   const soldOut = stockLimit !== undefined && stockLimit - inCart < 1;
@@ -110,6 +111,12 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
         </div>
       )}
 
+      {isPreorder && (
+        <p className="mt-4 rounded-2xl bg-[#FFF6E0] border border-[#F5DFA8] px-4 py-3 text-xs font-semibold text-[#8A5A00]">
+          This item is currently out of stock. You can pre-order it now and we&apos;ll ship it as soon as it&apos;s back.
+        </p>
+      )}
+
       <hr className="my-4 border-[#EAE3F7]" />
 
       {/* Quantity Stepper */}
@@ -148,7 +155,7 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
           className="flex-1 min-w-[200px] sm:min-w-[240px] h-14 rounded-full bg-[#FF4D6D] hover:bg-[#ff3358] active:scale-98 transition-all text-white font-bold text-base flex items-center justify-center gap-2.5 shadow-[0_8px_20px_rgba(255,77,109,0.25)] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <IconBag className="w-5 h-5 text-white" />
-          <span>{soldOut ? (inCart > 0 ? "All available units in cart" : "Out of stock") : "Add to cart"}</span>
+          <span>{soldOut ? (inCart > 0 ? "All available units in cart" : "Out of stock") : isPreorder ? "Pre-order now" : "Add to cart"}</span>
         </button>
 
         {/* Buy Now Button */}
@@ -157,7 +164,7 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
           disabled={soldOut}
           className="w-[140px] sm:w-[160px] h-14 rounded-full bg-[#171136] hover:bg-[#251c4a] active:scale-98 transition-all text-white font-bold text-base flex items-center justify-center shadow-sm cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          Buy now
+          {isPreorder ? "Pre-order" : "Buy now"}
         </button>
 
         {/* Wishlist Square Icon Button */}

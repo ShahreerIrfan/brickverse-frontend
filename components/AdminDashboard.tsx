@@ -4134,6 +4134,17 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                         <p className="text-[10.5px] text-[#736E9B] mt-0.5">
                                           SKU: KS-ITEM-{idx + 101}
                                         </p>
+                                        {item.isPreorder && (
+                                          <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-[#FFF1D6] text-[#B76E00] text-[10px] font-extrabold uppercase tracking-wide">
+                                            Pre-order · no stock deducted
+                                          </span>
+                                        )}
+                                        {Array.isArray(item.bundleItems) && item.bundleItems.length > 0 && (
+                                          <p className="text-[10.5px] text-[#7B5CFF] mt-0.5">
+                                            Includes:{" "}
+                                            {item.bundleItems.map((b: { name: string; quantity: number }) => `${b.quantity}× ${b.name}`).join(", ")}
+                                          </p>
+                                        )}
                                       </div>
                                     </div>
                                   </td>

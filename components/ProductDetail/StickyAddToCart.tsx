@@ -30,7 +30,8 @@ export default function StickyAddToCart({ product }: StickyAddToCartProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const stockLimit = typeof product.stock === "number" ? Math.max(0, product.stock) : undefined;
+  const isPreorder = product.stock === 0 && product.productType !== "grouped";
+  const stockLimit = typeof product.stock === "number" && !isPreorder ? Math.max(0, product.stock) : undefined;
   const inCart = items.find((i) => i.id === String(product.id || product.slug))?.quantity ?? 0;
   const maxQty = stockLimit !== undefined ? Math.max(1, stockLimit - inCart) : Infinity;
 
@@ -125,7 +126,7 @@ export default function StickyAddToCart({ product }: StickyAddToCartProps) {
             ) : (
               <>
                 <IconBag className="w-3.5 h-3.5" />
-                <span>Add to cart</span>
+                <span>{isPreorder ? "Pre-order" : "Add to cart"}</span>
               </>
             )}
           </button>

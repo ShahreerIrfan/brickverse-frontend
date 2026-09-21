@@ -18,6 +18,8 @@ export interface CartItem {
   slug?: string;
   /** Units in stock when added; the cart never goes above this. Undefined = unknown/unlimited. */
   maxStock?: number;
+  /** Simple product with no stock: sold as a pre-order, so no stock cap applies. */
+  preorder?: boolean;
 }
 
 interface CartContextType {
@@ -135,8 +137,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const seller = product.seller || product.brand || "Brickverse Official";
     const category = product.category || "General";
     const slug = product.slug || product.id;
-    const maxStock: number | undefined = typeof product.stock === "number" ? Math.max(0, product.stock) : undefined;
-    if (maxStock !== undefined && maxStock < 1) return; // out of stock
+    const stockNum: number | undefined = typeof product.stock === "number" ? Math.max(0, product.stock) : undefined;
+    const preorder = stockNum === 0 && product.productType !== "grouped";
+    if (stockNum === 0 && !preorder) return; // a bundle with no complete set available can't be sold
+    const maxStock = preorder ? undefined : stockNum;
 
     const newItem: CartItem = {
       id,
@@ -152,6 +156,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       category,
       slug,
       maxStock,
+      preorder: preorder || undefined,
     };
 
     setItems((prevItems) => {

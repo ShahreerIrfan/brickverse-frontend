@@ -665,6 +665,11 @@ export default function CheckoutPage() {
                         <p className="text-[11.5px] text-[#736E9B] truncate">
                           {it.subtitle || `${it.category || "Collector Series"}`}
                         </p>
+                        {it.preorder && (
+                          <span className="inline-block mt-0.5 px-2 py-0.5 rounded-full bg-[#FFF1D6] text-[#B76E00] text-[10px] font-extrabold uppercase tracking-wide">
+                            Pre-order · shipped once restocked
+                          </span>
+                        )}
                       </div>
 
                       {/* Price */}

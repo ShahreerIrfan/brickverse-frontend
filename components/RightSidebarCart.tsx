@@ -190,6 +190,9 @@ export default function RightSidebarCart() {
                   <h4 className="font-bold text-xs sm:text-[13px] text-[#171136] line-clamp-2 leading-tight">
                     {item.name}
                   </h4>
+                  {item.preorder && (
+                    <span className="inline-block px-2 py-0.5 rounded-full bg-[#FFF1D6] text-[#B76E00] text-[10px] font-extrabold uppercase tracking-wide">Pre-order</span>
+                  )}
                   <p className="text-[10.5px] text-[#8A84A6] mt-0.5 truncate">
                     {item.seller || "Eezy Mart Official"}
                   </p>
