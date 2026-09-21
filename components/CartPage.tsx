@@ -359,7 +359,8 @@ export default function CartPage() {
                             type="button"
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             aria-label="Increase quantity"
-                            className="w-7 h-7 rounded-full hover:bg-[#F6F1FF] flex items-center justify-center text-[#171136] active:scale-90 transition-all cursor-pointer"
+                            disabled={item.maxStock !== undefined && item.quantity >= item.maxStock}
+                            className="w-7 h-7 rounded-full hover:bg-[#F6F1FF] flex items-center justify-center text-[#171136] active:scale-90 transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                           >
                             <IconPlus className="w-3 h-3" />
                           </button>

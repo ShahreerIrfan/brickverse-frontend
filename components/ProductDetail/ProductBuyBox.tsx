@@ -10,7 +10,7 @@ interface ProductBuyBoxProps {
 }
 
 export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
-  const { addToCart, openCart } = useCart();
+  const { addToCart, openCart, items } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [addedToast, setAddedToast] = useState(false);
@@ -28,12 +28,18 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
     return null;
   })();
 
+  const stockLimit = typeof product.stock === "number" ? Math.max(0, product.stock) : undefined;
+  const inCart = items.find((i) => i.id === String(product.id || product.slug))?.quantity ?? 0;
+  const maxQty = stockLimit !== undefined ? Math.max(1, stockLimit - inCart) : Infinity;
+  const soldOut = stockLimit !== undefined && stockLimit - inCart < 1;
+
   const handleAddToCart = () => {
-    addToCart(product, quantity, true);
+    addToCart(product, Math.min(quantity, maxQty), true);
+    setQuantity(1);
   };
 
   const handleBuyNow = () => {
-    addToCart(product, quantity, true);
+    addToCart(product, Math.min(quantity, maxQty), true);
   };
 
   return (
@@ -123,8 +129,9 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
               {quantity}
             </span>
             <button
-              onClick={() => setQuantity(quantity + 1)}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-[#171136] hover:bg-[#F6F1FF] active:scale-95 transition-all text-lg font-bold"
+              onClick={() => setQuantity(Math.min(maxQty, quantity + 1))}
+              disabled={quantity >= maxQty}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-[#171136] hover:bg-[#F6F1FF] active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-lg font-bold"
             >
               +
             </button>
@@ -137,16 +144,18 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
         {/* Add to Cart Button */}
         <button
           onClick={handleAddToCart}
-          className="flex-1 min-w-[200px] sm:min-w-[240px] h-14 rounded-full bg-[#FF4D6D] hover:bg-[#ff3358] active:scale-98 transition-all text-white font-bold text-base flex items-center justify-center gap-2.5 shadow-[0_8px_20px_rgba(255,77,109,0.25)] cursor-pointer"
+          disabled={soldOut}
+          className="flex-1 min-w-[200px] sm:min-w-[240px] h-14 rounded-full bg-[#FF4D6D] hover:bg-[#ff3358] active:scale-98 transition-all text-white font-bold text-base flex items-center justify-center gap-2.5 shadow-[0_8px_20px_rgba(255,77,109,0.25)] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <IconBag className="w-5 h-5 text-white" />
-          <span>Add to cart</span>
+          <span>{soldOut ? (inCart > 0 ? "All available units in cart" : "Out of stock") : "Add to cart"}</span>
         </button>
 
         {/* Buy Now Button */}
         <button
           onClick={handleBuyNow}
-          className="w-[140px] sm:w-[160px] h-14 rounded-full bg-[#171136] hover:bg-[#251c4a] active:scale-98 transition-all text-white font-bold text-base flex items-center justify-center shadow-sm cursor-pointer"
+          disabled={soldOut}
+          className="w-[140px] sm:w-[160px] h-14 rounded-full bg-[#171136] hover:bg-[#251c4a] active:scale-98 transition-all text-white font-bold text-base flex items-center justify-center shadow-sm cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
           Buy now
         </button>

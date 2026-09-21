@@ -11,7 +11,7 @@ interface StickyAddToCartProps {
 }
 
 export default function StickyAddToCart({ product }: StickyAddToCartProps) {
-  const { addToCart } = useCart();
+  const { addToCart, items } = useCart();
   const [visible, setVisible] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [addedToast, setAddedToast] = useState(false);
@@ -30,8 +30,12 @@ export default function StickyAddToCart({ product }: StickyAddToCartProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const stockLimit = typeof product.stock === "number" ? Math.max(0, product.stock) : undefined;
+  const inCart = items.find((i) => i.id === String(product.id || product.slug))?.quantity ?? 0;
+  const maxQty = stockLimit !== undefined ? Math.max(1, stockLimit - inCart) : Infinity;
+
   const handleAdd = () => {
-    addToCart(product, quantity, true);
+    addToCart(product, Math.min(quantity, maxQty), true);
     setAddedToast(true);
     setTimeout(() => setAddedToast(false), 2500);
   };
@@ -100,8 +104,9 @@ export default function StickyAddToCart({ product }: StickyAddToCartProps) {
             </button>
             <span className="font-extrabold text-xs text-[#171136]">{quantity}</span>
             <button
-              onClick={() => setQuantity(quantity + 1)}
-              className="w-6 h-6 rounded-full flex items-center justify-center text-[#171136] hover:bg-[#F6F1FF] font-bold"
+              onClick={() => setQuantity(Math.min(maxQty, quantity + 1))}
+              disabled={quantity >= maxQty}
+              className="w-6 h-6 rounded-full flex items-center justify-center text-[#171136] hover:bg-[#F6F1FF] font-bold disabled:opacity-30 disabled:cursor-not-allowed"
             >
               +
             </button>

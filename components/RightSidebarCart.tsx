@@ -210,8 +210,9 @@ export default function RightSidebarCart() {
                     <button
                       type="button"
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="w-6 h-full flex items-center justify-center text-[#736E9B] hover:text-[#171136] hover:bg-[#F6F1FF] rounded-r-xl text-xs font-bold transition-colors cursor-pointer"
+                      className="w-6 h-full flex items-center justify-center text-[#736E9B] hover:text-[#171136] hover:bg-[#F6F1FF] rounded-r-xl text-xs font-bold transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                       title="Increase quantity"
+                      disabled={item.maxStock !== undefined && item.quantity >= item.maxStock}
                     >
                       +
                     </button>

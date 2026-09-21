@@ -16,6 +16,8 @@ export interface CartItem {
   seller?: string;
   category?: string;
   slug?: string;
+  /** Units in stock when added; the cart never goes above this. Undefined = unknown/unlimited. */
+  maxStock?: number;
 }
 
 interface CartContextType {
@@ -133,6 +135,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const seller = product.seller || product.brand || "Brickverse Official";
     const category = product.category || "General";
     const slug = product.slug || product.id;
+    const maxStock: number | undefined = typeof product.stock === "number" ? Math.max(0, product.stock) : undefined;
+    if (maxStock !== undefined && maxStock < 1) return; // out of stock
 
     const newItem: CartItem = {
       id,
@@ -147,19 +151,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       seller,
       category,
       slug,
+      maxStock,
     };
 
     setItems((prevItems) => {
       const existingIndex = prevItems.findIndex((item) => item.id === id);
       if (existingIndex > -1) {
         const updated = [...prevItems];
+        const current = updated[existingIndex];
+        const cap = maxStock ?? current.maxStock;
+        const wanted = current.quantity + quantity;
         updated[existingIndex] = {
-          ...updated[existingIndex],
-          quantity: updated[existingIndex].quantity + quantity,
+          ...current,
+          maxStock: cap,
+          quantity: cap !== undefined ? Math.min(cap, wanted) : wanted,
         };
         return updated;
       } else {
-        return [...prevItems, newItem];
+        return [...prevItems, { ...newItem, quantity: maxStock !== undefined ? Math.min(maxStock, quantity) : quantity }];
       }
     });
 
@@ -181,7 +190,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     setItems((prev) =>
-      prev.map((item) => (item.id === productId ? { ...item, quantity } : item))
+      prev.map((item) =>
+        item.id === productId
+          ? { ...item, quantity: item.maxStock !== undefined ? Math.min(item.maxStock, quantity) : quantity }
+          : item
+      )
     );
   };
 
