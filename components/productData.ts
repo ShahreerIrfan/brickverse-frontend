@@ -1,3 +1,16 @@
+export type GroupItem = {
+  childId: string;
+  name: string;
+  slug?: string;
+  image: string;
+  quantity: number;
+  price: string;
+  priceValue: number;
+  stock?: number;
+};
+
+export type ProductType = "simple" | "grouped";
+
 export type Product = {
   id: string;
   slug?: string;
@@ -32,6 +45,9 @@ export type Product = {
   accent?: string;
   description?: string;
   stock?: number;
+  productType?: ProductType;
+  groupItems?: GroupItem[];
+  bundleTotal?: number | null;
   thumbnails?: string[];
   reviews_list?: {
     id: number;

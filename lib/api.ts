@@ -564,7 +564,9 @@ export async function deleteProduct(id: string) {
     const res = await fetch(`${getApiBaseUrl()}/products/${encodeURIComponent(id)}/`, {
       method: "DELETE",
     });
-    return { success: res.ok };
+    if (res.ok) return { success: true };
+    const data = await res.json().catch(() => null);
+    return { success: false, error: describeApiError(data) };
   } catch (error) {
     return { success: false };
   }
@@ -592,6 +594,12 @@ export async function bulkDeleteProducts(ids: string[]) {
     if (res.ok) {
       const data = await res.json();
       return { success: true, data };
+    }
+    // A 400 is a deliberate refusal (e.g. a product still used in a bundle):
+    // report it instead of retrying one by one and claiming success.
+    if (res.status === 400) {
+      const data = await res.json().catch(() => null);
+      return { success: false, error: describeApiError(data) };
     }
     // Fallback: parallel deleteProduct
     await Promise.all(ids.map((id) => deleteProduct(id)));

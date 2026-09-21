@@ -84,6 +84,7 @@ import BlogPostsList from "./admin/BlogPostsList";
 import BlogPostEditor from "./admin/BlogPostEditor";
 import BlogTaxonomyManager from "./admin/BlogTaxonomyManager";
 import RichTextEditor from "./admin/RichTextEditor";
+import ProductBundleBuilder, { type BundleLine, parsePrice } from "./admin/ProductBundleBuilder";
 import { printOrderInvoice } from "@/lib/invoice";
 
 interface AdminDashboardProps {
@@ -377,6 +378,8 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [formDiscountedPrice, setFormDiscountedPrice] = useState("34.99");
   const [formTradePrice, setFormTradePrice] = useState("28.00");
   const [formStock, setFormStock] = useState(50);
+  const [formProductType, setFormProductType] = useState<"simple" | "grouped">("simple");
+  const [formGroupItems, setFormGroupItems] = useState<BundleLine[]>([]);
 
   const generateSlug = (text: string) => {
     return text
@@ -1059,6 +1062,8 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     setFormDiscountedPrice("34.99");
     setFormTradePrice("28.00");
     setFormStock(50);
+    setFormProductType("simple");
+    setFormGroupItems([]);
     setPrimaryFile(null);
     setPrimaryPreviewUrl(null);
     setGalleryFiles([]);
@@ -1078,6 +1083,8 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     setFormDiscountedPrice(prod.discountedPrice?.replace("৳", "") || prod.price?.replace("৳", "") || "34.99");
     setFormTradePrice(prod.tradePrice?.replace("৳", "") || "28.00");
     setFormStock(prod.stock ?? 50);
+    setFormProductType(prod.productType === "grouped" ? "grouped" : "simple");
+    setFormGroupItems((prod.groupItems || []).map((g) => ({ childId: g.childId, quantity: g.quantity })));
     setPrimaryFile(null);
     setPrimaryPreviewUrl(prod.image || null);
     setGalleryFiles([]);
@@ -1143,6 +1150,10 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       alert("Please select a category.");
       return;
     }
+    if (formProductType === "grouped" && formGroupItems.length === 0) {
+      alert("Add at least one product to the bundle before saving.");
+      return;
+    }
     setSubmittingProduct(true);
     const formElement = e.currentTarget;
     const form = new FormData(formElement);
@@ -1172,7 +1183,14 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     data.append("tradePrice", tradePrice);
     data.append("price", discountedPrice);
     data.append("originalPrice", regularPrice);
-    data.append("stock", String(stock));
+    data.append("productType", formProductType);
+    if (formProductType === "grouped") {
+      // A bundle has no stock of its own - availability comes from its items.
+      data.append("stock", "0");
+      data.append("groupItems", JSON.stringify(formGroupItems));
+    } else {
+      data.append("stock", String(stock));
+    }
     data.append("discountPercent", String(calculatedDiscountPercent));
 
     // Primary image
@@ -1234,7 +1252,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
 
       fetchData();
     } else {
-      alert("Could not delete product.");
+      alert(res.error || "Could not delete product.");
     }
   };
 
@@ -2523,6 +2541,11 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                 <div>
                                   <p className="font-extrabold text-[#171136] text-sm leading-tight">{p.name}</p>
                                   <div className="flex items-center gap-1.5 mt-0.5">
+                                    {p.productType === "grouped" && (
+                                      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-[#EFE9FF] text-[#7B5CFF] uppercase tracking-wide">
+                                        Bundle · {p.groupItems?.length ?? 0} items
+                                      </span>
+                                    )}
                                     <span className="font-mono text-[10.5px] px-1.5 py-0.5 rounded bg-[#F0EBF8] text-[#5C5478] font-bold">
                                       {p.sku || p.id}
                                     </span>
@@ -2552,12 +2575,14 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                               <td className="py-3.5">
                                 <span
                                   className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold ${
-                                    (p.stock || 10) > 10
+                                    (p.stock ?? 0) > 10
                                       ? "bg-emerald-50 text-emerald-700"
                                       : "bg-red-50 text-red-700"
                                   }`}
                                 >
-                                  {p.stock || 100} in stock
+                                  {p.productType === "grouped"
+                                    ? `${p.stock ?? 0} bundles available`
+                                    : `${p.stock ?? 0} in stock`}
                                 </span>
                               </td>
                               <td className="py-3.5">
@@ -2698,6 +2723,89 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
               </div>
 
               <form onSubmit={handleSaveProduct} className="space-y-6 w-full">
+                {/* 0. Product Type Card */}
+                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#EAE3F7] shadow-xs space-y-4 w-full">
+                  <div>
+                    <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
+                      Product Type <span className="text-[#FF4D6D]">*</span>
+                    </h2>
+                    <p className="text-xs text-[#736E9B]">Choose how this product is sold and how its stock is tracked</p>
+                  </div>
+                  {(() => {
+                    const usedIn = editingProduct
+                      ? products.filter(
+                          (bp) => bp.productType === "grouped" && bp.groupItems?.some((g) => g.childId === editingProduct.id)
+                        )
+                      : [];
+                    const options = [
+                      {
+                        value: "simple" as const,
+                        title: "Simple product",
+                        text: "A single product with its own price and stock quantity.",
+                        icon: <IconBox className="w-5 h-5" />,
+                        disabled: false,
+                      },
+                      {
+                        value: "grouped" as const,
+                        title: "Grouped product (bundle)",
+                        text: "Sell existing simple products together as one package. Stock is taken from each item.",
+                        icon: <IconLayers className="w-5 h-5" />,
+                        disabled: usedIn.length > 0 && formProductType !== "grouped",
+                      },
+                    ];
+                    return (
+                      <>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {options.map((opt) => {
+                            const selected = formProductType === opt.value;
+                            return (
+                              <button
+                                key={opt.value}
+                                type="button"
+                                disabled={opt.disabled}
+                                onClick={() => setFormProductType(opt.value)}
+                                className={`text-left flex items-start gap-3 rounded-2xl border-2 p-4 transition-all ${
+                                  selected ? "border-[#FF4D6D] bg-[#FFF7F9]" : "border-[#EAE3F7] hover:border-[#D9CEEE] bg-white"
+                                } ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                              >
+                                <span
+                                  className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                                    selected ? "bg-[#FF4D6D] text-white" : "bg-[#F4F1FD] text-[#7B5CFF]"
+                                  }`}
+                                >
+                                  {opt.icon}
+                                </span>
+                                <span className="flex-1 min-w-0">
+                                  <span className="block text-sm font-extrabold text-[#171136]">{opt.title}</span>
+                                  <span className="block text-xs text-[#736E9B] mt-0.5">{opt.text}</span>
+                                </span>
+                                <span
+                                  className={`w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center ${
+                                    selected ? "border-[#FF4D6D] bg-[#FF4D6D]" : "border-[#D9CEEE]"
+                                  }`}
+                                >
+                                  {selected && <IconCheck className="w-3 h-3 text-white" />}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {usedIn.length > 0 && formProductType !== "grouped" && (
+                          <p className="text-[11px] font-bold text-[#E8590C]">
+                            This product is part of {usedIn.map((b) => b.name).join(", ")}, so it can&apos;t become a grouped
+                            product. Remove it from those bundles first.
+                          </p>
+                        )}
+                        {editingProduct?.productType === "grouped" && formProductType === "simple" && (
+                          <p className="text-[11px] font-bold text-[#E8590C]">
+                            Switching back to Simple removes this bundle&apos;s items when you save. Set its own stock below.
+                          </p>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+
                 {/* 1. Basic Information Card */}
                 <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#EAE3F7] shadow-xs space-y-5 w-full">
                   <div className="flex items-center gap-3 pb-3 border-b border-[#F0EBF8]">
@@ -2746,6 +2854,31 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                     />
                   </div>
                 </div>
+
+                {/* 1b. Bundle Contents Card (grouped products only) */}
+                {formProductType === "grouped" && (
+                  <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#DCD3F5] shadow-xs space-y-5 w-full">
+                    <div className="flex items-center gap-3 pb-3 border-b border-[#F0EBF8]">
+                      <div className="w-10 h-10 rounded-2xl bg-[#F4F1FD] text-[#7B5CFF] flex items-center justify-center shrink-0">
+                        <IconLayers className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
+                          Bundle Contents
+                        </h2>
+                        <p className="text-xs text-[#736E9B]">Which products, and how many of each, make up one bundle</p>
+                      </div>
+                    </div>
+                    <ProductBundleBuilder
+                      products={products}
+                      lines={formGroupItems}
+                      onChange={setFormGroupItems}
+                      excludeId={editingProduct?.id}
+                      bundlePrice={parsePrice(formDiscountedPrice)}
+                      onUseTotalAsRegularPrice={(total) => setFormRegularPrice(total.toFixed(2))}
+                    />
+                  </div>
+                )}
 
                 {/* 2. Organization & Taxonomy Card */}
                 <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#EAE3F7] shadow-xs space-y-5 w-full">
@@ -2923,26 +3056,37 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                       />
                     </div>
 
-                    {/* 4) Stock Quantity */}
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <label className="font-bold text-xs text-[#171136]">
-                          4) Stock Quantity <span className="text-[#FF4D6D]">*</span>
-                        </label>
-                        <span title="Available inventory units in warehouse" className="text-[#8A84A6] hover:text-[#171136] cursor-help">
-                          <IconInfo className="w-3.5 h-3.5" />
-                        </span>
+                    {/* 4) Stock Quantity (simple) / derived availability (grouped) */}
+                    {formProductType === "grouped" ? (
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <label className="font-bold text-xs text-[#171136]">4) Stock</label>
+                        </div>
+                        <div className="w-full px-4 py-3 rounded-2xl border border-dashed border-[#D9CEEE] bg-[#F8F6FD] text-xs font-bold text-[#736E9B]">
+                          Calculated from the bundle&apos;s items
+                        </div>
                       </div>
-                      <input
-                        type="number"
-                        name="stock"
-                        value={formStock}
-                        onChange={(e) => setFormStock(Number(e.target.value))}
-                        required
-                        min={0}
-                        className="w-full px-4 py-3 rounded-2xl border border-[#EAE3F7] bg-[#FAF8FD] focus:bg-white text-xs font-bold text-[#171136] focus:outline-none focus:border-[#FF4D6D] transition-all"
-                      />
-                    </div>
+                    ) : (
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <label className="font-bold text-xs text-[#171136]">
+                            4) Stock Quantity <span className="text-[#FF4D6D]">*</span>
+                          </label>
+                          <span title="Available inventory units in warehouse" className="text-[#8A84A6] hover:text-[#171136] cursor-help">
+                            <IconInfo className="w-3.5 h-3.5" />
+                          </span>
+                        </div>
+                        <input
+                          type="number"
+                          name="stock"
+                          value={formStock}
+                          onChange={(e) => setFormStock(Number(e.target.value))}
+                          required
+                          min={0}
+                          className="w-full px-4 py-3 rounded-2xl border border-[#EAE3F7] bg-[#FAF8FD] focus:bg-white text-xs font-bold text-[#171136] focus:outline-none focus:border-[#FF4D6D] transition-all"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 

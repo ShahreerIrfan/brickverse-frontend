@@ -76,6 +76,34 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
         ) : null}
       </div>
 
+      {/* Bundle contents (grouped products) */}
+      {product.productType === "grouped" && product.groupItems && product.groupItems.length > 0 && (
+        <div className="mt-4 rounded-2xl border border-[#EAE3F7] bg-white overflow-hidden">
+          <p className="px-4 py-2.5 bg-[#F6F1FF] text-xs font-extrabold text-[#171136] uppercase tracking-wide">
+            This bundle includes
+          </p>
+          <ul className="divide-y divide-[#F0EBF8]">
+            {product.groupItems.map((item) => (
+              <li key={item.childId} className="flex items-center gap-3 px-4 py-2.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={item.image} alt="" className="w-11 h-11 rounded-xl object-cover bg-[#F6F1FF] shrink-0" />
+                <span className="flex-1 min-w-0 text-[13px] font-bold text-[#171136] truncate">{item.name}</span>
+                <span className="text-xs font-extrabold text-[#736E9B] shrink-0">× {item.quantity}</span>
+                <span className="text-xs font-bold text-[#171136] w-20 text-right shrink-0">{item.price}</span>
+              </li>
+            ))}
+          </ul>
+          {product.bundleTotal ? (
+            <div className="px-4 py-2.5 bg-[#FAF8FE] flex items-center justify-between text-xs">
+              <span className="text-[#736E9B] font-semibold">Total if bought separately</span>
+              <span className="font-extrabold text-[#171136] line-through decoration-[#FF4D6D]/60">
+                ৳{product.bundleTotal.toLocaleString("en-US", { maximumFractionDigits: 2 })}
+              </span>
+            </div>
+          ) : null}
+        </div>
+      )}
+
       <hr className="my-4 border-[#EAE3F7]" />
 
       {/* Quantity Stepper */}
