@@ -1168,7 +1168,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     const regularPrice = formRegularPrice.startsWith("৳") ? formRegularPrice : `৳${formRegularPrice}`;
     const discountedPrice = formDiscountedPrice.startsWith("৳") ? formDiscountedPrice : `৳${formDiscountedPrice}`;
     const tradePrice = formTradePrice.startsWith("৳") ? formTradePrice : `৳${formTradePrice}`;
-    const stock = Number(formStock || 50);
+    const stock = Number.isFinite(Number(formStock)) ? Math.max(0, Math.floor(Number(formStock))) : 0;
 
     const data = new FormData();
     data.append("id", id);
