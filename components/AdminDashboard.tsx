@@ -374,10 +374,10 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [formName, setFormName] = useState("");
   const [formSlug, setFormSlug] = useState("");
   const [formSku, setFormSku] = useState("");
-  const [formRegularPrice, setFormRegularPrice] = useState("46.00");
-  const [formDiscountedPrice, setFormDiscountedPrice] = useState("34.99");
-  const [formTradePrice, setFormTradePrice] = useState("28.00");
-  const [formStock, setFormStock] = useState(50);
+  const [formRegularPrice, setFormRegularPrice] = useState("");
+  const [formDiscountedPrice, setFormDiscountedPrice] = useState("");
+  const [formTradePrice, setFormTradePrice] = useState("");
+  const [formStock, setFormStock] = useState<number | "">("");
   const [formProductType, setFormProductType] = useState<"simple" | "grouped">("simple");
   const [formGroupItems, setFormGroupItems] = useState<BundleLine[]>([]);
 
@@ -1057,11 +1057,11 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     setFormCategory(categories[0]?.id || "");
     setFormName("");
     setFormSlug("");
-    setFormSku(generateRandomSku());
-    setFormRegularPrice("46.00");
-    setFormDiscountedPrice("34.99");
-    setFormTradePrice("28.00");
-    setFormStock(50);
+    setFormSku("");
+    setFormRegularPrice("");
+    setFormDiscountedPrice("");
+    setFormTradePrice("");
+    setFormStock("");
     setFormProductType("simple");
     setFormGroupItems([]);
     setPrimaryFile(null);
@@ -1079,10 +1079,10 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     setFormName(prod.name || "");
     setFormSlug(prod.slug || prod.id || "");
     setFormSku(prod.sku || `KS-${prod.id.toUpperCase().slice(0, 6)}`);
-    setFormRegularPrice(prod.regularPrice?.replace("৳", "") || prod.originalPrice?.replace("৳", "") || "46.00");
-    setFormDiscountedPrice(prod.discountedPrice?.replace("৳", "") || prod.price?.replace("৳", "") || "34.99");
-    setFormTradePrice(prod.tradePrice?.replace("৳", "") || "28.00");
-    setFormStock(prod.stock ?? 50);
+    setFormRegularPrice(prod.regularPrice?.replace("৳", "") || prod.originalPrice?.replace("৳", "") || "");
+    setFormDiscountedPrice(prod.discountedPrice?.replace("৳", "") || prod.price?.replace("৳", "") || "");
+    setFormTradePrice(prod.tradePrice?.replace("৳", "") || "");
+    setFormStock(prod.stock ?? 0);
     setFormProductType(prod.productType === "grouped" ? "grouped" : "simple");
     setFormGroupItems((prod.groupItems || []).map((g) => ({ childId: g.childId, quantity: g.quantity })));
     setPrimaryFile(null);
@@ -3080,7 +3080,8 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                           type="number"
                           name="stock"
                           value={formStock}
-                          onChange={(e) => setFormStock(Number(e.target.value))}
+                          onChange={(e) => setFormStock(e.target.value === "" ? "" : Number(e.target.value))}
+                          placeholder="e.g. 50"
                           required
                           min={0}
                           className="w-full px-4 py-3 rounded-2xl border border-[#EAE3F7] bg-[#FAF8FD] focus:bg-white text-xs font-bold text-[#171136] focus:outline-none focus:border-[#FF4D6D] transition-all"
