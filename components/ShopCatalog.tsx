@@ -423,15 +423,6 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
               )}
 
 
-              {onSaleOnly && (
-                <span className="inline-flex items-center gap-1.5 bg-white border border-[#EAE3F7] text-[#171136] text-xs font-bold px-2.5 py-1 rounded-full shadow-xs">
-                  On Sale
-                  <button onClick={() => setOnSaleOnly(false)} className="hover:opacity-75">
-                    <IconX className="w-3 h-3" />
-                  </button>
-                </span>
-              )}
-
               <button
                 onClick={handleResetFilters}
                 className="text-xs font-bold text-[#FF4D6D] hover:underline ml-auto"
@@ -942,26 +933,6 @@ function FilterSidebarContent({
               </label>
             );
           })}
-        </div>
-      </div>
-
-      <hr className="border-[#F0EBF9]" />
-
-      {/* 4. AVAILABILITY & DEALS */}
-      <div>
-        <h4 className="text-[12px] font-extrabold tracking-wider text-[#171136] uppercase mb-3">
-          AVAILABILITY
-        </h4>
-        <div className="space-y-2.5">
-          <label className="flex items-center gap-2.5 cursor-pointer text-xs">
-            <input
-              type="checkbox"
-              checked={onSaleOnly}
-              onChange={(e) => setOnSaleOnly(e.target.checked)}
-              className="w-4 h-4 rounded text-[#FF4D6D] accent-[#FF4D6D] cursor-pointer"
-            />
-            <span className="text-[#3B3468] font-semibold text-[12px]">On Sale / Deals only</span>
-          </label>
         </div>
       </div>
 
