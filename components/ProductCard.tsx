@@ -27,6 +27,9 @@ export default function ProductCard({ product }: { product: Product }) {
     addToCart(product, 1, true);
   };
 
+  const isPreorder = product.stock === 0 && product.productType !== "grouped";
+  const soldOut = product.stock === 0 && product.productType === "grouped";
+
   const imageSrc = getMediaUrl(product.image || product.image_file);
 
   return (
@@ -102,11 +105,16 @@ export default function ProductCard({ product }: { product: Product }) {
           <button
             type="button"
             onClick={handleAddToCart}
-            aria-label={`Add ${product.name} to bag`}
-            className="w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
-            style={{ backgroundColor: product.accent || "#FF4D6D" }}
+            disabled={soldOut}
+            aria-label={`${isPreorder ? "Pre-order" : "Add"} ${product.name}${isPreorder ? "" : " to bag"}`}
+            className={
+              isPreorder || soldOut
+                ? "h-8 sm:h-12 px-3 sm:px-5 rounded-full flex items-center justify-center shrink-0 shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer text-white text-[10.5px] sm:text-[13px] font-extrabold whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                : "w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 shadow-xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            }
+            style={{ backgroundColor: soldOut ? "#8A84A6" : product.accent || "#FF4D6D" }}
           >
-            <IconBag className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white" />
+            {isPreorder ? "Pre-order" : soldOut ? "Sold out" : <IconBag className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white" />}
           </button>
         </div>
       </div>

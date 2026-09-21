@@ -139,11 +139,15 @@ export default function RelatedShelf({ products = [] }: RelatedShelfProps) {
                 <button
                   type="button"
                   onClick={() => addToCart(item, 1, true)}
-                  aria-label={`Add ${item.name} to bag`}
-                  className="w-7 h-7 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-90 shadow-xs hover:scale-105 cursor-pointer"
+                  aria-label={`${item.stock === 0 ? "Pre-order" : "Add"} ${item.name}`}
+                  className={
+                    item.stock === 0 && item.productType !== "grouped"
+                      ? "h-7 sm:h-10 px-2.5 sm:px-4 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-90 shadow-xs hover:scale-105 cursor-pointer text-white text-[10px] sm:text-xs font-extrabold whitespace-nowrap"
+                      : "w-7 h-7 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-90 shadow-xs hover:scale-105 cursor-pointer"
+                  }
                   style={{ backgroundColor: item.accent || "#FF4D6D" }}
                 >
-                  <IconBag className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-white" />
+                  {item.stock === 0 && item.productType !== "grouped" ? "Pre-order" : <IconBag className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-white" />}
                 </button>
               </div>
             </div>

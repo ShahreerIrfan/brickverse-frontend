@@ -565,12 +565,15 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
                               e.stopPropagation();
                               addToCart(product, 1, true);
                             }}
-                            aria-label={`Add ${product.name} to cart`}
-                            title={`Add ${product.name} to cart`}
-                            className="inline-flex items-center justify-center gap-1 sm:gap-1.5 bg-[#FF4D6D] hover:bg-[#E63956] text-white text-[11px] sm:text-[12.5px] font-bold px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl sm:rounded-full shadow-[0_3px_10px_rgba(255,77,109,0.28)] active:scale-95 transition-all cursor-pointer shrink-0"
+                            disabled={product.stock === 0 && product.productType === "grouped"}
+                            aria-label={`${product.stock === 0 && product.productType !== "grouped" ? "Pre-order" : "Add"} ${product.name}`}
+                            title={`${product.stock === 0 && product.productType !== "grouped" ? "Pre-order" : "Add"} ${product.name}`}
+                            className="inline-flex items-center justify-center gap-1 sm:gap-1.5 bg-[#FF4D6D] hover:bg-[#E63956] text-white text-[11px] sm:text-[12.5px] font-bold px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl sm:rounded-full shadow-[0_3px_10px_rgba(255,77,109,0.28)] active:scale-95 transition-all cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <IconBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
-                            <span className="hidden min-[380px]:inline font-extrabold">Add</span>
+                            <span className="hidden min-[380px]:inline font-extrabold">
+                              {product.stock === 0 ? (product.productType === "grouped" ? "Sold out" : "Pre-order") : "Add"}
+                            </span>
                           </button>
                         </div>
                       </div>
@@ -756,7 +759,7 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
                   className="flex-1 bg-[#FF4D6D] hover:bg-[#E63956] text-white flex items-center justify-center gap-2 font-extrabold text-xs sm:text-sm py-2.5 sm:py-3 rounded-full shadow-[0_4px_12px_rgba(255,77,109,0.28)] active:scale-95 transition-all cursor-pointer"
                 >
                   <IconBag className="w-4 h-4 text-white" />
-                  <span>Add to Cart</span>
+                  <span>{quickViewProduct.stock === 0 && quickViewProduct.productType !== "grouped" ? "Pre-order" : "Add to Cart"}</span>
                 </button>
                 <Link
                   href={`/product/${quickViewProduct.slug || quickViewProduct.id}`}
