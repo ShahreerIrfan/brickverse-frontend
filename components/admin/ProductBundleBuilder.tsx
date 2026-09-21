@@ -59,8 +59,11 @@ export default function ProductBundleBuilder({
     onChange([...lines, { childId: id, quantity: 1 }]);
     setQuery("");
   };
-  const setQty = (id: string, quantity: number) =>
-    onChange(lines.map((l) => (l.childId === id ? { ...l, quantity: Math.max(1, Math.floor(quantity) || 1) } : l)));
+  // A bundle can't take more of a product than its own stock (at least 1 so the row stays valid).
+  const setQty = (id: string, quantity: number) => {
+    const max = Math.max(1, byId.get(id)?.stock ?? 1);
+    onChange(lines.map((l) => (l.childId === id ? { ...l, quantity: Math.min(max, Math.max(1, Math.floor(quantity) || 1)) } : l)));
+  };
   const remove = (id: string) => onChange(lines.filter((l) => l.childId !== id));
 
   return (
@@ -134,7 +137,7 @@ export default function ProductBundleBuilder({
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-bold text-[#171136] truncate">{product?.name || line.childId}</p>
                   <p className="text-[10.5px] text-[#8A84A6]">
-                    {money(unit)} each · {stock} in stock
+                    {money(unit)} each · {stock} in stock{line.quantity >= stock && stock > 0 ? " (max)" : ""}
                   </p>
                   {short && (
                     <p className="text-[10.5px] font-bold text-[#E8590C]">
@@ -162,8 +165,9 @@ export default function ProductBundleBuilder({
                   <button
                     type="button"
                     onClick={() => setQty(line.childId, line.quantity + 1)}
+                    disabled={line.quantity >= stock}
                     aria-label="Increase quantity"
-                    className="w-8 h-8 text-[#171136] hover:bg-[#F6F1FF] rounded-r-xl cursor-pointer"
+                    className="w-8 h-8 text-[#171136] hover:bg-[#F6F1FF] disabled:opacity-30 rounded-r-xl cursor-pointer disabled:cursor-not-allowed"
                   >
                     +
                   </button>
