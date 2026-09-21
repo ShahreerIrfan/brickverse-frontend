@@ -517,6 +517,47 @@ export async function getAllProducts(params?: { category?: string; subcategory?:
   }
 }
 
+export type ShopProductQuery = {
+  category?: string;
+  subcategory?: string;
+  search?: string;
+  minPrice?: number | null;
+  maxPrice?: number | null;
+  minRating?: number | null;
+  onSale?: boolean;
+  sort?: string;
+};
+
+export type ShopProductPage = { results: Product[]; count: number; hasMore: boolean };
+
+// One page of the shop grid. Filtering, sorting and paging all happen on the
+// server, so the browser only ever holds the pages it has scrolled through.
+export async function getProductsPage(
+  query: ShopProductQuery,
+  page: number,
+  pageSize = 20,
+  signal?: AbortSignal
+): Promise<ShopProductPage> {
+  const qs = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+  if (query.category && query.category !== "all") qs.set("category", query.category);
+  if (query.subcategory && query.subcategory !== "all") qs.set("subcategory", query.subcategory);
+  if (query.search?.trim()) qs.set("search", query.search.trim());
+  if (query.minPrice != null) qs.set("min_price", String(query.minPrice));
+  if (query.maxPrice != null) qs.set("max_price", String(query.maxPrice));
+  if (query.minRating != null) qs.set("min_rating", String(query.minRating));
+  if (query.onSale) qs.set("on_sale", "1");
+  if (query.sort && query.sort !== "newest") qs.set("sort", query.sort);
+
+  const res = await fetch(`${getApiBaseUrl()}/products/?${qs.toString()}`, { cache: "no-store", signal });
+  if (!res.ok) throw new Error(`Products request failed (${res.status})`);
+  const data = await res.json();
+  return {
+    results: Array.isArray(data.results) ? data.results : [],
+    count: typeof data.count === "number" ? data.count : 0,
+    hasMore: Boolean(data.hasMore),
+  };
+}
+
 // DRF returns validation failures as {field: ["message"]}; flatten that so the
 // admin sees why a save failed instead of a generic "check fields".
 function describeApiError(data: unknown): string | undefined {

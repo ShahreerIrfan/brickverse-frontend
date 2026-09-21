@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -22,14 +22,16 @@ import { CategoryGlyph } from "./CategoryRail";
 import type { Product, Category, SubCategory } from "./productData";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
-import { getMediaUrl } from "@/lib/api";
+import { getMediaUrl, getProductsPage } from "@/lib/api";
 
 type ShopCatalogProps = {
   initialProducts: Product[];
+  initialCount: number;
+  initialHasMore: boolean;
   initialCategories: Category[];
 };
 
-function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogProps) {
+function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, initialCategories }: ShopCatalogProps) {
   const searchParams = useSearchParams();
   const { addToCart } = useCart();
   const router = useRouter();
@@ -132,86 +134,22 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
     return isNaN(num) ? 0 : num;
   };
 
-  // Filter & Sort Products
-  const filteredProducts = useMemo(() => {
-    return initialProducts.filter((product) => {
-      // 1. Category Filter
-      if (selectedCategory !== "all") {
-        const productCat = (product.category || "").toLowerCase();
-        const targetCat = selectedCategory.toLowerCase();
-        if (!productCat.includes(targetCat) && targetCat !== productCat) {
-          return false;
-        }
-      }
+  // Server-driven infinite scroll: the first page arrives with the HTML, every
+  // later page is requested only when the visitor scrolls near the bottom.
+  const PAGE_SIZE = 20;
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [totalCount, setTotalCount] = useState(initialCount);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [loadingFirst, setLoadingFirst] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const pageRef = useRef(1);
+  const requestRef = useRef(0);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  // Query the server-rendered first page corresponds to (the unfiltered shop).
+  const loadedKey = useRef(JSON.stringify(["all", "all", "", null, null, null, false, "newest"]));
 
-      // 2. Subcategory Filter
-      if (selectedSubcategory !== "all") {
-        const productSubId = typeof product.subcategory === "object" ? product.subcategory?.id : product.subcategoryId || product.subcategory;
-        if (productSubId !== selectedSubcategory) {
-          return false;
-        }
-      }
-
-      // 3. Search Query Filter
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
-        const matchName = product.name?.toLowerCase().includes(query);
-        const matchDesc = product.description?.toLowerCase().includes(query);
-        const matchCategory = product.category?.toLowerCase().includes(query);
-        const matchSku = product.sku?.toLowerCase().includes(query);
-        if (!matchName && !matchDesc && !matchCategory && !matchSku) {
-          return false;
-        }
-      }
-
-      // 4. Price Filter
-      const priceVal = parsePrice(product.discountedPrice || product.price);
-      if (appliedMinPrice !== null && priceVal < appliedMinPrice) {
-        return false;
-      }
-      if (appliedMaxPrice !== null && priceVal > appliedMaxPrice) {
-        return false;
-      }
-
-      // 5. Rating Filter
-      if (selectedRating !== null) {
-        const rating = product.rating ?? 5.0;
-        if (rating < selectedRating) {
-          return false;
-        }
-      }
-
-      // 7. On Sale Filter
-      if (onSaleOnly) {
-        const regular = parsePrice(product.regularPrice || product.originalPrice);
-        const disc = parsePrice(product.discountedPrice || product.price);
-        if (regular <= disc) return false;
-      }
-
-      return true;
-    }).sort((a, b) => {
-      if (sortBy === "price_asc") {
-        return parsePrice(a.discountedPrice || a.price) - parsePrice(b.discountedPrice || b.price);
-      }
-      if (sortBy === "price_desc") {
-        return parsePrice(b.discountedPrice || b.price) - parsePrice(a.discountedPrice || a.price);
-      }
-      if (sortBy === "rating") {
-        return (b.rating ?? 5) - (a.rating ?? 5);
-      }
-      if (sortBy === "name_asc") {
-        return (a.name || "").localeCompare(b.name || "");
-      }
-      if (sortBy === "discount") {
-        const discA = a.discountPercent ?? 0;
-        const discB = b.discountPercent ?? 0;
-        return discB - discA;
-      }
-      // default "newest"
-      return 0;
-    });
-  }, [
-    initialProducts,
+  const queryKey = JSON.stringify([
     selectedCategory,
     selectedSubcategory,
     searchQuery,
@@ -222,30 +160,85 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
     sortBy,
   ]);
 
-  // Shop Catalog Pagination (20 products per page)
-  const [shopPage, setShopPage] = useState(1);
-  const PRODUCTS_PER_PAGE = 20;
+  const buildQuery = useCallback(
+    () => ({
+      category: selectedCategory,
+      subcategory: selectedSubcategory,
+      search: searchQuery,
+      minPrice: appliedMinPrice,
+      maxPrice: appliedMaxPrice,
+      minRating: selectedRating,
+      onSale: onSaleOnly,
+      sort: sortBy,
+    }),
+    [selectedCategory, selectedSubcategory, searchQuery, appliedMinPrice, appliedMaxPrice, selectedRating, onSaleOnly, sortBy]
+  );
 
-  // Reset page when any filter changes
+  // Filters changed: start again from page 1.
   useEffect(() => {
-    setShopPage(1);
-  }, [
-    selectedCategory,
-    selectedSubcategory,
-    searchQuery,
-    appliedMinPrice,
-    appliedMaxPrice,
-    selectedRating,
-    onSaleOnly,
-    sortBy,
-  ]);
+    if (queryKey === loadedKey.current) return; // already showing this query's first page
+    const controller = new AbortController();
+    const requestId = ++requestRef.current;
+    pageRef.current = 1;
+    setLoadingFirst(true);
+    setLoadError(false);
+    getProductsPage(buildQuery(), 1, PAGE_SIZE, controller.signal)
+      .then((data) => {
+        if (requestId !== requestRef.current) return;
+        loadedKey.current = queryKey;
+        setProducts(data.results);
+        setTotalCount(data.count);
+        setHasMore(data.hasMore);
+      })
+      .catch((err) => {
+        if (controller.signal.aborted || requestId !== requestRef.current) return;
+        console.warn("[Shop] Failed to load products", err);
+        setLoadError(true);
+        setHasMore(false);
+      })
+      .finally(() => {
+        if (requestId === requestRef.current) setLoadingFirst(false);
+      });
+    return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryKey]);
 
-  const totalShopPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
-  const currentShopPage = Math.min(Math.max(1, shopPage), totalShopPages);
-  const paginatedShopProducts = useMemo(() => {
-    const start = (currentShopPage - 1) * PRODUCTS_PER_PAGE;
-    return filteredProducts.slice(start, start + PRODUCTS_PER_PAGE);
-  }, [filteredProducts, currentShopPage, PRODUCTS_PER_PAGE]);
+  const loadMore = useCallback(() => {
+    if (loadingFirst || loadingMore || !hasMore) return;
+    const requestId = requestRef.current;
+    const nextPage = pageRef.current + 1;
+    setLoadingMore(true);
+    setLoadError(false);
+    getProductsPage(buildQuery(), nextPage, PAGE_SIZE)
+      .then((data) => {
+        if (requestId !== requestRef.current) return; // filters changed meanwhile
+        pageRef.current = nextPage;
+        setProducts((prev) => {
+          const seen = new Set(prev.map((p) => p.id));
+          return [...prev, ...data.results.filter((p) => !seen.has(p.id))];
+        });
+        setTotalCount(data.count);
+        setHasMore(data.hasMore);
+      })
+      .catch((err) => {
+        console.warn("[Shop] Failed to load more products", err);
+        if (requestId === requestRef.current) setLoadError(true);
+      })
+      .finally(() => setLoadingMore(false));
+  }, [buildQuery, hasMore, loadingFirst, loadingMore]);
+
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node || !hasMore || loadError) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMore();
+      },
+      { rootMargin: "400px 0px" }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMore, loadError, loadMore, products.length]);
 
   // Current active category object
   const currentCategoryObj = initialCategories.find(
@@ -291,7 +284,7 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
             {currentCategoryObj ? currentCategoryObj.label : "All Products"}
           </h1>
           <p className="text-xs sm:text-sm text-[#736E9B] mt-0.5 sm:mt-1 font-medium">
-            Showing <span className="font-bold text-[#171136]">{filteredProducts.length}</span>{" "}
+            Showing <span className="font-bold text-[#171136]">{totalCount}</span>{" "}
             products {searchQuery ? `for "${searchQuery}"` : ""}
           </p>
         </div>
@@ -337,7 +330,7 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
         <aside className="hidden lg:block w-[280px] shrink-0 bg-white border border-[#EAE3F7] rounded-[22px] shadow-[0_16px_0_-4px_rgba(23,17,54,0.06)] p-5 space-y-6">
           <FilterSidebarContent
             categories={initialCategories}
-            products={initialProducts}
+            totalCount={initialCount}
             selectedCategory={selectedCategory}
             selectedSubcategory={selectedSubcategory}
             expandedCategories={expandedCategories}
@@ -430,7 +423,7 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
           )}
 
           {/* Grid of Products */}
-          {filteredProducts.length === 0 ? (
+          {!loadingFirst && products.length === 0 ? (
             <div className="bg-white border border-[#EAE3F7] rounded-[24px] p-8 sm:p-12 text-center flex flex-col items-center justify-center">
               <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#FFF1F4] flex items-center justify-center mb-4">
                 <IconSearch className="w-7 h-7 sm:w-8 sm:h-8 text-[#FF4D6D]" />
@@ -451,7 +444,7 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
           ) : (
             <>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4.5">
-                {paginatedShopProducts.map((product) => {
+                {products.map((product) => {
                   const isWishlisted = wishlistProductIds.has(product.id);
                   const regularPrice = product.regularPrice || product.originalPrice;
                   const discountedPrice = product.discountedPrice || product.price;
@@ -582,67 +575,31 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
                 })}
               </div>
 
-              {/* Shop Pagination Controls (20 Products per page) */}
-              {totalShopPages > 1 && (
-                <div className="mt-8 pt-6 border-t border-[#EAE3F7] flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <span className="text-xs text-[#736E9B] font-semibold order-2 sm:order-1">
-                    Showing <strong>{(currentShopPage - 1) * PRODUCTS_PER_PAGE + 1}</strong> - <strong>{Math.min(currentShopPage * PRODUCTS_PER_PAGE, filteredProducts.length)}</strong> of <strong>{filteredProducts.length}</strong> products
-                  </span>
-
-                  <div className="flex items-center gap-1.5 order-1 sm:order-2">
-                    <button
-                      type="button"
-                      onClick={() => setShopPage((p) => Math.max(1, p - 1))}
-                      disabled={currentShopPage <= 1}
-                      className="p-2.5 rounded-xl border border-[#EAE3F7] text-[#736E9B] hover:text-[#171136] hover:bg-white disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-2xs"
-                      title="Previous Page"
-                    >
-                      <IconChevronLeft className="w-4 h-4" />
-                    </button>
-
-                    {Array.from({ length: totalShopPages }, (_, i) => i + 1).map((pg) => {
-                      if (
-                        pg === 1 ||
-                        pg === totalShopPages ||
-                        (pg >= currentShopPage - 2 && pg <= currentShopPage + 2)
-                      ) {
-                        return (
-                          <button
-                            key={pg}
-                            type="button"
-                            onClick={() => setShopPage(pg)}
-                            className={`w-9 h-9 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
-                              currentShopPage === pg
-                                ? "bg-[#FF4D6D] text-white shadow-sm"
-                                : "bg-white border border-[#EAE3F7] text-[#171136] hover:border-[#FF4D6D] hover:text-[#FF4D6D]"
-                            }`}
-                          >
-                            {pg}
-                          </button>
-                        );
-                      }
-                      if (pg === currentShopPage - 3 || pg === currentShopPage + 3) {
-                        return (
-                          <span key={pg} className="px-1 text-[#8A84A6] text-xs">
-                            ...
-                          </span>
-                        );
-                      }
-                      return null;
-                    })}
-
-                    <button
-                      type="button"
-                      onClick={() => setShopPage((p) => Math.min(totalShopPages, p + 1))}
-                      disabled={currentShopPage >= totalShopPages}
-                      className="p-2.5 rounded-xl border border-[#EAE3F7] text-[#736E9B] hover:text-[#171136] hover:bg-white disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer shadow-2xs"
-                      title="Next Page"
-                    >
-                      <IconChevronRight className="w-4 h-4" />
-                    </button>
+              {/* Infinite scroll: the next page is requested when this marker nears the viewport */}
+              <div ref={sentinelRef} aria-hidden className="h-px" />
+              <div className="mt-6 flex flex-col items-center gap-3 min-h-10" aria-live="polite">
+                {(loadingMore || loadingFirst) && (
+                  <div className="flex items-center gap-2 text-xs font-semibold text-[#736E9B]">
+                    <span className="w-5 h-5 border-2 border-[#FF4D6D] border-t-transparent rounded-full animate-spin" />
+                    Loading more products...
                   </div>
-                </div>
-              )}
+                )}
+                {loadError && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoadError(false);
+                      setHasMore(true);
+                    }}
+                    className="px-5 py-2 rounded-full bg-white border border-[#EAE3F7] text-xs font-bold text-[#FF4D6D] hover:bg-[#FFF1F4] cursor-pointer"
+                  >
+                    Couldn&apos;t load more products - tap to retry
+                  </button>
+                )}
+                {!hasMore && !loadError && !loadingFirst && products.length > 0 && (
+                  <p className="text-xs text-[#8A84A6] font-medium">You&apos;ve seen all {totalCount} products</p>
+                )}
+              </div>
             </>
           )}
         </div>
@@ -677,7 +634,7 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
 
             <FilterSidebarContent
               categories={initialCategories}
-              products={initialProducts}
+              totalCount={initialCount}
               selectedCategory={selectedCategory}
               selectedSubcategory={selectedSubcategory}
               expandedCategories={expandedCategories}
@@ -781,7 +738,7 @@ function ShopCatalogContent({ initialProducts, initialCategories }: ShopCatalogP
 // Reusable Filter Sidebar Content (Used for Desktop sidebar & Mobile Drawer)
 function FilterSidebarContent({
   categories,
-  products,
+  totalCount,
   selectedCategory,
   selectedSubcategory,
   expandedCategories,
@@ -819,7 +776,7 @@ function FilterSidebarContent({
             }`}
           >
             <span>All Products</span>
-            <span className="text-[11px] text-[#736E9B] font-semibold">{products.length}</span>
+            <span className="text-[11px] text-[#736E9B] font-semibold">{totalCount}</span>
           </button>
 
           {/* Parent Categories with Subcategory expansion */}
