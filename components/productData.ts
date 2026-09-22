@@ -22,6 +22,7 @@ export type Product = {
   name: string;
   subtitle?: string;
   series?: string;
+  categoryPath?: { id: string; label: string; slug: string }[];
   image: string;
   image_file?: string | null;
   gallery_images?: {
