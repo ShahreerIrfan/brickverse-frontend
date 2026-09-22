@@ -259,10 +259,17 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
     return () => observer.disconnect();
   }, [hasMore, loadError, loadMore, products.length]);
 
-  // Current active category object
+  // Current active category (and, if one is selected, subcategory) objects.
   const currentCategoryObj = initialCategories.find(
     (c) => c.id.toLowerCase() === selectedCategory.toLowerCase()
   );
+  const currentSubcategoryObj =
+    selectedSubcategory !== "all"
+      ? initialCategories
+          .flatMap((c) => c.subcategories || [])
+          .find((sc) => sc.id.toLowerCase() === selectedSubcategory.toLowerCase())
+      : undefined;
+  const activeCategoryLabel = currentSubcategoryObj?.label || currentCategoryObj?.label;
 
   const activeFilterCount =
     (selectedCategory !== "all" ? 1 : 0) +
@@ -291,7 +298,22 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
         {currentCategoryObj && (
           <>
             <IconChevronRight className="w-3.5 h-3.5 text-[#A59FC2] shrink-0" />
-            <span className="text-[#171136] font-bold truncate">{currentCategoryObj.label}</span>
+            {currentSubcategoryObj ? (
+              <Link
+                href={`/shop?category=${encodeURIComponent(selectedCategory)}`}
+                className="hover:text-[#FF4D6D] transition-colors font-medium shrink-0"
+              >
+                {currentCategoryObj.label}
+              </Link>
+            ) : (
+              <span className="text-[#171136] font-bold truncate">{currentCategoryObj.label}</span>
+            )}
+          </>
+        )}
+        {currentSubcategoryObj && (
+          <>
+            <IconChevronRight className="w-3.5 h-3.5 text-[#A59FC2] shrink-0" />
+            <span className="text-[#171136] font-bold truncate">{currentSubcategoryObj.label}</span>
           </>
         )}
       </nav>
@@ -300,7 +322,7 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 sm:gap-4 pb-4 border-b border-[#EAE3F7] mb-5 sm:mb-6">
         <div>
           <h1 className="font-[family-name:var(--font-display)] font-extrabold text-xl sm:text-3xl text-[#171136] tracking-tight">
-            {currentCategoryObj ? currentCategoryObj.label : "All Products"}
+            {activeCategoryLabel || "All Products"}
           </h1>
           <p className="text-xs sm:text-sm text-[#736E9B] mt-0.5 sm:mt-1 font-medium">
             Showing <span className="font-bold text-[#171136]">{totalCount}</span>{" "}
@@ -380,7 +402,7 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
 
               {selectedCategory !== "all" && (
                 <span className="inline-flex items-center gap-1.5 bg-white border border-[#FF4D6D]/30 text-[#FF4D6D] text-xs font-bold px-2.5 py-1 rounded-full shadow-xs">
-                  Category: {currentCategoryObj?.label || selectedCategory}
+                  Category: {activeCategoryLabel || selectedCategory}
                   <button onClick={() => setSelectedCategory("all")} className="hover:opacity-75">
                     <IconX className="w-3 h-3" />
                   </button>
