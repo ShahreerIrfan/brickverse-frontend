@@ -19,11 +19,15 @@ export default function ProductBreadcrumb({ product }: ProductBreadcrumbProps) {
 
   // Each ancestor links back to the shop filtered down to that level: the
   // top-level category as "category", everything under it as "subcategory".
+  // The shop page matches these against each category's id (not its slug -
+  // a subcategory's slug can collide across different parents), so these
+  // links must use id too or the shop's sidebar highlight and heading won't
+  // recognise the selection.
   const hrefFor = (index: number) => {
     const top = path[0];
-    if (index === 0) return `/shop?category=${encodeURIComponent(top.slug || top.id)}`;
+    if (index === 0) return `/shop?category=${encodeURIComponent(top.id)}`;
     const node = path[index];
-    return `/shop?category=${encodeURIComponent(top.slug || top.id)}&subcategory=${encodeURIComponent(node.slug || node.id)}`;
+    return `/shop?category=${encodeURIComponent(top.id)}&subcategory=${encodeURIComponent(node.id)}`;
   };
 
   const lastLabel = path[path.length - 1]?.label;
