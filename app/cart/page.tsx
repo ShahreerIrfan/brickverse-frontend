@@ -6,9 +6,9 @@ import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 
 export const metadata: Metadata = {
-  title: "Shopping Cart | Brickverse",
+  title: "Shopping Cart | Kawaii Subete",
   description:
-    "Review your Brickverse shopping cart with authentic anime figures, building sets, and STEM coding kits.",
+    "Review your Kawaii Subete shopping cart with authentic anime figures, building sets, and STEM coding kits.",
 };
 
 export default function Cart() {

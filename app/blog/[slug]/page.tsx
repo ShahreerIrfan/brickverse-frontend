@@ -33,7 +33,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     [post.author?.first_name, post.author?.last_name].filter(Boolean).join(" ").trim() ||
     post.author?.name ||
     post.author?.email ||
-    "Brickverse Team";
+    "Kawaii Subete Team";
 
   return (
     <div className="flex flex-col min-h-screen bg-[#FFF6EE] pb-16 lg:pb-0">

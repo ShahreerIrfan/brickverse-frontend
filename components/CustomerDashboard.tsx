@@ -183,7 +183,7 @@ export default function CustomerDashboard({
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center">
-              <Image src="/logo.png" alt="Brickverse" width={130} height={40} className="h-8 sm:h-9 w-auto object-contain" />
+              <Image src="/logo.png" alt="Kawaii Subete" width={130} height={40} className="h-8 sm:h-9 w-auto object-contain" />
             </Link>
 
             <span className="hidden sm:inline-flex items-center gap-1 px-3 py-1 bg-[#FFF1F4] text-[#FF4D6D] text-xs font-bold rounded-full border border-[#FF4D6D]/20">
@@ -331,7 +331,7 @@ export default function CustomerDashboard({
                     Welcome back, {fullName}! 👋
                   </h1>
                   <p className="text-xs sm:text-sm text-[#736E9B] mt-1 font-medium">
-                    Here&apos;s what&apos;s happening with your Brickverse collector account today.
+                    Here&apos;s what&apos;s happening with your Kawaii Subete collector account today.
                   </p>
                 </div>
 
@@ -601,7 +601,7 @@ export default function CustomerDashboard({
                             ))
                           ) : (
                             <p className="text-xs text-[#736E9B]">
-                              Brickverse Anime & Collectibles Set
+                              Anime & Collectibles Set
                             </p>
                           )}
                         </div>
@@ -782,7 +782,7 @@ export default function CustomerDashboard({
                           ))
                         ) : (
                           <div className="py-4 text-xs text-[#736E9B]">
-                            Brickverse Collector Edition Kit
+                            Collector Edition Kit
                           </div>
                         )}
                       </div>
@@ -1127,7 +1127,7 @@ export default function CustomerDashboard({
                             ))
                           ) : (
                             <div className="py-4 text-xs text-[#736E9B]">
-                              Brickverse Anime Figures & Collector Building Kits
+                              Anime Figures & Collector Building Kits
                             </div>
                           )}
                         </div>
@@ -1162,7 +1162,7 @@ export default function CustomerDashboard({
                             Need Help With Package?
                           </h4>
                           <p className="text-xs text-[#171136] font-medium mt-1">
-                            Contact Brickverse Collector Care for courier inquiries and delivery rescheduling.
+                            Contact Collector Care for courier inquiries and delivery rescheduling.
                           </p>
                           <Link
                             href="/"

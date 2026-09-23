@@ -107,7 +107,7 @@ function LoginForm() {
       {/* Top Header */}
       <header className="max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
         <Link href="/" className="flex items-center">
-          <Image src="/logo.png" alt="Brickverse" width={120} height={38} className="h-8 sm:h-9 w-auto object-contain" />
+          <Image src="/logo.png" alt="Kawaii Subete" width={120} height={38} className="h-8 sm:h-9 w-auto object-contain" />
         </Link>
         <Link
           href="/"
@@ -123,7 +123,7 @@ function LoginForm() {
         <div className="relative w-full max-w-[400px] bg-white rounded-[28px] shadow-2xl p-6 sm:p-7 border border-[#EAE3F7]">
           {/* Brand Logo Header */}
           <div className="flex flex-col items-center justify-center mb-5">
-            <Image src="/logo.png" alt="Brickverse" width={130} height={42} className="h-10 sm:h-11 w-auto object-contain" />
+            <Image src="/logo.png" alt="Kawaii Subete" width={130} height={42} className="h-10 sm:h-11 w-auto object-contain" />
           </div>
 
           {/* Tab Headers: Sign In & Sign Up */}
@@ -340,7 +340,7 @@ function LoginForm() {
 
       {/* Footer copyright */}
       <footer className="py-2 text-center text-xs text-[#736E9B]">
-        &copy; {new Date().getFullYear()} Brickverse Ltd. All rights reserved.
+        &copy; {new Date().getFullYear()} Kawaii Subete. All rights reserved.
       </footer>
     </div>
   );

@@ -127,7 +127,7 @@ export default function AuthModal() {
 
         {/* Brand Logo Header */}
         <div className="flex flex-col items-center justify-center mb-5">
-          <Image src="/logo.png" alt="Brickverse" width={140} height={44} className="h-11 w-auto object-contain" />
+          <Image src="/logo.png" alt="Kawaii Subete" width={140} height={44} className="h-11 w-auto object-contain" />
         </div>
 
         {/* Tab Headers: Sign In & Sign Up with Brickverse Pink Underline */}

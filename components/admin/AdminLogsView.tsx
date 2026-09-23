@@ -252,7 +252,7 @@ export default function AdminLogsView({ onBackToDashboard }: AdminLogsViewProps)
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `brickverse-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, "-")}.json`;
+    a.download = `kawaiisubete-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, "-")}.json`;
     a.click();
     URL.revokeObjectURL(url);
     showToast("✓ Logs exported as JSON.");
@@ -605,7 +605,7 @@ export default function AdminLogsView({ onBackToDashboard }: AdminLogsViewProps)
               <span className="w-3 h-3 rounded-full bg-[#FF4D6D]" />
               <span className="w-3 h-3 rounded-full bg-[#F59E0B]" />
               <span className="w-3 h-3 rounded-full bg-[#2ECC8F]" />
-              <span className="ml-2 font-bold text-white text-[11px]">brickverse-backend.log</span>
+              <span className="ml-2 font-bold text-white text-[11px]">kawaiisubete-backend.log</span>
             </div>
             <span className="text-[10px] text-[#A79FD1]">
               Showing {logsList.length} recent entries · Stream active

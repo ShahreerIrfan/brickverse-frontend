@@ -3,8 +3,8 @@ import { Metadata } from "next";
 import ThankYouPage from "@/components/ThankYouPage";
 
 export const metadata: Metadata = {
-  title: "Order Confirmed | Brickverse",
-  description: "Thank you for your order! Your Brickverse collectibles are on their way.",
+  title: "Order Confirmed | Kawaii Subete",
+  description: "Thank you for your order! Your Kawaii Subete collectibles are on their way.",
 };
 
 export default function ThankYou() {

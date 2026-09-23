@@ -66,7 +66,7 @@ export default function MobileMenu() {
       >
         <div className="flex items-center justify-between gap-3 bg-white px-5 py-4 border-b border-[#EAE3F7] shrink-0">
           <a href="/" className="flex items-center" onClick={() => setOpen(false)}>
-            <Image src="/logo.png" alt="Brickverse" width={120} height={38} className="h-8 w-auto object-contain" />
+            <Image src="/logo.png" alt="Kawaii Subete" width={120} height={38} className="h-8 w-auto object-contain" />
           </a>
           <button
             aria-label="Close menu"
@@ -153,7 +153,7 @@ export default function MobileMenu() {
               </span>
               <span className="flex-1">
                 <span className="block text-[13.5px] font-bold text-[#171136]">Sign in / Sign up</span>
-                <span className="block text-[11.5px] text-[#736E9B]">Join Brickverse rewards</span>
+                <span className="block text-[11.5px] text-[#736E9B]">Join Kawaii Subete rewards</span>
               </span>
               <IconChevronRight className="w-4 h-4 text-[#736E9B]" />
             </button>

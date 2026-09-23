@@ -220,7 +220,7 @@ export default function CheckoutPage() {
       last_name: lastName,
       customer_name: `${firstName} ${lastName}`.trim(),
       customer_phone: phone,
-      customer_email: user?.email || "guest@brickverse.com",
+      customer_email: user?.email || "guest@kawaiisubete.com",
       city: district,
       district: district,
       address,
@@ -308,7 +308,7 @@ export default function CheckoutPage() {
             </div>
             <div className="flex flex-col">
               <span className="font-[family-name:var(--font-display)] font-extrabold text-xl sm:text-2xl text-[#171136] tracking-tight leading-none">
-                Brickverse
+                Kawaii Subete
               </span>
               <span className="text-[10px] sm:text-[10.5px] font-medium text-[#736E9B]">
                 figures · bricks · code kits
@@ -595,7 +595,7 @@ export default function CheckoutPage() {
 
             {/* Terms Agreement Subtext */}
             <p className="text-xs text-[#736E9B] pt-1">
-              By placing your order you agree to Brickverse&apos;s{" "}
+              By placing your order you agree to Kawaii Subete&apos;s{" "}
               <Link href="#" className="underline text-[#171136] hover:text-[#FF4D6D]">
                 Terms of Service
               </Link>{" "}
@@ -809,7 +809,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
               <span className="font-[family-name:var(--font-display)] font-extrabold text-lg text-[#171136]">
-                Brickverse
+                Kawaii Subete
               </span>
             </div>
 
@@ -844,7 +844,7 @@ export default function CheckoutPage() {
             </div>
 
             <p className="text-[11.5px] text-[#9C96BE]">
-              © 2026 Brickverse Pty Ltd. All rights reserved.
+              © 2026 Kawaii Subete. All rights reserved.
             </p>
           </div>
         </div>

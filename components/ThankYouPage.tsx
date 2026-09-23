@@ -197,7 +197,7 @@ export default function ThankYouPage() {
             </div>
             <div className="flex flex-col">
               <span className="font-[family-name:var(--font-display)] font-extrabold text-xl sm:text-2xl text-[#171136] tracking-tight leading-none">
-                Brickverse
+                Kawaii Subete
               </span>
               <span className="text-[10px] sm:text-[10.5px] font-medium text-[#736E9B]">
                 figures · bricks · code kits
@@ -512,7 +512,7 @@ export default function ThankYouPage() {
                   Need help?
                 </h3>
                 <p className="text-xs text-[#736E9B] mt-0.5">
-                  Reach us at <a href="mailto:hi@brickverse.com.bd" className="hover:text-[#FF4D6D] underline">hi@brickverse.com.bd</a>
+                  Reach us at <a href="mailto:hi@kawaiisubete.com" className="hover:text-[#FF4D6D] underline">hi@kawaiisubete.com</a>
                 </p>
               </div>
             </div>
@@ -565,7 +565,7 @@ export default function ThankYouPage() {
                 </div>
               </div>
               <span className="font-[family-name:var(--font-display)] font-extrabold text-lg text-[#171136]">
-                Brickverse
+                Kawaii Subete
               </span>
             </div>
 
@@ -588,7 +588,7 @@ export default function ThankYouPage() {
 
           {/* Copyright */}
           <div className="text-center sm:text-left text-xs text-[#9C96BE] pt-4 border-t border-[#EAE3F7]">
-            © 2026 Brickverse Pty Ltd. All rights reserved.
+            © 2026 Kawaii Subete. All rights reserved.
           </div>
         </div>
       </footer>

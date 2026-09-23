@@ -109,7 +109,7 @@ export default function AdminRoutePage({ params }: PageProps) {
       <div className="min-h-screen bg-[#FFF6EE] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-[#FF4D6D] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold text-[#736E9B]">Loading Brickverse Admin Workspace...</p>
+          <p className="text-xs font-bold text-[#736E9B]">Loading Kawaii Subete Admin Workspace...</p>
         </div>
       </div>
     );

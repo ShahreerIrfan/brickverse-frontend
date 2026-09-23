@@ -24,7 +24,7 @@ export default function Navbar() {
             <Link href="/" className="flex items-center shrink-0">
               <Image
                 src="/logo.png"
-                alt="Brickverse"
+                alt="Kawaii Subete"
                 width={130}
                 height={42}
                 className="h-8 sm:h-10 w-auto object-contain"

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { IconPin, IconPhone, IconMail } from "./icons";
+import { IconPhone } from "./icons";
 
 const columns = [
   {
@@ -24,13 +24,8 @@ export default function Footer() {
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14 grid grid-cols-1 lg:grid-cols-[280px_1fr_1fr_1fr_220px] gap-6 sm:gap-10">
         <div>
           <div className="flex items-center">
-            <Image src="/logo.png" alt="Brickverse" width={140} height={44} className="h-10 sm:h-12 w-auto object-contain" />
+            <Image src="/logo.png" alt="Kawaii Subete" width={140} height={44} className="h-10 sm:h-12 w-auto object-contain" />
           </div>
-          <p className="text-[13px] text-[#B9B2DA] leading-relaxed mt-6">
-            Authentic anime figures, cartoon collectibles, brick sets and coding
-            kits. Shipping Australia-wide from our Melbourne warehouse since
-            2019.
-          </p>
           <div className="flex items-center gap-3 mt-7">
             {social.map((s) => (
               <a
@@ -69,21 +64,9 @@ export default function Footer() {
           </h4>
           <span className="block w-[26px] h-[3px] rounded-full bg-[#FF4D6D] mt-2 mb-5" />
           <div className="flex flex-col gap-4 text-[13px] text-[#B9B2DA]">
-            <div className="flex items-start gap-2.5">
-              <IconPin className="w-4 h-4 text-[#FF4D6D] mt-0.5 shrink-0" />
-              <span>
-                14 Maribyrnong St,
-                <br />
-                Footscray VIC 3011
-              </span>
-            </div>
             <div className="flex items-center gap-2.5">
               <IconPhone className="w-4 h-4 text-[#FF4D6D] shrink-0" />
               <span>01402494401</span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <IconMail className="w-4 h-4 text-[#FF4D6D] shrink-0" />
-              <span>hi@brickverse.com.au</span>
             </div>
           </div>
         </div>
@@ -92,7 +75,7 @@ export default function Footer() {
       <div className="border-t border-[#2A2159]">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-[12.5px] text-[#8880B5]">
-            © 2026 Brickverse Pty Ltd. All rights reserved.
+            © 2026 Kawaii Subete. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-[12.5px] text-[#8880B5]">
             <a href="#" className="hover:text-white">Privacy</a>

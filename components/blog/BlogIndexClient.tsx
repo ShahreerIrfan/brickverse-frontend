@@ -57,12 +57,12 @@ export default function BlogIndexClient({
   return (
     <div className="max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
       <div className="mb-6 sm:mb-10">
-        <p className="text-[10.5px] sm:text-xs font-bold tracking-wide text-[#FF4D6D]">BRICKVERSE JOURNAL</p>
+        <p className="text-[10.5px] sm:text-xs font-bold tracking-wide text-[#FF4D6D]">KAWAII SUBETE JOURNAL</p>
         <h1 className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-4xl text-[#171136] tracking-tight mt-1">
           Blog
         </h1>
         <p className="text-xs sm:text-sm text-[#736E9B] mt-1.5 sm:mt-2 max-w-xl">
-          News, guides, and stories from the Brickverse team.
+          News, guides, and stories from the Kawaii Subete team.
         </p>
       </div>
 

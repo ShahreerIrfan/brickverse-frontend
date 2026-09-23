@@ -1337,7 +1337,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
               {/* Brickverse Brand Logo */}
               <Image
                 src="/logo.png"
-                alt="Brickverse"
+                alt="Kawaii Subete"
                 width={130}
                 height={40}
                 className={sidebarCollapsed ? "w-8 h-8 object-contain shrink-0" : "h-9 w-auto object-contain shrink-0"}
@@ -3855,7 +3855,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
             const items = currentOrder.items && currentOrder.items.length > 0 ? currentOrder.items : [
               {
                 id: "fallback-1",
-                product_name: "Brickverse Custom Order Item",
+                product_name: "Custom Order Item",
                 price: currentOrder.total_amount,
                 quantity: 1,
               }
@@ -4594,7 +4594,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                   type="email"
                   name="email"
                   required
-                  placeholder="user@brickverse.com"
+                  placeholder="user@kawaiisubete.com"
                   className="w-full p-2.5 rounded-xl border border-[#EAE3F7] focus:outline-none focus:border-[#FF4D6D]"
                 />
               </div>

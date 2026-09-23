@@ -134,7 +134,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const subtitle = product.subtitle || product.series || undefined;
     const image = product.image || "/images/figure-samurai-red.svg";
     const cardBg = product.cardBg || undefined;
-    const seller = product.seller || product.brand || "Brickverse Official";
+    const seller = product.seller || product.brand || "Kawaii Subete Official";
     const category = product.category || "General";
     const slug = product.slug || product.id;
     const stockNum: number | undefined = typeof product.stock === "number" ? Math.max(0, product.stock) : undefined;
