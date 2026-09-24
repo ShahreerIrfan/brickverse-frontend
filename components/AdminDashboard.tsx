@@ -27,6 +27,7 @@ import {
   createUser,
   deleteUser,
   getAllStores,
+  changePassword,
 } from "@/lib/api";
 import {
   IconShield,
@@ -72,6 +73,11 @@ import {
   IconTerminal,
   IconPalette,
   IconGripVertical,
+  IconSettings,
+  IconLock,
+  IconKey,
+  IconEye,
+  IconEyeOff,
 } from "./icons";
 import PartnerStoresList from "./admin/PartnerStoresList";
 import PartnerStoreDetail from "./admin/PartnerStoreDetail";
@@ -113,6 +119,7 @@ type ActiveNav =
   | "blog-all"
   | "blog-form"
   | "blog-taxonomy"
+  | "settings-password"
   | "logs";
 
 export default function AdminDashboard({ user, initialNav, initialOrderId, initialStoreId, initialBlogPostId }: AdminDashboardProps) {
@@ -144,6 +151,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [usersMenuOpen, setUsersMenuOpen] = useState(initialNav ? initialNav.startsWith("users") : false);
   const [storesMenuOpen, setStoresMenuOpen] = useState(initialNav ? initialNav.startsWith("stores") : false);
   const [blogMenuOpen, setBlogMenuOpen] = useState(initialNav ? initialNav.startsWith("blog") : false);
+  const [settingsMenuOpen, setSettingsMenuOpen] = useState(initialNav ? initialNav.startsWith("settings") : false);
   const [currentStoreId, setCurrentStoreId] = useState<string | undefined>(initialStoreId);
   const [editingBlogPostId, setEditingBlogPostId] = useState<string | number | undefined>(undefined);
 
@@ -202,6 +210,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     "blog-all": "/en/admin/blog",
     "blog-form": "/en/admin/blog/new",
     "blog-taxonomy": "/en/admin/blog/taxonomy",
+    "settings-password": "/en/admin/settings/password",
     "logs": "/en/admin/logs",
   };
 
@@ -213,6 +222,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     if (nav.startsWith("users")) setUsersMenuOpen(true);
     if (nav.startsWith("stores")) setStoresMenuOpen(true);
     if (nav.startsWith("blog")) setBlogMenuOpen(true);
+    if (nav.startsWith("settings")) setSettingsMenuOpen(true);
     if (nav !== "blog-form") setEditingBlogPostId(undefined);
     const targetUrl = customUrl || navToUrlMap[nav] || "/en/admin";
     if (typeof window !== "undefined" && window.location.pathname !== targetUrl) {
@@ -229,6 +239,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       if (initialNav.startsWith("users")) setUsersMenuOpen(true);
       if (initialNav.startsWith("stores")) setStoresMenuOpen(true);
       if (initialNav.startsWith("blog")) setBlogMenuOpen(true);
+      if (initialNav.startsWith("settings")) setSettingsMenuOpen(true);
     }
   }, [initialNav]);
 
@@ -296,6 +307,9 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       } else if (path.includes("/blog")) {
         setActiveNav("blog-all");
         setBlogMenuOpen(true);
+      } else if (path.includes("/settings/password") || path.includes("/settings")) {
+        setActiveNav("settings-password");
+        setSettingsMenuOpen(true);
       } else if (path.includes("/en/admin") || path.includes("/admin")) {
         setActiveNav("dashboard");
       }
@@ -383,6 +397,59 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [formProductType, setFormProductType] = useState<"simple" | "grouped">("simple");
   const [formGroupItems, setFormGroupItems] = useState<BundleLine[]>([]);
   const [formIsActive, setFormIsActive] = useState<boolean>(true);
+
+  // Change Password Form State
+  const [pwdCurrent, setPwdCurrent] = useState("");
+  const [pwdNew, setPwdNew] = useState("");
+  const [pwdConfirm, setPwdConfirm] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [submittingPassword, setSubmittingPassword] = useState(false);
+  const [passwordFeedback, setPasswordFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordFeedback(null);
+
+    if (!pwdCurrent.trim()) {
+      setPasswordFeedback({ type: "error", message: "Please enter your current password." });
+      return;
+    }
+    if (!pwdNew || pwdNew.length < 6) {
+      setPasswordFeedback({ type: "error", message: "New password must be at least 6 characters long." });
+      return;
+    }
+    if (pwdNew !== pwdConfirm) {
+      setPasswordFeedback({ type: "error", message: "New password confirmation does not match. Please verify both fields." });
+      return;
+    }
+
+    setSubmittingPassword(true);
+    try {
+      const res = await changePassword({
+        current_password: pwdCurrent,
+        new_password: pwdNew,
+        confirm_password: pwdConfirm,
+        user_id: user?.id,
+        email: user?.email,
+      });
+
+      if (res.success) {
+        setPasswordFeedback({ type: "success", message: res.message || "✓ Password updated successfully!" });
+        showToast("✓ Password changed successfully!");
+        setPwdCurrent("");
+        setPwdNew("");
+        setPwdConfirm("");
+      } else {
+        setPasswordFeedback({ type: "error", message: res.error || "Failed to update password." });
+      }
+    } catch (err) {
+      setPasswordFeedback({ type: "error", message: "An unexpected error occurred. Please try again." });
+    } finally {
+      setSubmittingPassword(false);
+    }
+  };
 
   const generateSlug = (text: string) => {
     return text
@@ -1696,7 +1763,48 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
               )}
             </div>
 
-            {/* 6) Logs */}
+            {/* 6) Settings Accordion (Parent Menu with Change Password Submenu) */}
+            <div className="space-y-1">
+              <button
+                onClick={() => setSettingsMenuOpen(!settingsMenuOpen)}
+                title="Settings"
+                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-bold text-xs sm:text-[13.5px] transition-all cursor-pointer relative ${
+                  activeNav.startsWith("settings")
+                    ? "bg-[#2A2159] text-white before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-sm before:bg-[#FF4D6D]"
+                    : "text-[#C7C0E8] hover:bg-[#2A2159]/60 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <IconSettings className={`w-4 h-4 shrink-0 ${activeNav.startsWith("settings") ? "text-white" : "text-[#A79FD1]"}`} />
+                  {!sidebarCollapsed && <span>Settings</span>}
+                </div>
+                {!sidebarCollapsed && (
+                  <IconChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      settingsMenuOpen ? "rotate-0 text-white" : "-rotate-90 text-[#A79FD1]"
+                    }`}
+                  />
+                )}
+              </button>
+
+              {settingsMenuOpen && !sidebarCollapsed && (
+                <div className="pl-8 pr-1 py-1 space-y-1">
+                  <button
+                    onClick={() => navigateTo("settings-password")}
+                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                      activeNav === "settings-password"
+                        ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
+                        : "text-[#A79FD1] hover:text-white hover:bg-[#2A2159]/40"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    <span>Change Password</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 7) Logs */}
             <div className="space-y-1">
               <button
                 onClick={() => navigateTo("logs")}
@@ -4604,6 +4712,262 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
           {/* ============================================================= */}
           {activeNav === "logs" && (
             <AdminLogsView onBackToDashboard={() => navigateTo("dashboard")} />
+          )}
+
+          {/* ============================================================= */}
+          {/* VIEW: SETTINGS -> CHANGE PASSWORD */}
+          {/* ============================================================= */}
+          {activeNav === "settings-password" && (
+            <div className="space-y-6 max-w-5xl">
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#736E9B] mb-1">
+                    <span>Settings</span>
+                    <span>/</span>
+                    <span className="text-[#FF4D6D]">Change Password</span>
+                  </div>
+                  <h1 className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-3xl text-[#171136] tracking-tight">
+                    Change Password
+                  </h1>
+                  <p className="text-xs sm:text-sm text-[#736E9B] mt-0.5">
+                    Update your administrator password to maintain account security
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#E9FBF3] text-[#0FA968] text-xs font-bold border border-[#0FA968]/20">
+                    <span className="w-2 h-2 rounded-full bg-[#0FA968] animate-pulse" />
+                    Security Status: Protected
+                  </span>
+                </div>
+              </div>
+
+              {/* Grid: Form (Left) & Security Tips (Right) */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                {/* Password Form Card */}
+                <div className="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-8 border border-[#EAE3F7] shadow-xs space-y-6">
+                  {/* Account Identity Header */}
+                  <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#F8F6FD] border border-[#EAE3F7]">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#FF4D6D] to-[#7B5CFF] text-white flex items-center justify-center font-extrabold text-base shadow-sm shrink-0">
+                      {avatarInitial}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-extrabold text-sm text-[#171136] truncate">
+                          {userFullName}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md bg-[#7B5CFF]/15 text-[#7B5CFF] text-[10px] font-extrabold uppercase tracking-wide">
+                          {user?.role || "ADMIN"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#736E9B] truncate font-mono mt-0.5">
+                        {user?.email || "admin@example.com"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Feedback Notification */}
+                  {passwordFeedback && (
+                    <div
+                      className={`p-4 rounded-2xl text-xs font-bold flex items-start gap-3 animate-in fade-in slide-in-from-top-2 ${
+                        passwordFeedback.type === "success"
+                          ? "bg-[#E9FBF3] text-[#0FA968] border border-[#0FA968]/30"
+                          : "bg-[#FFF0F4] text-[#FF4D6D] border border-[#FF4D6D]/30"
+                      }`}
+                    >
+                      <span className="text-base leading-none shrink-0 mt-0.5">
+                        {passwordFeedback.type === "success" ? "✓" : "⚠"}
+                      </span>
+                      <p className="flex-1 leading-relaxed">{passwordFeedback.message}</p>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleChangePassword} className="space-y-5">
+                    {/* 1. Current Password */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="font-bold text-xs text-[#171136]">
+                          Current Password <span className="text-[#FF4D6D]">*</span>
+                        </label>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type={showCurrentPassword ? "text" : "password"}
+                          value={pwdCurrent}
+                          onChange={(e) => setPwdCurrent(e.target.value)}
+                          required
+                          placeholder="Enter your current password"
+                          className="w-full px-4 py-3 pr-11 rounded-2xl border border-[#EAE3F7] bg-[#FAF8FD] focus:bg-white text-xs font-semibold text-[#171136] focus:outline-none focus:border-[#FF4D6D] transition-all"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#736E9B] hover:text-[#171136] transition-colors p-1 cursor-pointer"
+                          title={showCurrentPassword ? "Hide password" : "Show password"}
+                        >
+                          {showCurrentPassword ? <IconEyeOff className="w-4 h-4" /> : <IconEye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 2. New Password */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="font-bold text-xs text-[#171136]">
+                          New Password <span className="text-[#FF4D6D]">*</span>
+                        </label>
+                        {pwdNew && (
+                          <span
+                            className={`text-[11px] font-extrabold ${
+                              pwdNew.length >= 8 ? "text-[#0FA968]" : pwdNew.length >= 6 ? "text-amber-600" : "text-[#FF4D6D]"
+                            }`}
+                          >
+                            {pwdNew.length >= 8 ? "Strong" : pwdNew.length >= 6 ? "Moderate" : "Too short (min 6 chars)"}
+                          </span>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <input
+                          type={showNewPassword ? "text" : "password"}
+                          value={pwdNew}
+                          onChange={(e) => setPwdNew(e.target.value)}
+                          required
+                          placeholder="Enter a strong new password (min. 6 characters)"
+                          className="w-full px-4 py-3 pr-11 rounded-2xl border border-[#EAE3F7] bg-[#FAF8FD] focus:bg-white text-xs font-semibold text-[#171136] focus:outline-none focus:border-[#FF4D6D] transition-all"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#736E9B] hover:text-[#171136] transition-colors p-1 cursor-pointer"
+                          title={showNewPassword ? "Hide password" : "Show password"}
+                        >
+                          {showNewPassword ? <IconEyeOff className="w-4 h-4" /> : <IconEye className="w-4 h-4" />}
+                        </button>
+                      </div>
+
+                      {/* Password Strength Progress Bar */}
+                      {pwdNew && (
+                        <div className="w-full bg-[#EAE3F7] h-1.5 rounded-full overflow-hidden mt-2">
+                          <div
+                            className={`h-full transition-all duration-300 rounded-full ${
+                              pwdNew.length >= 8 ? "w-full bg-[#0FA968]" : pwdNew.length >= 6 ? "w-2/3 bg-amber-500" : "w-1/3 bg-[#FF4D6D]"
+                            }`}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 3. Confirm New Password */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="font-bold text-xs text-[#171136]">
+                          Confirm New Password <span className="text-[#FF4D6D]">*</span>
+                        </label>
+                        {pwdConfirm && (
+                          <span
+                            className={`text-[11px] font-extrabold ${
+                              pwdNew === pwdConfirm ? "text-[#0FA968]" : "text-[#FF4D6D]"
+                            }`}
+                          >
+                            {pwdNew === pwdConfirm ? "✓ Passwords match" : "✗ Passwords do not match"}
+                          </span>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPassword ? "text" : "password"}
+                          value={pwdConfirm}
+                          onChange={(e) => setPwdConfirm(e.target.value)}
+                          required
+                          placeholder="Re-type your new password"
+                          className="w-full px-4 py-3 pr-11 rounded-2xl border border-[#EAE3F7] bg-[#FAF8FD] focus:bg-white text-xs font-semibold text-[#171136] focus:outline-none focus:border-[#FF4D6D] transition-all"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#736E9B] hover:text-[#171136] transition-colors p-1 cursor-pointer"
+                          title={showConfirmPassword ? "Hide password" : "Show password"}
+                        >
+                          {showConfirmPassword ? <IconEyeOff className="w-4 h-4" /> : <IconEye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="pt-4 border-t border-[#F0EBF8] flex items-center justify-between gap-3 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPwdCurrent("");
+                          setPwdNew("");
+                          setPwdConfirm("");
+                          setPasswordFeedback(null);
+                        }}
+                        className="px-4 py-2.5 rounded-xl border border-[#EAE3F7] text-xs font-bold text-[#736E9B] hover:bg-[#F8F6FD] hover:text-[#171136] transition-all cursor-pointer"
+                      >
+                        Reset
+                      </button>
+
+                      <button
+                        type="submit"
+                        disabled={submittingPassword}
+                        className="px-6 py-2.5 rounded-xl bg-[#FF4D6D] hover:bg-[#ff3358] text-white text-xs font-bold transition-all shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
+                      >
+                        {submittingPassword ? (
+                          <>
+                            <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>Saving Changes...</span>
+                          </>
+                        ) : (
+                          <>
+                            <IconLock className="w-3.5 h-3.5" />
+                            <span>Save New Password</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Right Side Security Advisory Card */}
+                <div className="space-y-4">
+                  <div className="bg-white rounded-3xl p-6 border border-[#EAE3F7] shadow-xs space-y-4">
+                    <div className="flex items-center gap-2.5 pb-3 border-b border-[#F0EBF8]">
+                      <div className="w-8 h-8 rounded-xl bg-[#FFF0F4] text-[#FF4D6D] flex items-center justify-center">
+                        <IconShield className="w-4 h-4" />
+                      </div>
+                      <h3 className="font-extrabold text-sm text-[#171136]">Security Guidelines</h3>
+                    </div>
+
+                    <ul className="space-y-3 text-xs text-[#5C5478]">
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#0FA968] font-extrabold mt-0.5">✓</span>
+                        <span>Use at least 8 characters with a combination of uppercase letters, numbers, and symbols.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#0FA968] font-extrabold mt-0.5">✓</span>
+                        <span>Avoid using personal names, birthdays, or easily guessable dictionary words.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-[#0FA968] font-extrabold mt-0.5">✓</span>
+                        <span>Never share your administrator login. Create dedicated team member accounts from the <strong>Users</strong> menu.</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-[#1C1440] to-[#2A2159] text-white rounded-3xl p-6 shadow-md space-y-3">
+                    <div className="flex items-center gap-2">
+                      <IconKey className="w-4 h-4 text-[#FF4D6D]" />
+                      <h4 className="font-bold text-xs text-white uppercase tracking-wider">Account Protection</h4>
+                    </div>
+                    <p className="text-xs text-[#C7C0E8] leading-relaxed">
+                      Changing your password will immediately secure your account across all active sessions.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </main>
       </div>

@@ -292,6 +292,30 @@ export async function logoutUser() {
   }
 }
 
+export async function changePassword(data: {
+  current_password?: string;
+  new_password?: string;
+  confirm_password?: string;
+  user_id?: number | string;
+  email?: string;
+}) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/auth/change-password/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    return {
+      success: res.ok,
+      message: result.message || (res.ok ? "Password changed successfully!" : undefined),
+      error: result.error || (result.detail ? String(result.detail) : undefined) || (!res.ok ? "Failed to change password." : undefined),
+    };
+  } catch (error) {
+    return { success: false, error: "Network error. Could not connect to server." };
+  }
+}
+
 export async function getCurrentUser() {
   try {
     const res = await fetch(`${getApiBaseUrl()}/auth/me/`);

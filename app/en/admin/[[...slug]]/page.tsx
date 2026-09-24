@@ -42,6 +42,7 @@ export default function AdminRoutePage({ params }: PageProps) {
     | "blog-all"
     | "blog-form"
     | "blog-taxonomy"
+    | "settings-password"
     | "logs" = "dashboard";
   let initialOrderId: string | undefined = undefined;
   let initialStoreId: string | undefined = undefined;
@@ -72,6 +73,8 @@ export default function AdminRoutePage({ params }: PageProps) {
     }
   } else if (slug[0] === "users") {
     initialNav = "users-all";
+  } else if (slug[0] === "settings") {
+    initialNav = "settings-password";
   } else if (slug[0] === "stores") {
     if (slug.length >= 2 && slug[1] === "new") {
       initialNav = "stores-form";
