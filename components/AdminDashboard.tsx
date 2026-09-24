@@ -2888,96 +2888,19 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
               </div>
 
               <form onSubmit={handleSaveProduct} className="space-y-6 w-full">
-                {/* 0a. Product Status & Visibility Card */}
-                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#EAE3F7] shadow-xs space-y-4 w-full">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <div>
-                      <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136] flex items-center gap-2">
-                        <span>Product Status & Visibility</span>
-                        <span
-                          className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full ${
-                            formIsActive ? "bg-[#E9FBF3] text-[#0FA968]" : "bg-[#FFF0F4] text-[#FF4D6D]"
-                          }`}
-                        >
-                          {formIsActive ? "● ACTIVE & PUBLISHED" : "○ INACTIVE (DEACTIVATED)"}
-                        </span>
-                      </h2>
-                      <p className="text-xs text-[#736E9B]">
-                        Choose whether this product is live on the website or deactivated as a hidden draft
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    {/* Active Option */}
-                    <button
-                      type="button"
-                      onClick={() => setFormIsActive(true)}
-                      className={`text-left flex items-start gap-3 rounded-2xl border-2 p-4 transition-all cursor-pointer ${
-                        formIsActive
-                          ? "border-[#0FA968] bg-[#F0FDF7]"
-                          : "border-[#EAE3F7] hover:border-[#D9CEEE] bg-white"
-                      }`}
-                    >
-                      <span
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                          formIsActive ? "bg-[#0FA968] text-white" : "bg-[#F4F1FD] text-[#7B5CFF]"
-                        }`}
-                      >
-                        <IconCheck className="w-5 h-5" />
-                      </span>
-                      <span className="flex-1 min-w-0">
-                        <span className="block text-sm font-extrabold text-[#171136]">
-                          Active (Visible on Website)
-                        </span>
-                        <span className="block text-xs text-[#736E9B] mt-0.5">
-                          Product is visible on the shop page, category listings, search results, and can be ordered by customers.
-                        </span>
-                      </span>
-                      <span
-                        className={`w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center ${
-                          formIsActive ? "border-[#0FA968] bg-[#0FA968]" : "border-[#D9CEEE]"
-                        }`}
-                      >
-                        {formIsActive && <IconCheck className="w-3 h-3 text-white" />}
-                      </span>
-                    </button>
-
-                    {/* Inactive Option */}
-                    <button
-                      type="button"
-                      onClick={() => setFormIsActive(false)}
-                      className={`text-left flex items-start gap-3 rounded-2xl border-2 p-4 transition-all cursor-pointer ${
-                        !formIsActive
-                          ? "border-[#FF4D6D] bg-[#FFF7F9]"
-                          : "border-[#EAE3F7] hover:border-[#D9CEEE] bg-white"
-                      }`}
-                    >
-                      <span
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                          !formIsActive ? "bg-[#FF4D6D] text-white" : "bg-[#F4F1FD] text-[#8A84A6]"
-                        }`}
-                      >
-                        <IconClose className="w-5 h-5" />
-                      </span>
-                      <span className="flex-1 min-w-0">
-                        <span className="block text-sm font-extrabold text-[#171136]">
-                          Deactivated (Hidden / Draft)
-                        </span>
-                        <span className="block text-xs text-[#736E9B] mt-0.5">
-                          Product is hidden from the website, shop catalog, search, and direct links. Visitors cannot see or buy it.
-                        </span>
-                      </span>
-                      <span
-                        className={`w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center ${
-                          !formIsActive ? "border-[#FF4D6D] bg-[#FF4D6D]" : "border-[#D9CEEE]"
-                        }`}
-                      >
-                        {!formIsActive && <IconCheck className="w-3 h-3 text-white" />}
-                      </span>
-                    </button>
-                  </div>
-                </div>
+                {/* 0a. Active toggle: checked = visible on the website, unchecked = hidden draft */}
+                <label className="flex items-center gap-3 bg-white rounded-2xl px-5 py-4 border border-[#EAE3F7] shadow-xs w-full cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formIsActive}
+                    onChange={(e) => setFormIsActive(e.target.checked)}
+                    className="w-5 h-5 rounded accent-[#FF4D6D] cursor-pointer"
+                  />
+                  <span className="font-bold text-sm text-[#171136]">Active</span>
+                  <span className="text-xs text-[#736E9B]">
+                    {formIsActive ? "Visible on the website" : "Hidden from the website (draft)"}
+                  </span>
+                </label>
 
                 {/* 0b. Product Type Card */}
                 <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#EAE3F7] shadow-xs space-y-4 w-full">
