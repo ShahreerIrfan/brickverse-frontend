@@ -2601,7 +2601,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                   <table className="w-full text-left text-xs">
                     <thead>
                       <tr className="border-b border-[#EAE3F7] text-[#8A84A6]">
-                        <th className="pb-3 pl-1 pr-3 w-9">
+                        <th className="py-3.5 pl-3 pr-2 w-10 text-center">
                           <input
                             type="checkbox"
                             checked={isAllPageSelected}
@@ -2613,15 +2613,15 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                             title="Select / Unselect all on this page"
                           />
                         </th>
-                        <th className="pb-3 font-semibold">Product & SKU</th>
-                        <th className="pb-3 font-semibold">Category</th>
-                        <th className="pb-3 font-semibold">Regular Price</th>
-                        <th className="pb-3 font-semibold">Discounted Price</th>
-                        <th className="pb-3 font-semibold">Trade Price (TP)</th>
-                        <th className="pb-3 font-semibold">Stock</th>
-                        <th className="pb-3 font-semibold">Discount</th>
-                        <th className="pb-3 font-semibold">Status</th>
-                        <th className="pb-3 font-semibold text-right pr-2">Actions</th>
+                        <th className="py-3.5 px-3 font-semibold text-left min-w-[240px]">Product & SKU</th>
+                        <th className="py-3.5 px-3 font-semibold text-left whitespace-nowrap">Category</th>
+                        <th className="py-3.5 px-3 font-semibold text-left whitespace-nowrap">Regular Price</th>
+                        <th className="py-3.5 px-3 font-semibold text-left whitespace-nowrap">Discounted Price</th>
+                        <th className="py-3.5 px-3 font-semibold text-left whitespace-nowrap">Trade Price (TP)</th>
+                        <th className="py-3.5 px-3 font-semibold text-left whitespace-nowrap">Stock</th>
+                        <th className="py-3.5 px-3 font-semibold text-center whitespace-nowrap">Discount</th>
+                        <th className="py-3.5 px-3 font-semibold text-center whitespace-nowrap">Status</th>
+                        <th className="py-3.5 pl-3 pr-4 font-semibold text-right whitespace-nowrap">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#F0EBF8]">
@@ -2642,6 +2642,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                           const disc = p.discountedPrice || p.price || "—";
                           const tp = p.tradePrice || "—";
                           const discountBadge = p.discountPercent ? `-${p.discountPercent}%` : null;
+                          const truncatedName = p.name ? (p.name.length > 40 ? `${p.name.slice(0, 40)}...` : p.name) : "Unnamed Product";
 
                           return (
                             <tr
@@ -2650,7 +2651,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                 isSelected ? "bg-[#F6F1FF]/60 hover:bg-[#F6F1FF]" : "hover:bg-[#F8F6FD]"
                               }`}
                             >
-                              <td className="py-3.5 pl-1 pr-3 w-9">
+                              <td className="py-3.5 pl-3 pr-2 w-10 text-center">
                                 <input
                                   type="checkbox"
                                   checked={isSelected}
@@ -2658,51 +2659,55 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                   className="w-4 h-4 rounded-md border-[#D9CEEE] text-[#7B5CFF] focus:ring-[#7B5CFF] cursor-pointer"
                                 />
                               </td>
-                              <td className="py-3.5 flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-xl bg-[#F6F1FF] flex items-center justify-center overflow-hidden shrink-0 border border-[#EAE3F7]">
-                                  <Image
-                                    src={getMediaUrl(p.image || p.image_file)}
-                                    alt={p.name}
-                                    width={40}
-                                    height={40}
-                                    className="object-contain max-h-10 max-w-10"
-                                  />
-                                </div>
-                                <div>
-                                  <p className="font-extrabold text-[#171136] text-sm leading-tight">{p.name}</p>
-                                  <div className="flex items-center gap-1.5 mt-0.5">
-                                    {p.productType === "grouped" && (
-                                      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-[#EFE9FF] text-[#7B5CFF] uppercase tracking-wide">
-                                        Bundle · {p.groupItems?.length ?? 0} items
+                              <td className="py-3.5 px-3 text-left">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-12 h-12 rounded-xl bg-[#F6F1FF] flex items-center justify-center overflow-hidden shrink-0 border border-[#EAE3F7]">
+                                    <Image
+                                      src={getMediaUrl(p.image || p.image_file)}
+                                      alt={p.name}
+                                      width={40}
+                                      height={40}
+                                      className="object-contain max-h-10 max-w-10"
+                                    />
+                                  </div>
+                                  <div className="min-w-0 max-w-[280px]">
+                                    <p className="font-extrabold text-[#171136] text-sm leading-tight" title={p.name}>
+                                      {truncatedName}
+                                    </p>
+                                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                      {p.productType === "grouped" && (
+                                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-[#EFE9FF] text-[#7B5CFF] uppercase tracking-wide shrink-0">
+                                          Bundle · {p.groupItems?.length ?? 0} items
+                                        </span>
+                                      )}
+                                      <span className="font-mono text-[10.5px] px-1.5 py-0.5 rounded bg-[#F0EBF8] text-[#5C5478] font-bold shrink-0">
+                                        {p.sku || p.id}
                                       </span>
-                                    )}
-                                    <span className="font-mono text-[10.5px] px-1.5 py-0.5 rounded bg-[#F0EBF8] text-[#5C5478] font-bold">
-                                      {p.sku || p.id}
-                                    </span>
+                                    </div>
                                   </div>
                                 </div>
                               </td>
-                              <td className="py-3.5">
+                              <td className="py-3.5 px-3 text-left whitespace-nowrap">
                                 <span className="px-2.5 py-1 bg-[#F6F1FF] text-[#7B5CFF] text-[11px] font-bold rounded-lg capitalize">
                                   {p.category}
                                 </span>
                               </td>
-                              <td className="py-3.5">
+                              <td className="py-3.5 px-3 text-left whitespace-nowrap">
                                 <span className="text-[11.5px] text-[#8A84A6] line-through font-semibold">
                                   {reg}
                                 </span>
                               </td>
-                              <td className="py-3.5">
+                              <td className="py-3.5 px-3 text-left whitespace-nowrap">
                                 <span className="font-extrabold text-[#171136] text-sm">
                                   {disc}
                                 </span>
                               </td>
-                              <td className="py-3.5">
+                              <td className="py-3.5 px-3 text-left whitespace-nowrap">
                                 <span className="font-bold text-[#059669] text-xs bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">
                                   {tp}
                                 </span>
                               </td>
-                              <td className="py-3.5">
+                              <td className="py-3.5 px-3 text-left whitespace-nowrap">
                                 <span
                                   className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold ${
                                     (p.stock ?? 0) > 10
@@ -2715,7 +2720,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                     : `${p.stock ?? 0} in stock`}
                                 </span>
                               </td>
-                              <td className="py-3.5">
+                              <td className="py-3.5 px-3 text-center whitespace-nowrap">
                                 {discountBadge ? (
                                   <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FF4D6D] text-white shadow-xs">
                                     {discountBadge}
@@ -2724,7 +2729,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                   <span className="text-[#8A84A6]">—</span>
                                 )}
                               </td>
-                              <td className="py-3.5">
+                              <td className="py-3.5 px-3 text-center whitespace-nowrap">
                                 <button
                                   type="button"
                                   onClick={async () => {
@@ -2754,7 +2759,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                   <span>{p.is_active !== false ? "Active" : "Inactive"}</span>
                                 </button>
                               </td>
-                              <td className="py-3.5 text-right pr-2">
+                              <td className="py-3.5 pl-3 pr-4 text-right whitespace-nowrap">
                                 <div className="flex items-center justify-end gap-2">
                                   <Link
                                     href={`/product/${p.slug || p.id}`}
