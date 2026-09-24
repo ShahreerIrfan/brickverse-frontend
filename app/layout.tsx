@@ -22,8 +22,14 @@ export const metadata: Metadata = {
   description:
     "Anime figures, cartoon collectibles, brick sets and coding kits — shipped from Melbourne in 48 hours.",
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
+    icon: [
+      { url: "/logo.png" },
+      { url: "/favicon.ico" },
+    ],
+    shortcut: ["/logo.png"],
+    apple: [
+      { url: "/logo.png" },
+    ],
   },
   verification: {
     google: "ftCs_CxCBs5CFEeTXHx3d4i7hphtsuqXnWwaIlNKUZg",
