@@ -2903,71 +2903,47 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                 </label>
 
                 {/* 0b. Product Type Card */}
-                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#EAE3F7] shadow-xs space-y-4 w-full">
-                  <div>
-                    <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
-                      Product Type <span className="text-[#FF4D6D]">*</span>
-                    </h2>
-                    <p className="text-xs text-[#736E9B]">Choose how this product is sold and how its stock is tracked</p>
-                  </div>
+                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#EAE3F7] shadow-xs space-y-3 w-full">
                   {(() => {
                     const usedIn = editingProduct
                       ? products.filter(
                           (bp) => bp.productType === "grouped" && bp.groupItems?.some((g) => g.childId === editingProduct.id)
                         )
                       : [];
-                    const options = [
-                      {
-                        value: "simple" as const,
-                        title: "Simple product",
-                        text: "A single product with its own price and stock quantity.",
-                        icon: <IconBox className="w-5 h-5" />,
-                        disabled: false,
-                      },
-                      {
-                        value: "grouped" as const,
-                        title: "Grouped product (bundle)",
-                        text: "Sell existing simple products together as one package. Stock is taken from each item.",
-                        icon: <IconLayers className="w-5 h-5" />,
-                        disabled: usedIn.length > 0 && formProductType !== "grouped",
-                      },
-                    ];
+                    const isGroupedDisabled = usedIn.length > 0 && formProductType !== "grouped";
                     return (
                       <>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {options.map((opt) => {
-                            const selected = formProductType === opt.value;
-                            return (
-                              <button
-                                key={opt.value}
-                                type="button"
-                                disabled={opt.disabled}
-                                onClick={() => setFormProductType(opt.value)}
-                                className={`text-left flex items-start gap-3 rounded-2xl border-2 p-4 transition-all ${
-                                  selected ? "border-[#FF4D6D] bg-[#FFF7F9]" : "border-[#EAE3F7] hover:border-[#D9CEEE] bg-white"
-                                } ${opt.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-                              >
-                                <span
-                                  className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                                    selected ? "bg-[#FF4D6D] text-white" : "bg-[#F4F1FD] text-[#7B5CFF]"
-                                  }`}
-                                >
-                                  {opt.icon}
-                                </span>
-                                <span className="flex-1 min-w-0">
-                                  <span className="block text-sm font-extrabold text-[#171136]">{opt.title}</span>
-                                  <span className="block text-xs text-[#736E9B] mt-0.5">{opt.text}</span>
-                                </span>
-                                <span
-                                  className={`w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center ${
-                                    selected ? "border-[#FF4D6D] bg-[#FF4D6D]" : "border-[#D9CEEE]"
-                                  }`}
-                                >
-                                  {selected && <IconCheck className="w-3 h-3 text-white" />}
-                                </span>
-                              </button>
-                            );
-                          })}
+                        <div>
+                          <label
+                            htmlFor="formProductTypeSelect"
+                            className="block text-xs font-bold text-[#171136] mb-2 flex items-center gap-1.5"
+                          >
+                            <span>Product Type</span>
+                            <span className="text-[#FF4D6D]">*</span>
+                            <span
+                              className="w-4 h-4 rounded-full border border-[#D9CEEE] text-[#8A84A6] text-[10px] font-bold inline-flex items-center justify-center cursor-help"
+                              title="Choose how this product is sold (Simple or Grouped bundle)"
+                            >
+                              i
+                            </span>
+                          </label>
+                          <div className="relative">
+                            <select
+                              id="formProductTypeSelect"
+                              value={formProductType}
+                              disabled={isGroupedDisabled}
+                              onChange={(e) => setFormProductType(e.target.value as "simple" | "grouped")}
+                              className="w-full bg-[#FAFAFC] hover:bg-white focus:bg-white border-2 border-[#EAE3F7] focus:border-[#FF4D6D] text-sm font-semibold text-[#171136] rounded-2xl px-4 py-3.5 outline-none transition-all appearance-none cursor-pointer pr-11 shadow-xs"
+                            >
+                              <option value="simple">Simple</option>
+                              <option value="grouped" disabled={isGroupedDisabled}>
+                                Grouped
+                              </option>
+                            </select>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#736E9B]">
+                              <IconChevronDown className="w-4 h-4" />
+                            </div>
+                          </div>
                         </div>
                         {usedIn.length > 0 && formProductType !== "grouped" && (
                           <p className="text-[11px] font-bold text-[#E8590C]">
