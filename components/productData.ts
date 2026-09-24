@@ -57,6 +57,7 @@ export type Product = {
     comment: string;
     date: string;
   }[];
+  is_active?: boolean;
 };
 
 

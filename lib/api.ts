@@ -499,22 +499,34 @@ export async function deleteOrder(orderId: number | string) {
   }
 }
 
-export async function getAllProducts(params?: { category?: string; subcategory?: string; search?: string }) {
+export async function getAllProducts(params?: {
+  category?: string;
+  subcategory?: string;
+  search?: string;
+  all?: boolean;
+  is_active?: string | boolean;
+}) {
   try {
     let url = `${getApiBaseUrl()}/products/`;
     const queryParts = [];
     if (params?.category) queryParts.push(`category=${encodeURIComponent(params.category)}`);
     if (params?.subcategory) queryParts.push(`subcategory=${encodeURIComponent(params.subcategory)}`);
     if (params?.search) queryParts.push(`search=${encodeURIComponent(params.search)}`);
+    if (params?.all) queryParts.push(`all=1`);
+    if (params?.is_active !== undefined) queryParts.push(`is_active=${encodeURIComponent(String(params.is_active))}`);
     if (queryParts.length > 0) url += `?${queryParts.join("&")}`;
 
-    const res = await fetch(url, { next: { revalidate: 15 } });
+    const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) return [];
     return await res.json();
   } catch (error) {
     console.warn("[API] Failed to fetch all products:", error);
     return [];
   }
+}
+
+export async function toggleProductActive(id: string, is_active: boolean) {
+  return updateProduct(id, { is_active });
 }
 
 export type ShopProductQuery = {

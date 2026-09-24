@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import {
   getAdminStats,
   getAllProducts,
+  toggleProductActive,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -338,6 +339,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   // Filter & Search states
   const [searchGlobal, setSearchGlobal] = useState("");
   const [productCategoryFilter, setProductCategoryFilter] = useState("all");
+  const [productStatusFilter, setProductStatusFilter] = useState("all");
   const [orderStatusFilter, setOrderStatusFilter] = useState("all");
   const [userRoleFilter, setUserRoleFilter] = useState("all");
 
@@ -380,6 +382,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [formStock, setFormStock] = useState<number | "">("");
   const [formProductType, setFormProductType] = useState<"simple" | "grouped">("simple");
   const [formGroupItems, setFormGroupItems] = useState<BundleLine[]>([]);
+  const [formIsActive, setFormIsActive] = useState<boolean>(true);
 
   const generateSlug = (text: string) => {
     return text
@@ -488,7 +491,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     try {
       const [stats, prods, cats, tree, ords, usrs, strs] = await Promise.all([
         getAdminStats(),
-        getAllProducts(),
+        getAllProducts({ all: true }),
         getCategories(),
         getCategoryTree(),
         getAllOrders(),
@@ -657,9 +660,13 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
         p.sku?.toLowerCase().includes(searchGlobal.toLowerCase()) ||
         p.category.toLowerCase().includes(searchGlobal.toLowerCase()) ||
         p.id.toLowerCase().includes(searchGlobal.toLowerCase());
-      return matchCat && matchSearch;
+      const matchStatus =
+        productStatusFilter === "all" ||
+        (productStatusFilter === "active" && p.is_active !== false) ||
+        (productStatusFilter === "inactive" && p.is_active === false);
+      return matchCat && matchSearch && matchStatus;
     });
-  }, [products, productCategoryFilter, searchGlobal]);
+  }, [products, productCategoryFilter, productStatusFilter, searchGlobal]);
 
   // Product Pagination calculations (20 per page)
   const totalProductPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
@@ -672,7 +679,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   // Reset page to 1 when filters or search change
   useEffect(() => {
     setProductPage(1);
-  }, [productCategoryFilter, searchGlobal]);
+  }, [productCategoryFilter, productStatusFilter, searchGlobal]);
 
   // Product Selection & Bulk Action Helpers (Scoped to current page of 20 items)
   const isAllPageSelected =
@@ -1064,6 +1071,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     setFormStock("");
     setFormProductType("simple");
     setFormGroupItems([]);
+    setFormIsActive(true);
     setPrimaryFile(null);
     setPrimaryPreviewUrl(null);
     setGalleryFiles([]);
@@ -1085,6 +1093,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     setFormStock(prod.stock ?? 0);
     setFormProductType(prod.productType === "grouped" ? "grouped" : "simple");
     setFormGroupItems((prod.groupItems || []).map((g) => ({ childId: g.childId, quantity: g.quantity })));
+    setFormIsActive(prod.is_active !== false);
     setPrimaryFile(null);
     setPrimaryPreviewUrl(prod.image || null);
     setGalleryFiles([]);
@@ -1184,6 +1193,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     data.append("price", discountedPrice);
     data.append("originalPrice", regularPrice);
     data.append("productType", formProductType);
+    data.append("is_active", String(formIsActive));
     if (formProductType === "grouped") {
       // A bundle has no stock of its own - availability comes from its items.
       data.append("stock", "0");
@@ -2457,6 +2467,17 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                       </option>
                     ))}
                   </select>
+
+                  <span className="text-xs font-bold text-[#736E9B] ml-2">Status:</span>
+                  <select
+                    value={productStatusFilter}
+                    onChange={(e) => setProductStatusFilter(e.target.value)}
+                    className="bg-[#F8F6FD] border border-[#EAE3F7] text-xs font-semibold rounded-xl px-3 py-1.5 text-[#171136] focus:outline-none focus:border-[#FF4D6D]"
+                  >
+                    <option value="all">All Statuses ({products.length})</option>
+                    <option value="active">Active ({products.filter((p) => p.is_active !== false).length})</option>
+                    <option value="inactive">Inactive / Hidden ({products.filter((p) => p.is_active === false).length})</option>
+                  </select>
                 </div>
 
                 <div className="flex items-center gap-3 text-xs text-[#736E9B] font-semibold">
@@ -2491,13 +2512,14 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                         <th className="pb-3 font-semibold">Trade Price (TP)</th>
                         <th className="pb-3 font-semibold">Stock</th>
                         <th className="pb-3 font-semibold">Discount</th>
+                        <th className="pb-3 font-semibold">Status</th>
                         <th className="pb-3 font-semibold text-right pr-2">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#F0EBF8]">
                       {paginatedProducts.length === 0 ? (
                         <tr>
-                          <td colSpan={9} className="py-12 text-center text-[#736E9B]">
+                          <td colSpan={10} className="py-12 text-center text-[#736E9B]">
                             <div className="flex flex-col items-center justify-center gap-2">
                               <IconBox className="w-8 h-8 text-[#8A84A6]" />
                               <p className="font-bold text-sm text-[#171136]">No products found</p>
@@ -2593,6 +2615,36 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                 ) : (
                                   <span className="text-[#8A84A6]">—</span>
                                 )}
+                              </td>
+                              <td className="py-3.5">
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    const newActive = !(p.is_active !== false);
+                                    const res = await toggleProductActive(p.id, newActive);
+                                    if (res.success) {
+                                      showToast(`✓ "${p.name}" is now ${newActive ? "ACTIVE" : "INACTIVE"}`);
+                                      setProducts((prev) =>
+                                        prev.map((item) => (item.id === p.id ? { ...item, is_active: newActive } : item))
+                                      );
+                                    } else {
+                                      alert("Failed to update product status: " + (res.error || "Unknown error"));
+                                    }
+                                  }}
+                                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold cursor-pointer transition-all hover:scale-105 active:scale-95 ${
+                                    p.is_active !== false
+                                      ? "bg-[#E9FBF3] text-[#0FA968] hover:bg-[#d5f7e7]"
+                                      : "bg-[#FFF0F4] text-[#FF4D6D] hover:bg-[#ffe0e8]"
+                                  }`}
+                                  title={p.is_active !== false ? "Click to deactivate product" : "Click to activate product"}
+                                >
+                                  <span
+                                    className={`w-1.5 h-1.5 rounded-full ${
+                                      p.is_active !== false ? "bg-[#0FA968]" : "bg-[#FF4D6D]"
+                                    }`}
+                                  />
+                                  <span>{p.is_active !== false ? "Active" : "Inactive"}</span>
+                                </button>
                               </td>
                               <td className="py-3.5 text-right pr-2">
                                 <div className="flex items-center justify-end gap-2">
@@ -2723,7 +2775,98 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
               </div>
 
               <form onSubmit={handleSaveProduct} className="space-y-6 w-full">
-                {/* 0. Product Type Card */}
+                {/* 0a. Product Status & Visibility Card */}
+                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#EAE3F7] shadow-xs space-y-4 w-full">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div>
+                      <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136] flex items-center gap-2">
+                        <span>Product Status & Visibility</span>
+                        <span
+                          className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full ${
+                            formIsActive ? "bg-[#E9FBF3] text-[#0FA968]" : "bg-[#FFF0F4] text-[#FF4D6D]"
+                          }`}
+                        >
+                          {formIsActive ? "● ACTIVE & PUBLISHED" : "○ INACTIVE (DEACTIVATED)"}
+                        </span>
+                      </h2>
+                      <p className="text-xs text-[#736E9B]">
+                        Choose whether this product is live on the website or deactivated as a hidden draft
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    {/* Active Option */}
+                    <button
+                      type="button"
+                      onClick={() => setFormIsActive(true)}
+                      className={`text-left flex items-start gap-3 rounded-2xl border-2 p-4 transition-all cursor-pointer ${
+                        formIsActive
+                          ? "border-[#0FA968] bg-[#F0FDF7]"
+                          : "border-[#EAE3F7] hover:border-[#D9CEEE] bg-white"
+                      }`}
+                    >
+                      <span
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                          formIsActive ? "bg-[#0FA968] text-white" : "bg-[#F4F1FD] text-[#7B5CFF]"
+                        }`}
+                      >
+                        <IconCheck className="w-5 h-5" />
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-sm font-extrabold text-[#171136]">
+                          Active (Visible on Website)
+                        </span>
+                        <span className="block text-xs text-[#736E9B] mt-0.5">
+                          Product is visible on the shop page, category listings, search results, and can be ordered by customers.
+                        </span>
+                      </span>
+                      <span
+                        className={`w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center ${
+                          formIsActive ? "border-[#0FA968] bg-[#0FA968]" : "border-[#D9CEEE]"
+                        }`}
+                      >
+                        {formIsActive && <IconCheck className="w-3 h-3 text-white" />}
+                      </span>
+                    </button>
+
+                    {/* Inactive Option */}
+                    <button
+                      type="button"
+                      onClick={() => setFormIsActive(false)}
+                      className={`text-left flex items-start gap-3 rounded-2xl border-2 p-4 transition-all cursor-pointer ${
+                        !formIsActive
+                          ? "border-[#FF4D6D] bg-[#FFF7F9]"
+                          : "border-[#EAE3F7] hover:border-[#D9CEEE] bg-white"
+                      }`}
+                    >
+                      <span
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                          !formIsActive ? "bg-[#FF4D6D] text-white" : "bg-[#F4F1FD] text-[#8A84A6]"
+                        }`}
+                      >
+                        <IconClose className="w-5 h-5" />
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-sm font-extrabold text-[#171136]">
+                          Deactivated (Hidden / Draft)
+                        </span>
+                        <span className="block text-xs text-[#736E9B] mt-0.5">
+                          Product is hidden from the website, shop catalog, search, and direct links. Visitors cannot see or buy it.
+                        </span>
+                      </span>
+                      <span
+                        className={`w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center ${
+                          !formIsActive ? "border-[#FF4D6D] bg-[#FF4D6D]" : "border-[#D9CEEE]"
+                        }`}
+                      >
+                        {!formIsActive && <IconCheck className="w-3 h-3 text-white" />}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 0b. Product Type Card */}
                 <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#EAE3F7] shadow-xs space-y-4 w-full">
                   <div>
                     <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
