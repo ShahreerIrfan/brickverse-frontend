@@ -1643,16 +1643,11 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                   {!sidebarCollapsed && <span>Orders</span>}
                 </div>
                 {!sidebarCollapsed && (
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-full bg-[#FF4D6D] text-white text-[10.5px] font-extrabold">
-                      {orders.length || 12}
-                    </span>
-                    <IconChevronDown
-                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                        ordersMenuOpen ? "rotate-0 text-white" : "-rotate-90 text-[#A79FD1]"
-                      }`}
-                    />
-                  </div>
+                  <IconChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      ordersMenuOpen ? "rotate-0 text-white" : "-rotate-90 text-[#A79FD1]"
+                    }`}
+                  />
                 )}
               </button>
 
@@ -1730,12 +1725,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                   {!sidebarCollapsed && <span>Partner Stores</span>}
                 </div>
                 {!sidebarCollapsed && (
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-full bg-[#FF4D6D] text-white text-[10.5px] font-extrabold">
-                      {overdueStoreCount}
-                    </span>
-                    <IconChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${storesMenuOpen ? "rotate-0 text-white" : "-rotate-90 text-[#A79FD1]"}`} />
-                  </div>
+                  <IconChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${storesMenuOpen ? "rotate-0 text-white" : "-rotate-90 text-[#A79FD1]"}`} />
                 )}
               </button>
 
