@@ -735,6 +735,51 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     });
   }, [products, productCategoryFilter, productStatusFilter, searchGlobal]);
 
+  // Warehouse & Catalog Stock Summary Calculation (Trade Price valuation, total units, retail value)
+  const inventoryStockMetrics = useMemo(() => {
+    let totalStockUnits = 0;
+    let totalWarehouseTradeValue = 0;
+    let totalWarehouseRetailValue = 0;
+    let outOfStockCount = 0;
+    let lowStockCount = 0;
+    let activeCount = 0;
+    let inactiveCount = 0;
+
+    for (const p of products) {
+      const stock = typeof p.stock === "number" ? p.stock : (parsePrice(String(p.stock)) || 0);
+      const tp = parsePrice(p.tradePrice || (p as any).trade_price);
+      const retail = parsePrice(p.discountedPrice || p.price || p.regularPrice);
+
+      totalStockUnits += stock;
+      totalWarehouseTradeValue += tp * stock;
+      totalWarehouseRetailValue += retail * stock;
+
+      if (p.is_active !== false) {
+        activeCount++;
+      } else {
+        inactiveCount++;
+      }
+
+      if (stock <= 0) {
+        outOfStockCount++;
+      } else if (stock <= 5) {
+        lowStockCount++;
+      }
+    }
+
+    return {
+      totalStockUnits,
+      totalWarehouseTradeValue,
+      totalWarehouseRetailValue,
+      outOfStockCount,
+      lowStockCount,
+      inStockCount: products.length - outOfStockCount,
+      activeCount,
+      inactiveCount,
+      estimatedProfitMargin: Math.max(0, totalWarehouseRetailValue - totalWarehouseTradeValue),
+    };
+  }, [products]);
+
   // Product Pagination calculations (20 per page)
   const totalProductPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE));
   const currentProductPage = Math.min(Math.max(1, productPage), totalProductPages);
@@ -2518,6 +2563,115 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                 </div>
               </div>
 
+              {/* Warehouse Inventory Stock Summary Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                {/* 1. Total Warehouse Stock Value (TP) */}
+                <div className="bg-white rounded-[22px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.04)] flex flex-col justify-between">
+                  <div className="flex items-start justify-between">
+                    <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#059669] to-[#10B981] flex items-center justify-center text-white shadow-md shadow-[#059669]/20">
+                      <IconWallet className="w-5 h-5" />
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-[#059669] text-[10.5px] font-extrabold border border-emerald-200/60">
+                      Trade Price (TP)
+                    </span>
+                  </div>
+                  <div className="mt-4">
+                    <p className="text-[11.5px] font-semibold text-[#736E9B]">
+                      Warehouse Stock Value (TP)
+                    </p>
+                    <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block mt-0.5">
+                      ৳{inventoryStockMetrics.totalWarehouseTradeValue.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                    </span>
+                    <p className="text-[10.5px] text-[#736E9B] mt-1.5 flex items-center gap-1">
+                      <span>Total cost for <strong>{inventoryStockMetrics.totalStockUnits.toLocaleString()}</strong> units in warehouse</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* 2. Total Warehouse Units */}
+                <div className="bg-white rounded-[22px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.04)] flex flex-col justify-between">
+                  <div className="flex items-start justify-between">
+                    <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#6B3BF7] to-[#B14BE8] flex items-center justify-center text-white shadow-md shadow-[#6B3BF7]/20">
+                      <IconBox className="w-5 h-5" />
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full bg-[#F4F1FD] text-[#7B5CFF] text-[10.5px] font-extrabold border border-[#EAE3F7]">
+                      {products.length} Products
+                    </span>
+                  </div>
+                  <div className="mt-4">
+                    <p className="text-[11.5px] font-semibold text-[#736E9B]">
+                      Total Inventory Units
+                    </p>
+                    <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block mt-0.5">
+                      {inventoryStockMetrics.totalStockUnits.toLocaleString("en-US")} <span className="text-sm font-bold text-[#736E9B]">units</span>
+                    </span>
+                    <p className="text-[10.5px] text-[#736E9B] mt-1.5 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#0FA968]" />
+                      <span>{inventoryStockMetrics.activeCount} active catalog listings</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* 3. Total Selling / Retail Value */}
+                <div className="bg-white rounded-[22px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.04)] flex flex-col justify-between">
+                  <div className="flex items-start justify-between">
+                    <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#FF4D6D] to-[#FF758F] flex items-center justify-center text-white shadow-md shadow-[#FF4D6D]/20">
+                      <IconDollar className="w-5 h-5" />
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full bg-[#FFEAF0] text-[#FF4D6D] text-[10.5px] font-extrabold border border-[#FFD5DF]">
+                      Retail
+                    </span>
+                  </div>
+                  <div className="mt-4">
+                    <p className="text-[11.5px] font-semibold text-[#736E9B]">
+                      Est. Retail Stock Value
+                    </p>
+                    <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block mt-0.5">
+                      ৳{inventoryStockMetrics.totalWarehouseRetailValue.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                    </span>
+                    <p className="text-[10.5px] text-[#059669] font-bold mt-1.5 flex items-center gap-1">
+                      <span>+৳{inventoryStockMetrics.estimatedProfitMargin.toLocaleString("en-US", { maximumFractionDigits: 0 })} gross margin</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* 4. Stock Availability Health */}
+                <div className="bg-white rounded-[22px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.04)] flex flex-col justify-between">
+                  <div className="flex items-start justify-between">
+                    <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#FF9F43] to-[#FFC93C] flex items-center justify-center text-white shadow-md shadow-[#FF9F43]/20">
+                      <IconTarget className="w-5 h-5" />
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10.5px] font-extrabold border border-amber-200">
+                      Stock Health
+                    </span>
+                  </div>
+                  <div className="mt-4">
+                    <p className="text-[11.5px] font-semibold text-[#736E9B]">
+                      Inventory Status
+                    </p>
+                    <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block mt-0.5">
+                      {inventoryStockMetrics.inStockCount} <span className="text-sm font-bold text-[#736E9B]">In Stock</span>
+                    </span>
+                    <p className="text-[10.5px] text-[#736E9B] mt-1.5 flex items-center gap-1.5">
+                      {inventoryStockMetrics.outOfStockCount > 0 ? (
+                        <span className="text-[#FF4D6D] font-bold">
+                          ● {inventoryStockMetrics.outOfStockCount} out of stock
+                        </span>
+                      ) : (
+                        <span className="text-[#059669] font-bold">
+                          ✓ All items have stock
+                        </span>
+                      )}
+                      {inventoryStockMetrics.lowStockCount > 0 && (
+                        <span className="text-amber-600 font-semibold">
+                          · {inventoryStockMetrics.lowStockCount} low
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Bulk Action Toolbar */}
               {selectedProductIds.length > 0 && (
                 <div className="bg-white border-2 border-[#7B5CFF]/30 p-3.5 sm:p-4 rounded-2xl shadow-lg flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
@@ -2609,6 +2763,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                         <th className="py-3.5 px-3 font-semibold text-left whitespace-nowrap">Discounted Price</th>
                         <th className="py-3.5 px-3 font-semibold text-left whitespace-nowrap">Trade Price (TP)</th>
                         <th className="py-3.5 px-3 font-semibold text-left whitespace-nowrap">Stock</th>
+                        <th className="py-3.5 px-3 font-semibold text-left whitespace-nowrap">Stock Value (TP)</th>
                         <th className="py-3.5 px-3 font-semibold text-center whitespace-nowrap">Discount</th>
                         <th className="py-3.5 px-3 font-semibold text-center whitespace-nowrap">Status</th>
                         <th className="py-3.5 pl-3 pr-4 font-semibold text-right whitespace-nowrap">Actions</th>
@@ -2617,7 +2772,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                     <tbody className="divide-y divide-[#F0EBF8]">
                       {paginatedProducts.length === 0 ? (
                         <tr>
-                          <td colSpan={10} className="py-12 text-center text-[#736E9B]">
+                          <td colSpan={11} className="py-12 text-center text-[#736E9B]">
                             <div className="flex flex-col items-center justify-center gap-2">
                               <IconBox className="w-8 h-8 text-[#8A84A6]" />
                               <p className="font-bold text-sm text-[#171136]">No products found</p>
@@ -2633,6 +2788,9 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                           const tp = p.tradePrice || "—";
                           const discountBadge = p.discountPercent ? `-${p.discountPercent}%` : null;
                           const truncatedName = p.name ? (p.name.length > 40 ? `${p.name.slice(0, 40)}...` : p.name) : "Unnamed Product";
+                          const itemStock = typeof p.stock === "number" ? p.stock : (parsePrice(String(p.stock)) || 0);
+                          const itemTp = parsePrice(p.tradePrice || (p as any).trade_price);
+                          const itemStockValue = itemTp * itemStock;
 
                           return (
                             <tr
@@ -2709,6 +2867,16 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                     ? `${p.stock ?? 0} bundles available`
                                     : `${p.stock ?? 0} in stock`}
                                 </span>
+                              </td>
+                              <td className="py-3.5 px-3 text-left whitespace-nowrap">
+                                <div className="flex flex-col">
+                                  <span className="font-extrabold text-[#059669] text-xs bg-emerald-50 border border-emerald-200/70 px-2 py-0.5 rounded-lg w-fit">
+                                    ৳{itemStockValue.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                  </span>
+                                  <span className="text-[10px] text-[#736E9B] mt-0.5 font-medium">
+                                    {itemStock} × {itemTp > 0 ? `৳${itemTp.toLocaleString()}` : "৳0"}
+                                  </span>
+                                </div>
                               </td>
                               <td className="py-3.5 px-3 text-center whitespace-nowrap">
                                 {discountBadge ? (
