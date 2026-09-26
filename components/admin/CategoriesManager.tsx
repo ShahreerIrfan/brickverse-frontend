@@ -340,6 +340,7 @@ export default function CategoriesManager({ onChanged }: CategoriesManagerProps)
             <thead>
               <tr className="border-b border-[#EAE3F7] text-[#8A84A6] text-[10.5px] uppercase tracking-wide">
                 <th className="text-left font-bold px-5 py-3">Category</th>
+                <th className="text-left font-bold px-3 py-3">Category ID</th>
                 <th className="text-left font-bold px-3 py-3 hidden md:table-cell">Parent</th>
                 <th className="text-left font-bold px-3 py-3 hidden lg:table-cell">Children</th>
                 <th className="text-left font-bold px-3 py-3 hidden lg:table-cell">Order</th>
@@ -350,13 +351,13 @@ export default function CategoriesManager({ onChanged }: CategoriesManagerProps)
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-10 text-center text-[#8A84A6]">
+                  <td colSpan={7} className="px-5 py-10 text-center text-[#8A84A6]">
                     Loading categories...
                   </td>
                 </tr>
               ) : visibleRows.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-10 text-center text-[#8A84A6]">
+                  <td colSpan={7} className="px-5 py-10 text-center text-[#8A84A6]">
                     {search ? "No categories match your search." : "No categories yet. Add your first one above."}
                   </td>
                 </tr>
@@ -385,6 +386,11 @@ export default function CategoriesManager({ onChanged }: CategoriesManagerProps)
                           <p className="text-[10.5px] text-[#8A84A6] font-mono truncate">{cat.slug || cat.id}</p>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#F0EBF8] text-[#5C5478] font-mono text-[11px] font-bold border border-[#EAE3F7]">
+                        {cat.id}
+                      </span>
                     </td>
                     <td className="px-3 py-3 hidden md:table-cell text-[#736E9B]">
                       {cat.parentLabel || <span className="text-[#C7C0E8]">Top Level</span>}
