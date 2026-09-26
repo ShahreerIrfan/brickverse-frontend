@@ -211,6 +211,16 @@ export default function CategoriesManager({ onChanged }: CategoriesManagerProps)
 
   const tree = useMemo(() => buildOrderedTree(categories), [categories]);
 
+  // Map each category to a consistent integer ID
+  const categoryIntIdMap = useMemo(() => {
+    const map = new Map<string, number>();
+    categories.forEach((cat, index) => {
+      const parsed = parseInt(cat.id, 10);
+      map.set(cat.id, !isNaN(parsed) && String(parsed) === cat.id ? parsed : index + 1);
+    });
+    return map;
+  }, [categories]);
+
   const visibleRows = useMemo(() => {
     if (!search.trim()) return tree;
     const q = search.trim().toLowerCase();
@@ -362,7 +372,7 @@ export default function CategoriesManager({ onChanged }: CategoriesManagerProps)
                   </td>
                 </tr>
               ) : (
-                visibleRows.map((cat) => (
+                visibleRows.map((cat, idx) => (
                   <tr key={cat.id} className="border-b border-[#F5F1FB] last:border-b-0 hover:bg-[#FAF8FE] transition-colors">
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2.5">
@@ -388,8 +398,8 @@ export default function CategoriesManager({ onChanged }: CategoriesManagerProps)
                       </div>
                     </td>
                     <td className="px-3 py-3 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#F0EBF8] text-[#5C5478] font-mono text-[11px] font-bold border border-[#EAE3F7]">
-                        {cat.id}
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#F0EBF8] text-[#7B5CFF] font-mono text-[11px] font-extrabold border border-[#EAE3F7]">
+                        {categoryIntIdMap.get(cat.id) ?? (idx + 1)}
                       </span>
                     </td>
                     <td className="px-3 py-3 hidden md:table-cell text-[#736E9B]">
