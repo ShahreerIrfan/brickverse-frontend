@@ -129,22 +129,24 @@ export default function AuthModal() {
     }
   };
 
+  // Step 2: Handle OTP clipboard paste
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+    const newOtp = ["", "", "", "", "", ""];
+    for (let i = 0; i < pasted.length; i++) {
+      newOtp[i] = pasted[i];
+    }
+    setOtpCode(newOtp);
+    const nextIndex = Math.min(pasted.length - 1, 5);
+    setTimeout(() => {
+      document.getElementById(`modal-otp-box-${nextIndex}`)?.focus();
+    }, 10);
+  };
+
   // Step 2: Handle OTP input
   const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) {
-      const pasted = value.replace(/\D/g, "").slice(0, 6);
-      if (pasted.length > 0) {
-        const newOtp = [...otpCode];
-        for (let i = 0; i < 6; i++) {
-          newOtp[i] = pasted[i] || "";
-        }
-        setOtpCode(newOtp);
-        const nextIndex = Math.min(pasted.length, 5);
-        document.getElementById(`modal-otp-box-${nextIndex}`)?.focus();
-        return;
-      }
-    }
-
     const digit = value.replace(/\D/g, "").slice(-1);
     const newOtp = [...otpCode];
     newOtp[index] = digit;
@@ -156,10 +158,20 @@ export default function AuthModal() {
   };
 
   const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !otpCode[index] && index > 0) {
-      document.getElementById(`modal-otp-box-${index - 1}`)?.focus();
+    if (e.key === "Backspace") {
+      if (!otpCode[index] && index > 0) {
+        const newOtp = [...otpCode];
+        newOtp[index - 1] = "";
+        setOtpCode(newOtp);
+        document.getElementById(`modal-otp-box-${index - 1}`)?.focus();
+      } else {
+        const newOtp = [...otpCode];
+        newOtp[index] = "";
+        setOtpCode(newOtp);
+      }
     }
   };
+
 
   // Step 2: Verify OTP
   const handleVerifyOtp = async (e: React.FormEvent) => {
@@ -480,10 +492,12 @@ export default function AuthModal() {
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                  onPaste={handleOtpPaste}
                   className="w-11 h-12 sm:w-12 sm:h-13 text-center text-xl font-bold bg-[#F8F6FD] border border-[#EAE3F7] rounded-xl focus:border-[#FF4D6D] focus:bg-white focus:ring-2 focus:ring-[#FF4D6D]/20 outline-none transition-all text-[#171136]"
                 />
               ))}
             </div>
+
 
             {/* Resend Timer / Action */}
             <div className="flex items-center justify-between text-xs px-1">
