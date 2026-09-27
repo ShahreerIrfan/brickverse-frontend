@@ -27,8 +27,10 @@ function SlideContent({ slide }: { slide: HeroSlide }) {
           alt=""
           fill
           priority
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 800px"
           className="object-cover pointer-events-none"
         />
+
       ) : (
         <>
           {/* Background ambient shapes (default look, no slide image set) */}
