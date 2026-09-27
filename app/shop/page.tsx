@@ -7,12 +7,14 @@ import BottomNav from "@/components/BottomNav";
 import { getCategories, getServerApiBaseUrl } from "@/lib/api";
 import type { Product } from "@/components/productData";
 
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function ShopPage() {
+  const randomSeed = Math.random().toString(36).substring(2, 10);
   const apiBase = await getServerApiBaseUrl();
   const [firstPage, categories] = await Promise.all([
-    fetch(`${apiBase}/products/?page=1&page_size=20`, { next: { revalidate: 30 } })
+    fetch(`${apiBase}/products/?page=1&page_size=20&sort=random&seed=${randomSeed}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null),
     getCategories(apiBase),
@@ -30,6 +32,7 @@ export default async function ShopPage() {
           initialCount={typeof firstPage?.count === "number" ? firstPage.count : products.length}
           initialHasMore={Boolean(firstPage?.hasMore)}
           initialCategories={categories}
+          initialSeed={randomSeed}
         />
       </main>
 
@@ -42,3 +45,4 @@ export default async function ShopPage() {
     </div>
   );
 }
+

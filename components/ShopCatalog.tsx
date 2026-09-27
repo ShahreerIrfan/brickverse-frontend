@@ -29,13 +29,16 @@ type ShopCatalogProps = {
   initialCount: number;
   initialHasMore: boolean;
   initialCategories: Category[];
+  initialSeed?: string;
 };
 
-function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, initialCategories }: ShopCatalogProps) {
+function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, initialCategories, initialSeed }: ShopCatalogProps) {
   const searchParams = useSearchParams();
   const { addToCart } = useCart();
   const router = useRouter();
   const { openLoginModal } = useAuth();
+
+  const [seed] = useState<string>(() => initialSeed || Math.random().toString(36).substring(2, 10));
 
   // URL Query parameter states
   const paramCategory = searchParams.get("category") || "all";
@@ -52,9 +55,10 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
   const [appliedMaxPrice, setAppliedMaxPrice] = useState<number | null>(null);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [onSaleOnly, setOnSaleOnly] = useState<boolean>(false);
-  const [sortBy, setSortBy] = useState<string>("newest");
+  const [sortBy, setSortBy] = useState<string>("random");
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [mobileFilterOpen, setMobileFilterOpen] = useState<boolean>(false);
+
 
   // Quick view modal state
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
@@ -108,11 +112,9 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
     setSearchQuery("");
     setMinPriceInput("");
     setMaxPriceInput("");
-    setAppliedMinPrice(null);
-    setAppliedMaxPrice(null);
     setSelectedRating(null);
     setOnSaleOnly(false);
-    setSortBy("newest");
+    setSortBy("random");
     setMobileFilterOpen(false);
   };
 
@@ -165,8 +167,8 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
   const pageRef = useRef(1);
   const requestRef = useRef(0);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  // Query the server-rendered first page corresponds to (the unfiltered shop).
-  const loadedKey = useRef(JSON.stringify(["all", "all", "", null, null, null, false, "newest"]));
+  // Query the server-rendered first page corresponds to (the unfiltered shop with initial random seed).
+  const loadedKey = useRef(JSON.stringify(["all", "all", "", null, null, null, false, "random"]));
 
   const queryKey = JSON.stringify([
     selectedCategory,
@@ -189,9 +191,11 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
       minRating: selectedRating,
       onSale: onSaleOnly,
       sort: sortBy,
+      seed: sortBy === "random" ? seed : undefined,
     }),
-    [selectedCategory, selectedSubcategory, searchQuery, appliedMinPrice, appliedMaxPrice, selectedRating, onSaleOnly, sortBy]
+    [selectedCategory, selectedSubcategory, searchQuery, appliedMinPrice, appliedMaxPrice, selectedRating, onSaleOnly, sortBy, seed]
   );
+
 
   // Filters changed: start again from page 1.
   useEffect(() => {
@@ -353,6 +357,7 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
               onChange={(e) => setSortBy(e.target.value)}
               className="bg-white border border-[#EAE3F7] text-[#171136] font-semibold text-xs sm:text-sm rounded-xl px-2.5 sm:px-3.5 py-2 sm:py-2.5 outline-none focus:border-[#FF4D6D] shadow-xs cursor-pointer"
             >
+              <option value="random">Random / Featured</option>
               <option value="newest">Newest Arrivals</option>
               <option value="price_asc">Price: Low to High</option>
               <option value="price_desc">Price: High to Low</option>
@@ -360,6 +365,7 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
               <option value="discount">Biggest Discount</option>
               <option value="name_asc">Name: A to Z</option>
             </select>
+
           </div>
         </div>
       </div>

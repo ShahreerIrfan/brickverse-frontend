@@ -625,6 +625,7 @@ export type ShopProductQuery = {
   minRating?: number | null;
   onSale?: boolean;
   sort?: string;
+  seed?: string;
 };
 
 export type ShopProductPage = { results: Product[]; count: number; hasMore: boolean };
@@ -645,7 +646,8 @@ export async function getProductsPage(
   if (query.maxPrice != null) qs.set("max_price", String(query.maxPrice));
   if (query.minRating != null) qs.set("min_rating", String(query.minRating));
   if (query.onSale) qs.set("on_sale", "1");
-  if (query.sort && query.sort !== "newest") qs.set("sort", query.sort);
+  if (query.sort) qs.set("sort", query.sort);
+  if (query.seed) qs.set("seed", query.seed);
 
   const res = await fetch(`${getApiBaseUrl()}/products/?${qs.toString()}`, { cache: "no-store", signal });
   if (!res.ok) throw new Error(`Products request failed (${res.status})`);
@@ -656,6 +658,7 @@ export async function getProductsPage(
     hasMore: Boolean(data.hasMore),
   };
 }
+
 
 // DRF returns validation failures as {field: ["message"]}; flatten that so the
 // admin sees why a save failed instead of a generic "check fields".
