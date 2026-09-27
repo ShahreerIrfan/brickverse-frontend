@@ -21,23 +21,42 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const redirectParam = searchParams.get("redirect") || "/dashboard";
 
-  const { user, isAuthenticated, isLoading, login, signup } = useAuth();
+  const { user, isAuthenticated, isLoading, login, sendOtp, verifyAndSignup, resendOtp } = useAuth();
 
   const [mode, setMode] = useState<"login" | "signup">("login");
+  const [signupStep, setSignupStep] = useState<"details" | "otp">("details");
 
-  // Form state
+  // Form state - Login
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
 
+  // Form state - Signup
   const [signupFirstName, setSignupFirstName] = useState("");
   const [signupLastName, setSignupLastName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
+  const [otpCode, setOtpCode] = useState(["", "", "", "", "", ""]);
 
+  // UI state
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [resendTimer, setResendTimer] = useState(0);
+
+  // OTP Countdown timer
+  useEffect(() => {
+    let interval: any = null;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [resendTimer]);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -54,6 +73,7 @@ function LoginForm() {
     }
     setSubmitting(true);
     setErrorMsg("");
+    setSuccessMsg("");
 
     const res = await login(loginEmail, loginPassword);
     setSubmitting(false);
@@ -65,7 +85,8 @@ function LoginForm() {
     }
   };
 
-  const handleSignupSubmit = async (e: React.FormEvent) => {
+  // Step 1: Send OTP to email
+  const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!signupFirstName.trim() || !signupLastName.trim()) {
       setErrorMsg("First name and last name are required.");
@@ -82,9 +103,70 @@ function LoginForm() {
 
     setSubmitting(true);
     setErrorMsg("");
+    setSuccessMsg("");
 
-    const res = await signup({
+    const res = await sendOtp(signupEmail);
+    setSubmitting(false);
+
+    if (res.success) {
+      setSignupStep("otp");
+      setSuccessMsg(res.message || `Verification code sent to ${signupEmail}`);
+      setResendTimer(60);
+    } else {
+      setErrorMsg(res.error || res.message || "Failed to send verification code. Please check your email.");
+    }
+  };
+
+  // Step 2: Handle OTP input change
+  const handleOtpChange = (index: number, value: string) => {
+    // Handle paste of full 6 digits
+    if (value.length > 1) {
+      const pasted = value.replace(/\D/g, "").slice(0, 6);
+      if (pasted.length > 0) {
+        const newOtp = [...otpCode];
+        for (let i = 0; i < 6; i++) {
+          newOtp[i] = pasted[i] || "";
+        }
+        setOtpCode(newOtp);
+        const nextIndex = Math.min(pasted.length, 5);
+        document.getElementById(`login-otp-box-${nextIndex}`)?.focus();
+        return;
+      }
+    }
+
+    const digit = value.replace(/\D/g, "").slice(-1);
+    const newOtp = [...otpCode];
+    newOtp[index] = digit;
+    setOtpCode(newOtp);
+
+    // Auto focus next input
+    if (digit && index < 5) {
+      document.getElementById(`login-otp-box-${index + 1}`)?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otpCode[index] && index > 0) {
+      document.getElementById(`login-otp-box-${index - 1}`)?.focus();
+    }
+  };
+
+  // Step 2: Verify OTP and complete registration
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const fullCode = otpCode.join("").trim();
+    if (fullCode.length !== 6) {
+      setErrorMsg("Please enter the complete 6-digit verification code.");
+      return;
+    }
+
+    setSubmitting(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    const res = await verifyAndSignup({
       email: signupEmail,
+      otp: fullCode,
       password: signupPassword,
       first_name: signupFirstName,
       last_name: signupLastName,
@@ -94,7 +176,27 @@ function LoginForm() {
     if (res.success) {
       router.push(redirectParam);
     } else {
-      setErrorMsg(res.message || "Registration failed. Please try again.");
+      setErrorMsg(res.error || res.message || "Invalid verification code. Please try again.");
+    }
+  };
+
+  // Resend OTP
+  const handleResendCode = async () => {
+    if (resendTimer > 0 || submitting) return;
+    setSubmitting(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    const res = await resendOtp(signupEmail);
+    setSubmitting(false);
+
+    if (res.success) {
+      setSuccessMsg(res.message || "A new verification code has been sent!");
+      setResendTimer(60);
+      setOtpCode(["", "", "", "", "", ""]);
+      document.getElementById("login-otp-box-0")?.focus();
+    } else {
+      setErrorMsg(res.error || res.message || "Failed to resend code.");
     }
   };
 
@@ -118,9 +220,9 @@ function LoginForm() {
         </Link>
       </header>
 
-      {/* Main Form Center Box - Styled in Brickverse palette */}
+      {/* Main Form Center Box - Styled in Kawaii Subete palette */}
       <main className="flex-1 flex items-center justify-center py-6">
-        <div className="relative w-full max-w-[400px] bg-white rounded-[28px] shadow-2xl p-6 sm:p-7 border border-[#EAE3F7]">
+        <div className="relative w-full max-w-[420px] bg-white rounded-[28px] shadow-2xl p-6 sm:p-7 border border-[#EAE3F7]">
           {/* Brand Logo Header */}
           <div className="flex flex-col items-center justify-center mb-5">
             <Image src="/logo.png" alt="Kawaii Subete" width={130} height={42} className="h-10 sm:h-11 w-auto object-contain" />
@@ -132,7 +234,9 @@ function LoginForm() {
               type="button"
               onClick={() => {
                 setMode("login");
+                setSignupStep("details");
                 setErrorMsg("");
+                setSuccessMsg("");
               }}
               className={`flex-1 pb-3 text-center text-[14.5px] font-extrabold transition-colors relative cursor-pointer ${
                 mode === "login" ? "text-[#171136]" : "text-[#736E9B] hover:text-[#171136]"
@@ -148,6 +252,7 @@ function LoginForm() {
               onClick={() => {
                 setMode("signup");
                 setErrorMsg("");
+                setSuccessMsg("");
               }}
               className={`flex-1 pb-3 text-center text-[14.5px] font-extrabold transition-colors relative cursor-pointer ${
                 mode === "signup" ? "text-[#171136]" : "text-[#736E9B] hover:text-[#171136]"
@@ -159,6 +264,16 @@ function LoginForm() {
               )}
             </button>
           </div>
+
+          {/* Success / Info Message */}
+          {successMsg && (
+            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl font-medium flex items-center gap-2">
+              <span className="shrink-0 w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-[10px]">
+                ✓
+              </span>
+              <span>{successMsg}</span>
+            </div>
+          )}
 
           {/* Error Message */}
           {errorMsg && (
@@ -240,9 +355,9 @@ function LoginForm() {
                 {submitting ? "Signing in..." : "Sign in"}
               </button>
             </form>
-          ) : (
-            /* SIGN UP FORM */
-            <form onSubmit={handleSignupSubmit} className="flex flex-col gap-3">
+          ) : signupStep === "details" ? (
+            /* SIGN UP STEP 1: Details */
+            <form onSubmit={handleRequestOtp} className="flex flex-col gap-3">
               {/* First Name & Last Name 2 Columns */}
               <div className="grid grid-cols-2 gap-2.5">
                 <div className="flex items-center gap-2 px-3 h-12 rounded-2xl bg-[#F8F6FD] border border-[#EAE3F7] focus-within:border-[#FF4D6D] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#FF4D6D]/15 transition-all">
@@ -291,7 +406,7 @@ function LoginForm() {
                   required
                   value={signupPassword}
                   onChange={(e) => setSignupPassword(e.target.value)}
-                  placeholder="At least 8 characters"
+                  placeholder="At least 6 characters"
                   className="w-full bg-transparent outline-none text-sm font-medium text-[#171136] placeholder:text-[#736E9B]/80"
                 />
                 <button
@@ -307,13 +422,96 @@ function LoginForm() {
                 </button>
               </div>
 
-              {/* Submit Button */}
+              {/* Continue to OTP verification Button */}
               <button
                 type="submit"
                 disabled={submitting}
                 className="mt-1.5 w-full h-12 bg-[#FF4D6D] hover:bg-[#ff3358] active:scale-[0.99] disabled:opacity-75 transition-all text-white font-bold text-[15px] rounded-2xl shadow-md shadow-[#FF4D6D]/20 flex items-center justify-center cursor-pointer"
               >
-                {submitting ? "Creating account..." : "Sign up"}
+                {submitting ? "Sending verification code..." : "Get Verification Code →"}
+              </button>
+            </form>
+          ) : (
+            /* SIGN UP STEP 2: 6-Digit Email OTP Verification */
+            <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4">
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#FFF0F3] text-[#FF4D6D] mb-2">
+                  <IconMail className="w-6 h-6" />
+                </div>
+                <h3 className="text-base font-extrabold text-[#171136]">
+                  Enter Verification Code
+                </h3>
+                <p className="text-xs text-[#736E9B] mt-1 leading-relaxed">
+                  We sent a 6-digit code to <strong className="text-[#171136]">{signupEmail}</strong>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSignupStep("details");
+                    setErrorMsg("");
+                    setSuccessMsg("");
+                  }}
+                  className="mt-1 text-xs text-[#FF4D6D] font-bold hover:underline inline-block cursor-pointer"
+                >
+                  Edit email
+                </button>
+              </div>
+
+              {/* 6 Digit Inputs */}
+              <div className="flex justify-between gap-1.5 sm:gap-2">
+                {otpCode.map((digit, index) => (
+                  <input
+                    key={index}
+                    id={`login-otp-box-${index}`}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                    className="w-11 h-12 sm:w-12 sm:h-13 text-center text-xl font-bold bg-[#F8F6FD] border border-[#EAE3F7] rounded-xl focus:border-[#FF4D6D] focus:bg-white focus:ring-2 focus:ring-[#FF4D6D]/20 outline-none transition-all text-[#171136]"
+                  />
+                ))}
+              </div>
+
+              {/* Resend Timer / Action */}
+              <div className="flex items-center justify-between text-xs px-1">
+                <span className="text-[#736E9B]">Didn&apos;t receive code?</span>
+                {resendTimer > 0 ? (
+                  <span className="text-[#736E9B] font-semibold">
+                    Resend in <span className="text-[#FF4D6D] font-bold">{resendTimer}s</span>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleResendCode}
+                    disabled={submitting}
+                    className="text-[#FF4D6D] font-bold hover:underline cursor-pointer disabled:opacity-50"
+                  >
+                    Resend Code
+                  </button>
+                )}
+              </div>
+
+              {/* Verify & Create Account Button */}
+              <button
+                type="submit"
+                disabled={submitting || otpCode.join("").length !== 6}
+                className="w-full h-12 bg-[#FF4D6D] hover:bg-[#ff3358] active:scale-[0.99] disabled:opacity-60 transition-all text-white font-bold text-[15px] rounded-2xl shadow-md shadow-[#FF4D6D]/20 flex items-center justify-center cursor-pointer"
+              >
+                {submitting ? "Verifying..." : "Verify & Complete Signup"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSignupStep("details");
+                  setErrorMsg("");
+                  setSuccessMsg("");
+                }}
+                className="text-xs text-[#736E9B] hover:text-[#171136] text-center font-semibold cursor-pointer"
+              >
+                ← Back to details
               </button>
             </form>
           )}
@@ -345,6 +543,7 @@ function LoginForm() {
     </div>
   );
 }
+
 
 export default function LoginPage() {
   return (

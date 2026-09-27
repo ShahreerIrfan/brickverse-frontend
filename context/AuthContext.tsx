@@ -2,7 +2,15 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User } from "@/components/productData";
-import { loginUser, registerCustomer, logoutUser, getCurrentUser } from "@/lib/api";
+import {
+  loginUser,
+  registerCustomer,
+  logoutUser,
+  getCurrentUser,
+  sendSignupOtp,
+  verifyOtpAndRegister,
+  resendSignupOtp,
+} from "@/lib/api";
 
 type AuthMode = "login" | "signup";
 
@@ -24,6 +32,16 @@ interface AuthContextType {
     last_name?: string;
     phone?: string;
   }) => Promise<{ success: boolean; message?: string }>;
+  sendOtp: (email: string) => Promise<{ success: boolean; message?: string; error?: string }>;
+  verifyAndSignup: (data: {
+    email: string;
+    otp: string;
+    password: string;
+    first_name?: string;
+    last_name?: string;
+    phone?: string;
+  }) => Promise<{ success: boolean; message?: string; error?: string }>;
+  resendOtp: (email: string, purpose?: string) => Promise<{ success: boolean; message?: string; error?: string }>;
   logout: () => Promise<void>;
 }
 
@@ -92,6 +110,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { success: false, message: res.message || res.error || "Login failed" };
   };
 
+  const sendOtp = async (email: string) => {
+    const res = await sendSignupOtp(email);
+    return res;
+  };
+
+  const verifyAndSignup = async (data: {
+    email: string;
+    otp: string;
+    password: string;
+    first_name?: string;
+    last_name?: string;
+    phone?: string;
+  }) => {
+    const res = await verifyOtpAndRegister(data);
+    if (res.success && res.user) {
+      setUser(res.user);
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(res.user));
+      closeAuthModal();
+      return { success: true, message: res.message };
+    }
+    return { success: false, message: res.error || res.message || "Verification failed" };
+  };
+
+  const resendOtp = async (email: string, purpose: string = "signup") => {
+    return await resendSignupOtp(email, purpose);
+  };
+
   const signup = async (data: {
     email: string;
     password: string;
@@ -129,6 +174,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setAuthMode,
         login,
         signup,
+        sendOtp,
+        verifyAndSignup,
+        resendOtp,
         logout,
       }}
     >
@@ -144,3 +192,4 @@ export function useAuth() {
   }
   return context;
 }
+

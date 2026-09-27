@@ -237,6 +237,68 @@ export async function getCategoryTree(): Promise<Category[]> {
   }
 }
 
+export async function sendSignupOtp(email: string) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/auth/send-otp/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const result = await res.json();
+    return {
+      success: res.ok,
+      message: result.message,
+      error: result.error || (!res.ok ? "Failed to send verification code." : undefined),
+    };
+  } catch (error) {
+    return { success: false, error: "Network error. Could not send verification code." };
+  }
+}
+
+export async function verifyOtpAndRegister(data: {
+  email: string;
+  otp: string;
+  password: string;
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+}) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/auth/verify-otp-register/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    return {
+      success: res.ok,
+      user: result.user,
+      message: result.message,
+      error: result.error || (!res.ok ? "Verification failed." : undefined),
+    };
+  } catch (error) {
+    return { success: false, error: "Network error. Could not verify code." };
+  }
+}
+
+export async function resendSignupOtp(email: string, purpose: string = "signup") {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/auth/resend-otp/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, purpose }),
+    });
+    const result = await res.json();
+    return {
+      success: res.ok,
+      message: result.message,
+      error: result.error || (!res.ok ? "Failed to resend code." : undefined),
+    };
+  } catch (error) {
+    return { success: false, error: "Network error. Could not resend code." };
+  }
+}
+
 export async function registerCustomer(data: {
   email: string;
   password: string;
@@ -261,6 +323,7 @@ export async function registerCustomer(data: {
     return { success: false, error: "Registration failed. Server unreachable." };
   }
 }
+
 
 export async function loginUser(email: string, password: string) {
   try {
