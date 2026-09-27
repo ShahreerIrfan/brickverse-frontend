@@ -11,8 +11,8 @@ import {
   IconUser,
   IconEye,
   IconEyeOff,
-  IconGoogle,
 } from "./icons";
+
 
 export default function AuthModal() {
   const router = useRouter();
@@ -223,11 +223,8 @@ export default function AuthModal() {
     }
   };
 
-  const handleGoogleAuth = () => {
-    setErrorMsg("Google OAuth sign in will be available shortly.");
-  };
-
   return (
+
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
       {/* Dark Dimmed Backdrop */}
       <div
@@ -540,26 +537,9 @@ export default function AuthModal() {
             </button>
           </form>
         )}
-
-        {/* Divider: Or continue with */}
-        <div className="relative my-4 flex items-center justify-center">
-          <div className="border-t border-[#EAE3F7] w-full" />
-          <span className="bg-white px-3 text-[11px] font-bold uppercase tracking-wider text-[#736E9B] absolute">
-            Or continue with
-          </span>
-        </div>
-
-        {/* Google OAuth Button */}
-        <button
-          type="button"
-          onClick={handleGoogleAuth}
-          className="w-full h-12 bg-[#F8F6FD] hover:bg-[#F0ECF8] border border-[#EAE3F7] active:scale-[0.99] rounded-2xl flex items-center justify-center gap-2.5 text-sm font-bold text-[#171136] transition-all cursor-pointer shadow-2xs"
-        >
-          <IconGoogle className="w-5 h-5 shrink-0" />
-          <span>Continue with Google</span>
-        </button>
       </div>
     </div>
   );
 }
+
 
