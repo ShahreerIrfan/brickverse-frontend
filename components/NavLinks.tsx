@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { IconPhone } from "./icons";
+import { IconPhone, IconFacebook, IconInstagram } from "./icons";
 
 const links = [
   { label: "Home", href: "/" },
@@ -29,11 +29,34 @@ export default function NavLinks() {
             </Link>
           ))}
         </nav>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-5">
           <div className="flex items-center gap-2">
-            <IconPhone className="w-4 h-4 text-[#FF4D6D]" />
-            <span className="text-[13px] font-semibold text-[#3B3468]">01402494401</span>
+            <a
+              href="https://www.facebook.com/profile.php?id=61575469209698"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Kawaii Subete Facebook"
+              className="w-8 h-8 rounded-full bg-[#FAF8FF] border border-[#EAE3F7] hover:bg-[#1877F2] hover:border-[#1877F2] hover:text-white flex items-center justify-center text-[#171136] transition-all"
+            >
+              <IconFacebook className="w-3.5 h-3.5" />
+            </a>
+            <a
+              href="https://www.instagram.com/kawaii.subete/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Kawaii Subete Instagram"
+              className="w-8 h-8 rounded-full bg-[#FAF8FF] border border-[#EAE3F7] hover:bg-gradient-to-tr hover:from-[#FD1D1D] hover:to-[#833AB4] hover:border-transparent hover:text-white flex items-center justify-center text-[#171136] transition-all"
+            >
+              <IconInstagram className="w-3.5 h-3.5" />
+            </a>
           </div>
+
+          <span className="w-px h-4 bg-[#EAE3F7]" />
+
+          <a href="tel:01402494401" className="flex items-center gap-2 hover:text-[#FF4D6D] transition-colors">
+            <IconPhone className="w-4 h-4 text-[#FF4D6D]" />
+            <span className="text-[13px] font-semibold text-[#3B3468] hover:text-[#FF4D6D] transition-colors">01402494401</span>
+          </a>
         </div>
       </div>
     </div>
