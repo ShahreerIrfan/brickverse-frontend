@@ -131,7 +131,7 @@ export default function ContactClient() {
     <div className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
       
       {/* Header */}
-      <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
+      <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
         <h1 className="font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold text-[#171136]">
           Contact Us
         </h1>
@@ -140,25 +140,27 @@ export default function ContactClient() {
         </p>
       </div>
 
-      {/* 2-Column Section: Left (3 Info Cards) & Right (Form) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start mb-12 sm:mb-16">
+      {/* 2-Column Section with Equal Height (items-stretch) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch mb-12 sm:mb-16">
         
-        {/* Left Column: Store, Call & WhatsApp, Hours & Social (5 cols) */}
-        <div className="lg:col-span-5 flex flex-col gap-5">
+        {/* Left Column: 3 Info Cards equal-height distribution */}
+        <div className="lg:col-span-5 h-full flex flex-col gap-4">
           
           {/* Card 1: Store & Office */}
-          <div className="bg-white rounded-2xl border border-[#EAE5DF] p-6 sm:p-7 shadow-xs">
-            <div className="w-10 h-10 rounded-xl bg-[#FAF8F5] border border-[#EAE5DF] flex items-center justify-center text-[#171136] mb-3.5">
-              <IconMapPin className="w-5 h-5" />
+          <div className="flex-1 bg-white rounded-2xl border border-[#EAE5DF] p-5 sm:p-6 shadow-xs flex flex-col justify-between">
+            <div>
+              <div className="w-9 h-9 rounded-xl bg-[#FAF8F5] border border-[#EAE5DF] flex items-center justify-center text-[#171136] mb-3">
+                <IconMapPin className="w-4 h-4" />
+              </div>
+              <h2 className="font-[family-name:var(--font-display)] font-bold text-[#171136] text-base">
+                Store &amp; Office
+              </h2>
+              <p className="text-xs sm:text-sm text-[#5A5579] mt-1.5 leading-relaxed">
+                Mohakhali DOHS, House No-412, Flat-3/A &amp; 3/B Road No-29, Dhaka
+              </p>
             </div>
-            <h2 className="font-[family-name:var(--font-display)] font-bold text-[#171136] text-base">
-              Store &amp; Office
-            </h2>
-            <p className="text-sm text-[#5A5579] mt-2 leading-relaxed">
-              Mohakhali DOHS, House No-412, Flat-3/A &amp; 3/B Road No-29, Dhaka
-            </p>
 
-            <div className="mt-5 pt-4 border-t border-[#F0ECE7] flex items-center gap-4">
+            <div className="mt-4 pt-3.5 border-t border-[#F0ECE7] flex items-center gap-4">
               <button
                 type="button"
                 onClick={handleCopyAddress}
@@ -190,21 +192,23 @@ export default function ContactClient() {
           </div>
 
           {/* Card 2: Call & WhatsApp */}
-          <div className="bg-white rounded-2xl border border-[#EAE5DF] p-6 sm:p-7 shadow-xs">
-            <div className="w-10 h-10 rounded-xl bg-[#FAF8F5] border border-[#EAE5DF] flex items-center justify-center text-[#171136] mb-3.5">
-              <IconPhone className="w-5 h-5" />
+          <div className="flex-1 bg-white rounded-2xl border border-[#EAE5DF] p-5 sm:p-6 shadow-xs flex flex-col justify-between">
+            <div>
+              <div className="w-9 h-9 rounded-xl bg-[#FAF8F5] border border-[#EAE5DF] flex items-center justify-center text-[#171136] mb-3">
+                <IconPhone className="w-4 h-4" />
+              </div>
+              <h2 className="font-[family-name:var(--font-display)] font-bold text-[#171136] text-base">
+                Call &amp; WhatsApp
+              </h2>
+              <p className="text-sm font-semibold text-[#171136] mt-1.5">
+                01402494401
+              </p>
+              <p className="text-xs text-[#5A5579] mt-0.5">
+                support@kawaiisubete.com
+              </p>
             </div>
-            <h2 className="font-[family-name:var(--font-display)] font-bold text-[#171136] text-base">
-              Call &amp; WhatsApp
-            </h2>
-            <p className="text-sm font-semibold text-[#171136] mt-2">
-              01402494401
-            </p>
-            <p className="text-xs text-[#5A5579] mt-1">
-              support@kawaiisubete.com
-            </p>
 
-            <div className="mt-5 pt-4 border-t border-[#F0ECE7] flex items-center gap-2.5">
+            <div className="mt-4 pt-3.5 border-t border-[#F0ECE7] flex items-center gap-2.5">
               <a
                 href="tel:01402494401"
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#171136] text-white text-xs font-semibold hover:bg-[#2A2159] transition-colors"
@@ -225,18 +229,20 @@ export default function ContactClient() {
           </div>
 
           {/* Card 3: Hours & Social */}
-          <div className="bg-white rounded-2xl border border-[#EAE5DF] p-6 sm:p-7 shadow-xs">
-            <div className="w-10 h-10 rounded-xl bg-[#FAF8F5] border border-[#EAE5DF] flex items-center justify-center text-[#171136] mb-3.5">
-              <IconClock className="w-5 h-5" />
+          <div className="flex-1 bg-white rounded-2xl border border-[#EAE5DF] p-5 sm:p-6 shadow-xs flex flex-col justify-between">
+            <div>
+              <div className="w-9 h-9 rounded-xl bg-[#FAF8F5] border border-[#EAE5DF] flex items-center justify-center text-[#171136] mb-3">
+                <IconClock className="w-4 h-4" />
+              </div>
+              <h2 className="font-[family-name:var(--font-display)] font-bold text-[#171136] text-base">
+                Hours &amp; Social
+              </h2>
+              <p className="text-xs sm:text-sm text-[#5A5579] mt-1.5">
+                Everyday: 10:00 AM – 9:00 PM
+              </p>
             </div>
-            <h2 className="font-[family-name:var(--font-display)] font-bold text-[#171136] text-base">
-              Hours &amp; Social
-            </h2>
-            <p className="text-sm text-[#5A5579] mt-2">
-              Everyday: 10:00 AM – 9:00 PM
-            </p>
 
-            <div className="mt-5 pt-4 border-t border-[#F0ECE7] flex items-center gap-2.5">
+            <div className="mt-4 pt-3.5 border-t border-[#F0ECE7] flex items-center gap-2.5">
               <a
                 href="https://www.facebook.com/profile.php?id=61575469209698"
                 target="_blank"
@@ -260,172 +266,174 @@ export default function ContactClient() {
 
         </div>
 
-        {/* Right Column: Send a Message Form (7 cols) */}
-        <div className="lg:col-span-7">
-          <div className="bg-white rounded-2xl border border-[#EAE5DF] p-7 sm:p-9 shadow-xs">
-            <div className="mb-6">
-              <h2 className="font-[family-name:var(--font-display)] text-2xl font-bold text-[#171136]">
-                Send a message
-              </h2>
-              <p className="text-sm text-[#5A5579] mt-1.5">
-                Fill out the form below and we will get back to you by email shortly.
-              </p>
-            </div>
-
-            {success ? (
-              <div className="rounded-xl bg-[#FAF8F5] border border-[#EAE5DF] p-8 text-center max-w-lg mx-auto">
-                <div className="w-12 h-12 rounded-full bg-[#171136] text-white flex items-center justify-center mx-auto mb-4">
-                  <IconCheck className="w-6 h-6" />
-                </div>
-                <h3 className="font-[family-name:var(--font-display)] text-lg font-bold text-[#171136]">
-                  Message sent successfully
-                </h3>
-                <p className="text-sm text-[#5A5579] mt-2 leading-relaxed">
-                  Thank you for getting in touch. Our team has received your message and will reply soon.
+        {/* Right Column: Send a Message Form (Equal Height Card) */}
+        <div className="lg:col-span-7 h-full flex flex-col">
+          <div className="h-full bg-white rounded-2xl border border-[#EAE5DF] p-6 sm:p-8 shadow-xs flex flex-col justify-between">
+            <div>
+              <div className="mb-5">
+                <h2 className="font-[family-name:var(--font-display)] text-xl sm:text-2xl font-bold text-[#171136]">
+                  Send a message
+                </h2>
+                <p className="text-xs sm:text-sm text-[#5A5579] mt-1">
+                  Fill out the form below and we will get back to you by email shortly.
                 </p>
-                <div className="mt-6 flex items-center justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setSuccess(false)}
-                    className="px-5 py-2.5 rounded-lg bg-[#171136] text-white text-xs font-semibold hover:bg-[#2A2159] transition-colors cursor-pointer"
-                  >
-                    Send another message
-                  </button>
-                  <Link
-                    href="/shop"
-                    className="px-5 py-2.5 rounded-lg border border-[#EAE5DF] text-[#171136] text-xs font-semibold hover:bg-[#FAF8F5] transition-colors"
-                  >
-                    Browse shop
-                  </Link>
-                </div>
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-                
-                {errorMsg && (
-                  <div className="p-4 rounded-lg bg-[#FFF5F5] border border-[#FED7D7] text-[#C53030] text-xs font-medium">
-                    {errorMsg}
-                  </div>
-                )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                  {/* Name */}
+              {success ? (
+                <div className="rounded-xl bg-[#FAF8F5] border border-[#EAE5DF] p-8 text-center max-w-lg mx-auto my-auto">
+                  <div className="w-12 h-12 rounded-full bg-[#171136] text-white flex items-center justify-center mx-auto mb-4">
+                    <IconCheck className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-[family-name:var(--font-display)] text-lg font-bold text-[#171136]">
+                    Message sent successfully
+                  </h3>
+                  <p className="text-sm text-[#5A5579] mt-2 leading-relaxed">
+                    Thank you for getting in touch. Our team has received your message and will reply soon.
+                  </p>
+                  <div className="mt-6 flex items-center justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setSuccess(false)}
+                      className="px-5 py-2.5 rounded-lg bg-[#171136] text-white text-xs font-semibold hover:bg-[#2A2159] transition-colors cursor-pointer"
+                    >
+                      Send another message
+                    </button>
+                    <Link
+                      href="/shop"
+                      className="px-5 py-2.5 rounded-lg border border-[#EAE5DF] text-[#171136] text-xs font-semibold hover:bg-[#FAF8F5] transition-colors"
+                    >
+                      Browse shop
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                  
+                  {errorMsg && (
+                    <div className="p-3.5 rounded-lg bg-[#FFF5F5] border border-[#FED7D7] text-[#C53030] text-xs font-medium">
+                      {errorMsg}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Name */}
+                    <div>
+                      <label className="block text-xs font-semibold text-[#171136] mb-1.5">
+                        Full name <span className="text-[#FF4D6D]">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={form.name}
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        placeholder="Your full name"
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-[#D5D0C9] bg-white text-sm text-[#171136] placeholder-[#9E97C2] focus:outline-none focus:border-[#171136] focus:ring-1 focus:ring-[#171136] transition-colors"
+                      />
+                    </div>
+
+                    {/* Email */}
+                    <div>
+                      <label className="block text-xs font-semibold text-[#171136] mb-1.5">
+                        Email address <span className="text-[#FF4D6D]">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={form.email}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        placeholder="you@example.com"
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-[#D5D0C9] bg-white text-sm text-[#171136] placeholder-[#9E97C2] focus:outline-none focus:border-[#171136] focus:ring-1 focus:ring-[#171136] transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Phone */}
+                    <div>
+                      <label className="block text-xs font-semibold text-[#171136] mb-1.5">
+                        Phone number <span className="text-xs text-[#8A85A6] font-normal">(Optional)</span>
+                      </label>
+                      <input
+                        type="tel"
+                        value={form.phone}
+                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                        placeholder="01XXXXXXXXX"
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-[#D5D0C9] bg-white text-sm text-[#171136] placeholder-[#9E97C2] focus:outline-none focus:border-[#171136] focus:ring-1 focus:ring-[#171136] transition-colors"
+                      />
+                    </div>
+
+                    {/* Subject */}
+                    <div>
+                      <label className="block text-xs font-semibold text-[#171136] mb-1.5">
+                        Subject
+                      </label>
+                      <select
+                        value={form.subject}
+                        onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-[#D5D0C9] bg-white text-sm text-[#171136] focus:outline-none focus:border-[#171136] focus:ring-1 focus:ring-[#171136] transition-colors cursor-pointer"
+                      >
+                        <option value="General Inquiry">General Inquiry</option>
+                        <option value="Order & Shipping">Order &amp; Shipping</option>
+                        <option value="Product Availability">Product Availability</option>
+                        <option value="Returns & Exchange">Returns &amp; Exchange</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Order ID */}
                   <div>
                     <label className="block text-xs font-semibold text-[#171136] mb-1.5">
-                      Full name <span className="text-[#FF4D6D]">*</span>
+                      Order ID <span className="text-xs text-[#8A85A6] font-normal">(Optional)</span>
                     </label>
                     <input
                       type="text"
+                      value={form.orderNumber}
+                      onChange={(e) => setForm({ ...form, orderNumber: e.target.value })}
+                      placeholder="e.g. KS-1029"
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-[#D5D0C9] bg-white text-sm text-[#171136] placeholder-[#9E97C2] focus:outline-none focus:border-[#171136] focus:ring-1 focus:ring-[#171136] transition-colors"
+                    />
+                  </div>
+
+                  {/* Message */}
+                  <div>
+                    <label className="block text-xs font-semibold text-[#171136] mb-1.5">
+                      Message <span className="text-[#FF4D6D]">*</span>
+                    </label>
+                    <textarea
                       required
-                      value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      placeholder="Your full name"
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-[#D5D0C9] bg-white text-sm text-[#171136] placeholder-[#9E97C2] focus:outline-none focus:border-[#171136] focus:ring-1 focus:ring-[#171136] transition-colors"
+                      rows={4}
+                      value={form.message}
+                      onChange={(e) => setForm({ ...form, message: e.target.value })}
+                      placeholder="How can we help you?"
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-[#D5D0C9] bg-white text-sm text-[#171136] placeholder-[#9E97C2] focus:outline-none focus:border-[#171136] focus:ring-1 focus:ring-[#171136] transition-colors resize-y leading-relaxed"
                     />
                   </div>
 
-                  {/* Email */}
-                  <div>
-                    <label className="block text-xs font-semibold text-[#171136] mb-1.5">
-                      Email address <span className="text-[#FF4D6D]">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      placeholder="you@example.com"
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-[#D5D0C9] bg-white text-sm text-[#171136] placeholder-[#9E97C2] focus:outline-none focus:border-[#171136] focus:ring-1 focus:ring-[#171136] transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                  {/* Phone */}
-                  <div>
-                    <label className="block text-xs font-semibold text-[#171136] mb-1.5">
-                      Phone number <span className="text-xs text-[#8A85A6] font-normal">(Optional)</span>
-                    </label>
-                    <input
-                      type="tel"
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      placeholder="01XXXXXXXXX"
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-[#D5D0C9] bg-white text-sm text-[#171136] placeholder-[#9E97C2] focus:outline-none focus:border-[#171136] focus:ring-1 focus:ring-[#171136] transition-colors"
-                    />
-                  </div>
-
-                  {/* Subject */}
-                  <div>
-                    <label className="block text-xs font-semibold text-[#171136] mb-1.5">
-                      Subject
-                    </label>
-                    <select
-                      value={form.subject}
-                      onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-[#D5D0C9] bg-white text-sm text-[#171136] focus:outline-none focus:border-[#171136] focus:ring-1 focus:ring-[#171136] transition-colors cursor-pointer"
+                  {/* Submit */}
+                  <div className="pt-1">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-[#171136] hover:bg-[#2A2159] text-white text-sm font-semibold transition-colors disabled:opacity-60 cursor-pointer"
                     >
-                      <option value="General Inquiry">General Inquiry</option>
-                      <option value="Order & Shipping">Order &amp; Shipping</option>
-                      <option value="Product Availability">Product Availability</option>
-                      <option value="Returns & Exchange">Returns &amp; Exchange</option>
-                      <option value="Other">Other</option>
-                    </select>
+                      {loading ? (
+                        <>
+                          <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Sending...</span>
+                        </>
+                      ) : (
+                        <>
+                          <IconSend className="w-3.5 h-3.5" />
+                          <span>Send message</span>
+                        </>
+                      )}
+                    </button>
                   </div>
-                </div>
 
-                {/* Order ID */}
-                <div>
-                  <label className="block text-xs font-semibold text-[#171136] mb-1.5">
-                    Order ID <span className="text-xs text-[#8A85A6] font-normal">(Optional)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={form.orderNumber}
-                    onChange={(e) => setForm({ ...form, orderNumber: e.target.value })}
-                    placeholder="e.g. KS-1029"
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-[#D5D0C9] bg-white text-sm text-[#171136] placeholder-[#9E97C2] focus:outline-none focus:border-[#171136] focus:ring-1 focus:ring-[#171136] transition-colors"
-                  />
-                </div>
-
-                {/* Message */}
-                <div>
-                  <label className="block text-xs font-semibold text-[#171136] mb-1.5">
-                    Message <span className="text-[#FF4D6D]">*</span>
-                  </label>
-                  <textarea
-                    required
-                    rows={4}
-                    value={form.message}
-                    onChange={(e) => setForm({ ...form, message: e.target.value })}
-                    placeholder="How can we help you?"
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-[#D5D0C9] bg-white text-sm text-[#171136] placeholder-[#9E97C2] focus:outline-none focus:border-[#171136] focus:ring-1 focus:ring-[#171136] transition-colors resize-y leading-relaxed"
-                  />
-                </div>
-
-                {/* Submit */}
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-lg bg-[#171136] hover:bg-[#2A2159] text-white text-sm font-semibold transition-colors disabled:opacity-60 cursor-pointer"
-                  >
-                    {loading ? (
-                      <>
-                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Sending message...</span>
-                      </>
-                    ) : (
-                      <>
-                        <IconSend className="w-4 h-4" />
-                        <span>Send message</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-              </form>
-            )}
+                </form>
+              )}
+            </div>
           </div>
         </div>
 
