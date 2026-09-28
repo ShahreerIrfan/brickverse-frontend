@@ -4,15 +4,33 @@ import { IconPhone, IconMapPin, IconFacebook, IconInstagram } from "./icons";
 const columns = [
   {
     title: "Shop",
-    links: ["Anime figures", "Cartoon toys", "Brick sets", "Coding kits", "New arrivals"],
+    links: [
+      { label: "Anime figures", href: "/shop?search=anime" },
+      { label: "Cartoon toys", href: "/shop?search=cartoon" },
+      { label: "Brick sets", href: "/shop?search=brick" },
+      { label: "Coding kits", href: "/shop?search=coding" },
+      { label: "New arrivals", href: "/shop?sort=newest" },
+    ],
   },
   {
     title: "Support",
-    links: ["Help centre", "Delivery info", "Returns policy", "Track my order", "FAQ"],
+    links: [
+      { label: "Help centre", href: "/contact" },
+      { label: "Delivery info", href: "/contact#faq" },
+      { label: "Returns policy", href: "/contact#faq" },
+      { label: "Track my order", href: "/dashboard" },
+      { label: "FAQ", href: "/contact#faq" },
+    ],
   },
   {
     title: "Company",
-    links: ["About us", "Careers", "Blog", "Affiliates", "Contact"],
+    links: [
+      { label: "About us", href: "/contact" },
+      { label: "Careers", href: "/contact" },
+      { label: "Blog", href: "/blog" },
+      { label: "Affiliates", href: "/contact" },
+      { label: "Contact", href: "/contact" },
+    ],
   },
 ];
 
@@ -66,9 +84,9 @@ export default function Footer() {
             <span className="block w-[26px] h-[3px] rounded-full bg-[#FF4D6D] mt-2 mb-5" />
             <ul className="flex flex-col gap-3.5">
               {col.links.map((link) => (
-                <li key={link}>
-                  <a href="#" className="text-[13px] text-[#B9B2DA] hover:text-white">
-                    {link}
+                <li key={link.label}>
+                  <a href={link.href} className="text-[13px] text-[#B9B2DA] hover:text-white transition-colors">
+                    {link.label}
                   </a>
                 </li>
               ))}

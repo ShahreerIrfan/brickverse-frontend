@@ -751,6 +751,41 @@ export function IconInstagram({ className, style }: IconProps) {
   );
 }
 
+export function IconClock({ className, style }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} style={style} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  );
+}
+
+export function IconMessageSquare({ className, style }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} style={style} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
+export function IconSend({ className, style }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} style={style} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="22" y1="2" x2="11" y2="13" />
+      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+    </svg>
+  );
+}
+
+export function IconWhatsApp({ className, style }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} style={style} fill="currentColor">
+      <path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.979-.275-.1-.476-.15-.677.15-.2.302-.777.979-.953 1.18-.175.201-.351.226-.652.076-.301-.151-1.272-.469-2.423-1.496-.896-.799-1.5-1.786-1.676-2.088-.175-.301-.019-.464.132-.614.136-.135.301-.351.451-.527.151-.176.201-.301.301-.502.101-.201.05-.377-.025-.527-.075-.151-.677-1.633-.928-2.235-.244-.587-.493-.507-.677-.517-.175-.009-.376-.01-.577-.01s-.527.075-.803.376c-.276.301-1.054 1.03-1.054 2.512s1.079 2.914 1.23 3.115c.15.201 2.123 3.241 5.143 4.545.718.311 1.279.497 1.716.636.722.23 1.378.198 1.897.12.578-.087 1.78-.728 2.031-1.431.251-.703.251-1.306.176-1.431-.076-.126-.277-.202-.578-.352zM12.04 21.785h-.002c-1.777 0-3.518-.478-5.043-1.383l-.362-.215-3.749.983 1-3.655-.236-.375a10.024 10.024 0 0 1-1.536-5.32c0-5.545 4.512-10.057 10.06-10.057 2.688 0 5.215 1.048 7.116 2.951a10.016 10.016 0 0 1 2.946 7.116c0 5.546-4.513 10.059-10.06 10.059z" />
+    </svg>
+  );
+}
+
+
 
 
 

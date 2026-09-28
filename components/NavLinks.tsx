@@ -6,6 +6,7 @@ const links = [
   { label: "Shop all", href: "/shop" },
   { label: "Deals", href: "/shop?deals=true", hot: true },
   { label: "Blog", href: "/blog" },
+  { label: "Contact", href: "/contact" },
 ];
 
 export default function NavLinks() {
