@@ -11,6 +11,7 @@ import {
   IconSend,
   IconWhatsApp,
   IconChevronRight,
+  IconMail,
   IconCopy,
   IconExternalLink,
   IconCheck,
@@ -30,7 +31,7 @@ const INITIAL_FORM: FormState = {
   name: "",
   email: "",
   phone: "",
-  subject: "General Inquiry",
+  subject: "Order Inquiry & Status",
   orderNumber: "",
   message: "",
 };
@@ -128,325 +129,361 @@ export default function ContactClient() {
   };
 
   return (
-    <div className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+    <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
       
-      {/* Header */}
-      <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold text-[#171136]">
-          Contact Us
-        </h1>
-        <p className="text-sm sm:text-base text-[#5A5579] mt-2.5 leading-relaxed">
-          Have a question about an order, brick set, or anime figure? We are always here to help you.
-        </p>
-      </div>
-
-      {/* 2-Column Section with Equal Height (items-stretch) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch mb-12 sm:mb-16">
+      {/* 2-Column Section matching screenshot layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start mb-12 sm:mb-16">
         
-        {/* Left Column: 3 Info Cards equal-height distribution */}
-        <div className="lg:col-span-5 h-full flex flex-col gap-4">
+        {/* Left Column: 4 Cards */}
+        <div className="lg:col-span-5 flex flex-col gap-5">
           
-          {/* Card 1: Store & Office */}
-          <div className="flex-1 bg-white rounded-2xl border border-[#EAE5DF] p-5 sm:p-6 shadow-xs flex flex-col justify-between">
-            <div>
-              <div className="w-9 h-9 rounded-xl bg-[#FAF8F5] border border-[#EAE5DF] flex items-center justify-center text-[#171136] mb-3">
-                <IconMapPin className="w-4 h-4" />
+          {/* Card 1: Store & Office Location */}
+          <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 sm:p-7 shadow-[0_8px_30px_rgb(0,0,0,0.03)] relative overflow-hidden">
+            <div className="absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r from-[#FF4D6D] to-[#FFA07A]" />
+            
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-2xl bg-[#FFF1F4] flex items-center justify-center text-[#FF4D6D] shrink-0 mt-0.5">
+                <IconMapPin className="w-5 h-5" />
               </div>
-              <h2 className="font-[family-name:var(--font-display)] font-bold text-[#171136] text-base">
-                Store &amp; Office
-              </h2>
-              <p className="text-xs sm:text-sm text-[#5A5579] mt-1.5 leading-relaxed">
-                Mohakhali DOHS, House No-412, Flat-3/A &amp; 3/B Road No-29, Dhaka
-              </p>
-            </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-[family-name:var(--font-display)] font-bold text-[#171136] text-base sm:text-lg">
+                  Store &amp; Office Location
+                </h3>
+                <p className="text-xs sm:text-sm text-[#5D5589] mt-1.5 leading-relaxed">
+                  Mohakhali DOHS, House No-412, Flat-3/A &amp; 3/B Road No-29, Dhaka
+                </p>
 
-            <div className="mt-4 pt-3.5 border-t border-[#F0ECE7] flex items-center gap-4">
-              <button
-                type="button"
-                onClick={handleCopyAddress}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#171136] hover:text-[#FF4D6D] transition-colors cursor-pointer"
-              >
-                {copied ? (
-                  <>
-                    <IconCheck className="w-3.5 h-3.5 text-green-600" />
-                    <span className="text-green-600">Copied</span>
-                  </>
-                ) : (
-                  <>
-                    <IconCopy className="w-3.5 h-3.5 text-[#8A85A6]" />
-                    <span>Copy</span>
-                  </>
-                )}
-              </button>
-              <span className="text-[#D1CADF]">•</span>
-              <a
-                href="https://www.google.com/maps/search/?api=1&query=Mohakhali+DOHS+House+412+Road+29+Dhaka"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#171136] hover:text-[#FF4D6D] transition-colors"
-              >
-                <span>Google Maps</span>
-                <IconExternalLink className="w-3 h-3 text-[#8A85A6]" />
-              </a>
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCopyAddress}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF8FF] hover:bg-[#F0EBFA] border border-[#EAE3F7] text-xs font-semibold text-[#171136] transition-colors cursor-pointer"
+                  >
+                    {copied ? (
+                      <>
+                        <IconCheck className="w-3.5 h-3.5 text-green-600" />
+                        <span className="text-green-600">Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <IconCopy className="w-3.5 h-3.5 text-[#736E9B]" />
+                        <span>Copy Address</span>
+                      </>
+                    )}
+                  </button>
+
+                  <a
+                    href="https://www.google.com/maps/search/?api=1&query=Mohakhali+DOHS+House+412+Road+29+Dhaka"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FFF1F4] hover:bg-[#FFE4E9] text-[#FF4D6D] text-xs font-semibold transition-colors"
+                  >
+                    <span>Open in Google Maps</span>
+                    <IconExternalLink className="w-3 h-3 text-[#FF4D6D]" />
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Card 2: Call & WhatsApp */}
-          <div className="flex-1 bg-white rounded-2xl border border-[#EAE5DF] p-5 sm:p-6 shadow-xs flex flex-col justify-between">
-            <div>
-              <div className="w-9 h-9 rounded-xl bg-[#FAF8F5] border border-[#EAE5DF] flex items-center justify-center text-[#171136] mb-3">
-                <IconPhone className="w-4 h-4" />
+          {/* Card 2: Phone & WhatsApp */}
+          <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 sm:p-7 shadow-[0_8px_30px_rgb(0,0,0,0.03)] relative overflow-hidden">
+            <div className="absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r from-[#00C48C] to-[#25D366]" />
+            
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-2xl bg-[#E8FBF0] flex items-center justify-center text-[#25D366] shrink-0 mt-0.5">
+                <IconPhone className="w-5 h-5" />
               </div>
-              <h2 className="font-[family-name:var(--font-display)] font-bold text-[#171136] text-base">
-                Call &amp; WhatsApp
-              </h2>
-              <p className="text-sm font-semibold text-[#171136] mt-1.5">
-                01402494401
-              </p>
-              <p className="text-xs text-[#5A5579] mt-0.5">
-                support@kawaiisubete.com
-              </p>
-            </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-[family-name:var(--font-display)] font-bold text-[#171136] text-base sm:text-lg">
+                  Phone &amp; WhatsApp
+                </h3>
+                <p className="text-xs sm:text-sm text-[#5D5589] mt-1">
+                  Call us directly or message us for instant support.
+                </p>
+                <p className="text-lg sm:text-xl font-extrabold text-[#171136] mt-2.5 tracking-tight">
+                  01402494401
+                </p>
 
-            <div className="mt-4 pt-3.5 border-t border-[#F0ECE7] flex items-center gap-2.5">
-              <a
-                href="tel:01402494401"
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#171136] text-white text-xs font-semibold hover:bg-[#2A2159] transition-colors"
-              >
-                <IconPhone className="w-3 h-3" />
-                <span>Call</span>
-              </a>
-              <a
-                href="https://wa.me/8801402494401"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[#EAE5DF] bg-white text-[#171136] text-xs font-semibold hover:bg-[#FAF8F5] transition-colors"
-              >
-                <IconWhatsApp className="w-3.5 h-3.5 text-[#171136]" />
-                <span>WhatsApp</span>
-              </a>
+                <div className="mt-4 flex flex-wrap items-center gap-2.5">
+                  <a
+                    href="tel:01402494401"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#171136] hover:bg-[#2A2159] text-white text-xs font-bold transition-all shadow-xs"
+                  >
+                    <IconPhone className="w-3.5 h-3.5 text-[#FF4D6D]" />
+                    <span>Call Hotline</span>
+                  </a>
+                  <a
+                    href="https://wa.me/8801402494401"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold transition-all shadow-xs"
+                  >
+                    <IconWhatsApp className="w-3.5 h-3.5" />
+                    <span>Chat on WhatsApp</span>
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Card 3: Hours & Social */}
-          <div className="flex-1 bg-white rounded-2xl border border-[#EAE5DF] p-5 sm:p-6 shadow-xs flex flex-col justify-between">
-            <div>
-              <div className="w-9 h-9 rounded-xl bg-[#FAF8F5] border border-[#EAE5DF] flex items-center justify-center text-[#171136] mb-3">
-                <IconClock className="w-4 h-4" />
+          {/* Card 3: Email Inquiries */}
+          <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 sm:p-7 shadow-[0_8px_30px_rgb(0,0,0,0.03)] relative overflow-hidden">
+            <div className="absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r from-[#7B5CFF] to-[#3B82F6]" />
+            
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-2xl bg-[#EFE9FF] flex items-center justify-center text-[#7B5CFF] shrink-0 mt-0.5">
+                <IconMail className="w-5 h-5" />
               </div>
-              <h2 className="font-[family-name:var(--font-display)] font-bold text-[#171136] text-base">
-                Hours &amp; Social
-              </h2>
-              <p className="text-xs sm:text-sm text-[#5A5579] mt-1.5">
-                Everyday: 10:00 AM – 9:00 PM
-              </p>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-[family-name:var(--font-display)] font-bold text-[#171136] text-base sm:text-lg">
+                  Email Inquiries
+                </h3>
+                <p className="text-xs sm:text-sm text-[#5D5589] mt-1">
+                  For bulk orders, business queries, or order tracking:
+                </p>
+                <a
+                  href="mailto:support@kawaiisubete.com"
+                  className="inline-block text-sm sm:text-base font-bold text-[#7B5CFF] hover:underline mt-2"
+                >
+                  support@kawaiisubete.com
+                </a>
+                <p className="text-xs text-[#8A84B0] flex items-center gap-1.5 mt-2">
+                  <IconClock className="w-3.5 h-3.5 text-[#7B5CFF]" />
+                  <span>Response time: Usually within 2–6 hours</span>
+                </p>
+              </div>
             </div>
+          </div>
 
-            <div className="mt-4 pt-3.5 border-t border-[#F0ECE7] flex items-center gap-2.5">
+          {/* Card 4: Follow Kawaii Subete (Dark Navy Card) */}
+          <div className="bg-[#171136] rounded-3xl p-6 sm:p-7 text-white shadow-lg">
+            <h3 className="font-[family-name:var(--font-display)] font-bold text-base sm:text-lg text-white">
+              Follow Kawaii Subete
+            </h3>
+            <p className="text-xs sm:text-sm text-[#C4BDE0] mt-1.5 leading-relaxed">
+              Stay updated with fresh anime figures, limited brick drops, and giveaway announcements.
+            </p>
+
+            <div className="mt-4 grid grid-cols-2 gap-3">
               <a
                 href="https://www.facebook.com/profile.php?id=61575469209698"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[#EAE5DF] bg-white text-xs font-semibold text-[#171136] hover:bg-[#FAF8F5] transition-colors"
+                className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-2xl bg-[#2A2159] hover:bg-[#392E73] border border-white/10 transition-all"
               >
-                <IconFacebook className="w-3.5 h-3.5 text-[#171136]" />
-                <span>Facebook</span>
+                <div className="w-8 h-8 rounded-xl bg-[#1877F2] flex items-center justify-center text-white shrink-0">
+                  <IconFacebook className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-white truncate">Facebook</p>
+                  <p className="text-[10px] text-[#A8A1CC] truncate">@kawaiisubete</p>
+                </div>
               </a>
+
               <a
                 href="https://www.instagram.com/kawaii.subete/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[#EAE5DF] bg-white text-xs font-semibold text-[#171136] hover:bg-[#FAF8F5] transition-colors"
+                className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-2xl bg-[#2A2159] hover:bg-[#392E73] border border-white/10 transition-all"
               >
-                <IconInstagram className="w-3.5 h-3.5 text-[#171136]" />
-                <span>Instagram</span>
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#FD1D1D] to-[#833AB4] flex items-center justify-center text-white shrink-0">
+                  <IconInstagram className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-white truncate">Instagram</p>
+                  <p className="text-[10px] text-[#A8A1CC] truncate">@kawaii.subete</p>
+                </div>
               </a>
             </div>
           </div>
 
         </div>
 
-        {/* Right Column: Send a Message Form (Equal Height Card) */}
-        <div className="lg:col-span-7 h-full flex flex-col">
-          <div className="h-full bg-white rounded-2xl border border-[#EAE5DF] p-6 sm:p-8 shadow-xs flex flex-col justify-between">
-            <div>
-              <div className="mb-5">
-                <h2 className="font-[family-name:var(--font-display)] text-xl sm:text-2xl font-bold text-[#171136]">
-                  Send a message
-                </h2>
-                <p className="text-xs sm:text-sm text-[#5A5579] mt-1">
-                  Fill out the form below and we will get back to you by email shortly.
-                </p>
-              </div>
+        {/* Right Column: Send a Message Form */}
+        <div className="lg:col-span-7">
+          <div className="bg-white rounded-3xl border border-[#EAE3F7] p-7 sm:p-10 shadow-[0_12px_40px_rgb(0,0,0,0.04)]">
+            
+            <div className="mb-6">
+              <span className="inline-block text-[11px] font-extrabold uppercase tracking-wider text-[#FF4D6D] bg-[#FFF1F4] px-3 py-1 rounded-full mb-3">
+                SEND A MESSAGE
+              </span>
+              <h2 className="font-[family-name:var(--font-display)] text-2xl sm:text-3xl font-extrabold text-[#171136]">
+                How can we help you today?
+              </h2>
+              <p className="text-xs sm:text-sm text-[#5D5589] mt-1.5 leading-relaxed">
+                Fill out the form below and our customer support team will get back to you promptly.
+              </p>
+            </div>
 
-              {success ? (
-                <div className="rounded-xl bg-[#FAF8F5] border border-[#EAE5DF] p-8 text-center max-w-lg mx-auto my-auto">
-                  <div className="w-12 h-12 rounded-full bg-[#171136] text-white flex items-center justify-center mx-auto mb-4">
-                    <IconCheck className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-[family-name:var(--font-display)] text-lg font-bold text-[#171136]">
-                    Message sent successfully
-                  </h3>
-                  <p className="text-sm text-[#5A5579] mt-2 leading-relaxed">
-                    Thank you for getting in touch. Our team has received your message and will reply soon.
-                  </p>
-                  <div className="mt-6 flex items-center justify-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setSuccess(false)}
-                      className="px-5 py-2.5 rounded-lg bg-[#171136] text-white text-xs font-semibold hover:bg-[#2A2159] transition-colors cursor-pointer"
-                    >
-                      Send another message
-                    </button>
-                    <Link
-                      href="/shop"
-                      className="px-5 py-2.5 rounded-lg border border-[#EAE5DF] text-[#171136] text-xs font-semibold hover:bg-[#FAF8F5] transition-colors"
-                    >
-                      Browse shop
-                    </Link>
-                  </div>
+            {success ? (
+              <div className="rounded-2xl bg-[#E8FBF0] border border-[#A7F3D0] p-8 text-center max-w-lg mx-auto my-6">
+                <div className="w-14 h-14 rounded-full bg-[#10B981] text-white flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/20 text-xl font-bold">
+                  ✓
                 </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                  
-                  {errorMsg && (
-                    <div className="p-3.5 rounded-lg bg-[#FFF5F5] border border-[#FED7D7] text-[#C53030] text-xs font-medium">
-                      {errorMsg}
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* Name */}
-                    <div>
-                      <label className="block text-xs font-semibold text-[#171136] mb-1.5">
-                        Full name <span className="text-[#FF4D6D]">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={form.name}
-                        onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        placeholder="Your full name"
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-[#D5D0C9] bg-white text-sm text-[#171136] placeholder-[#9E97C2] focus:outline-none focus:border-[#171136] focus:ring-1 focus:ring-[#171136] transition-colors"
-                      />
-                    </div>
-
-                    {/* Email */}
-                    <div>
-                      <label className="block text-xs font-semibold text-[#171136] mb-1.5">
-                        Email address <span className="text-[#FF4D6D]">*</span>
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        value={form.email}
-                        onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        placeholder="you@example.com"
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-[#D5D0C9] bg-white text-sm text-[#171136] placeholder-[#9E97C2] focus:outline-none focus:border-[#171136] focus:ring-1 focus:ring-[#171136] transition-colors"
-                      />
-                    </div>
+                <h3 className="font-[family-name:var(--font-display)] text-xl font-bold text-[#065F46]">
+                  Message Sent Successfully!
+                </h3>
+                <p className="text-sm text-[#047857] mt-2 leading-relaxed">
+                  Thank you for reaching out to Kawaii Subete. Our team has received your message and will reply to your email shortly.
+                </p>
+                <div className="mt-6 flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSuccess(false)}
+                    className="px-5 py-2.5 rounded-xl bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                  >
+                    Send Another Message
+                  </button>
+                  <Link
+                    href="/shop"
+                    className="px-5 py-2.5 rounded-xl bg-white border border-[#A7F3D0] text-[#065F46] text-xs font-bold hover:bg-[#D1FAE5] transition-all"
+                  >
+                    Continue Shopping
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-5">
+                
+                {errorMsg && (
+                  <div className="p-4 rounded-xl bg-[#FFF1F4] border border-[#FFCCD5] text-[#D90429] text-xs font-semibold">
+                    {errorMsg}
                   </div>
+                )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* Phone */}
-                    <div>
-                      <label className="block text-xs font-semibold text-[#171136] mb-1.5">
-                        Phone number <span className="text-xs text-[#8A85A6] font-normal">(Optional)</span>
-                      </label>
-                      <input
-                        type="tel"
-                        value={form.phone}
-                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                        placeholder="01XXXXXXXXX"
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-[#D5D0C9] bg-white text-sm text-[#171136] placeholder-[#9E97C2] focus:outline-none focus:border-[#171136] focus:ring-1 focus:ring-[#171136] transition-colors"
-                      />
-                    </div>
-
-                    {/* Subject */}
-                    <div>
-                      <label className="block text-xs font-semibold text-[#171136] mb-1.5">
-                        Subject
-                      </label>
-                      <select
-                        value={form.subject}
-                        onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-[#D5D0C9] bg-white text-sm text-[#171136] focus:outline-none focus:border-[#171136] focus:ring-1 focus:ring-[#171136] transition-colors cursor-pointer"
-                      >
-                        <option value="General Inquiry">General Inquiry</option>
-                        <option value="Order & Shipping">Order &amp; Shipping</option>
-                        <option value="Product Availability">Product Availability</option>
-                        <option value="Returns & Exchange">Returns &amp; Exchange</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Order ID */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                  {/* Name */}
                   <div>
-                    <label className="block text-xs font-semibold text-[#171136] mb-1.5">
-                      Order ID <span className="text-xs text-[#8A85A6] font-normal">(Optional)</span>
+                    <label className="block text-xs font-bold text-[#171136] mb-1.5">
+                      Your Full Name <span className="text-[#FF4D6D]">*</span>
                     </label>
                     <input
                       type="text"
-                      value={form.orderNumber}
-                      onChange={(e) => setForm({ ...form, orderNumber: e.target.value })}
-                      placeholder="e.g. KS-1029"
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-[#D5D0C9] bg-white text-sm text-[#171136] placeholder-[#9E97C2] focus:outline-none focus:border-[#171136] focus:ring-1 focus:ring-[#171136] transition-colors"
-                    />
-                  </div>
-
-                  {/* Message */}
-                  <div>
-                    <label className="block text-xs font-semibold text-[#171136] mb-1.5">
-                      Message <span className="text-[#FF4D6D]">*</span>
-                    </label>
-                    <textarea
                       required
-                      rows={4}
-                      value={form.message}
-                      onChange={(e) => setForm({ ...form, message: e.target.value })}
-                      placeholder="How can we help you?"
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-[#D5D0C9] bg-white text-sm text-[#171136] placeholder-[#9E97C2] focus:outline-none focus:border-[#171136] focus:ring-1 focus:ring-[#171136] transition-colors resize-y leading-relaxed"
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      placeholder="e.g. Tanvir Ahmed"
+                      className="w-full px-4 py-3 rounded-xl border border-[#EAE3F7] bg-[#FAF8FF] text-sm text-[#171136] placeholder-[#A59FC2] focus:outline-none focus:ring-2 focus:ring-[#FF4D6D] focus:border-transparent transition-all"
                     />
                   </div>
 
-                  {/* Submit */}
-                  <div className="pt-1">
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-[#171136] hover:bg-[#2A2159] text-white text-sm font-semibold transition-colors disabled:opacity-60 cursor-pointer"
-                    >
-                      {loading ? (
-                        <>
-                          <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          <span>Sending...</span>
-                        </>
-                      ) : (
-                        <>
-                          <IconSend className="w-3.5 h-3.5" />
-                          <span>Send message</span>
-                        </>
-                      )}
-                    </button>
+                  {/* Email */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#171136] mb-1.5">
+                      Email Address <span className="text-[#FF4D6D]">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      placeholder="name@example.com"
+                      className="w-full px-4 py-3 rounded-xl border border-[#EAE3F7] bg-[#FAF8FF] text-sm text-[#171136] placeholder-[#A59FC2] focus:outline-none focus:ring-2 focus:ring-[#FF4D6D] focus:border-transparent transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                  {/* Phone */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#171136] mb-1.5">
+                      Phone / WhatsApp <span className="text-xs text-[#8A84B0] font-normal">(Optional)</span>
+                    </label>
+                    <input
+                      type="tel"
+                      value={form.phone}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      placeholder="01XXXXXXXXX"
+                      className="w-full px-4 py-3 rounded-xl border border-[#EAE3F7] bg-[#FAF8FF] text-sm text-[#171136] placeholder-[#A59FC2] focus:outline-none focus:ring-2 focus:ring-[#FF4D6D] focus:border-transparent transition-all"
+                    />
                   </div>
 
-                </form>
-              )}
-            </div>
+                  {/* Subject */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#171136] mb-1.5">
+                      Topic / Subject <span className="text-[#FF4D6D]">*</span>
+                    </label>
+                    <select
+                      value={form.subject}
+                      onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl border border-[#EAE3F7] bg-[#FAF8FF] text-sm text-[#171136] focus:outline-none focus:ring-2 focus:ring-[#FF4D6D] focus:border-transparent transition-all cursor-pointer"
+                    >
+                      <option value="Order Inquiry & Status">Order Inquiry &amp; Status</option>
+                      <option value="Product Availability & Restock">Product Availability &amp; Restock</option>
+                      <option value="Shipping & Delivery Question">Shipping &amp; Delivery Question</option>
+                      <option value="Wholesale & Custom Figures">Wholesale &amp; Custom Figures</option>
+                      <option value="Feedback & Suggestion">Feedback &amp; Suggestion</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Order ID */}
+                <div>
+                  <label className="block text-xs font-bold text-[#171136] mb-1.5">
+                    Order ID / Number <span className="text-xs text-[#8A84B0] font-normal">(If inquiring about an existing order)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={form.orderNumber}
+                    onChange={(e) => setForm({ ...form, orderNumber: e.target.value })}
+                    placeholder="e.g. KS-84920"
+                    className="w-full px-4 py-3 rounded-xl border border-[#EAE3F7] bg-[#FAF8FF] text-sm text-[#171136] placeholder-[#A59FC2] focus:outline-none focus:ring-2 focus:ring-[#FF4D6D] focus:border-transparent transition-all"
+                  />
+                </div>
+
+                {/* Message */}
+                <div>
+                  <label className="block text-xs font-bold text-[#171136] mb-1.5">
+                    Your Message <span className="text-[#FF4D6D]">*</span>
+                  </label>
+                  <textarea
+                    required
+                    rows={4}
+                    value={form.message}
+                    onChange={(e) => setForm({ ...form, message: e.target.value })}
+                    placeholder="Please write your questions or details here..."
+                    className="w-full px-4 py-3 rounded-xl border border-[#EAE3F7] bg-[#FAF8FF] text-sm text-[#171136] placeholder-[#A59FC2] focus:outline-none focus:ring-2 focus:ring-[#FF4D6D] focus:border-transparent transition-all resize-y leading-relaxed"
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#FF4D6D] to-[#FF6B8B] hover:from-[#E63958] hover:to-[#FF4D6D] text-white text-sm font-bold shadow-lg shadow-red-500/20 active:scale-98 transition-all disabled:opacity-60 cursor-pointer"
+                  >
+                    {loading ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Sending message...</span>
+                      </>
+                    ) : (
+                      <>
+                        <IconSend className="w-4 h-4" />
+                        <span>Submit Message</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+              </form>
+            )}
           </div>
         </div>
 
       </div>
 
       {/* Location Map */}
-      <div className="bg-white rounded-2xl border border-[#EAE5DF] p-6 sm:p-8 mb-12 sm:mb-16 shadow-xs">
+      <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 sm:p-8 mb-12 sm:mb-16 shadow-[0_8px_30px_rgb(0,0,0,0.03)]">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-5">
           <div>
             <h3 className="font-[family-name:var(--font-display)] text-lg font-bold text-[#171136]">
               Location Map
             </h3>
-            <p className="text-xs sm:text-sm text-[#5A5579] mt-0.5">
+            <p className="text-xs sm:text-sm text-[#5D5589] mt-0.5">
               Mohakhali DOHS, House No-412, Flat-3/A &amp; 3/B Road No-29, Dhaka
             </p>
           </div>
@@ -454,14 +491,14 @@ export default function ContactClient() {
             href="https://www.google.com/maps/search/?api=1&query=Mohakhali+DOHS+House+412+Road+29+Dhaka"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#171136] hover:text-[#FF4D6D] transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#FFF1F4] hover:bg-[#FFE4E9] text-[#FF4D6D] text-xs font-semibold transition-colors"
           >
             <span>Open in Google Maps</span>
             <IconExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>
 
-        <div className="w-full h-[300px] sm:h-[360px] rounded-xl overflow-hidden border border-[#EAE5DF]">
+        <div className="w-full h-[300px] sm:h-[360px] rounded-2xl overflow-hidden border border-[#EAE3F7]">
           <iframe
             title="Kawaii Subete Location"
             src="https://maps.google.com/maps?q=Mohakhali%20DOHS,%20House%20No-412,%20Road%20No-29,%20Dhaka&t=&z=16&ie=UTF8&iwloc=&output=embed"
@@ -477,12 +514,15 @@ export default function ContactClient() {
       </div>
 
       {/* Clean FAQ Section */}
-      <div className="bg-white rounded-2xl border border-[#EAE5DF] p-7 sm:p-10 shadow-xs">
+      <div className="bg-white rounded-3xl border border-[#EAE3F7] p-7 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.03)]">
         <div className="max-w-xl mb-7">
+          <span className="inline-block text-[11px] font-extrabold uppercase tracking-wider text-[#7B5CFF] bg-[#EFE9FF] px-3 py-1 rounded-full mb-2">
+            COMMON QUESTIONS
+          </span>
           <h2 className="font-[family-name:var(--font-display)] text-xl sm:text-2xl font-bold text-[#171136]">
             Frequently Asked Questions
           </h2>
-          <p className="text-xs sm:text-sm text-[#5A5579] mt-1">
+          <p className="text-xs sm:text-sm text-[#5D5589] mt-1">
             Quick answers about shipping, payments, and returns.
           </p>
         </div>
@@ -495,12 +535,12 @@ export default function ContactClient() {
                 <button
                   type="button"
                   onClick={() => setOpenFaq(isOpen ? null : idx)}
-                  className="w-full text-left flex items-center justify-between gap-4 font-semibold text-sm sm:text-base text-[#171136] hover:text-[#FF4D6D] transition-colors cursor-pointer"
+                  className="w-full text-left flex items-center justify-between gap-4 font-bold text-sm sm:text-base text-[#171136] hover:text-[#FF4D6D] transition-colors cursor-pointer"
                 >
                   <span>{faq.q}</span>
                   <span
-                    className={`text-[#8A85A6] transition-transform duration-200 shrink-0 ${
-                      isOpen ? "rotate-90 text-[#171136]" : ""
+                    className={`w-7 h-7 rounded-full bg-[#FAF8FF] flex items-center justify-center text-[#7B5CFF] transition-transform duration-200 shrink-0 ${
+                      isOpen ? "rotate-90 bg-[#FFF1F4] text-[#FF4D6D]" : ""
                     }`}
                   >
                     <IconChevronRight className="w-4 h-4" />
@@ -508,7 +548,7 @@ export default function ContactClient() {
                 </button>
 
                 {isOpen && (
-                  <p className="text-xs sm:text-sm text-[#5A5579] leading-relaxed mt-2.5 pr-6">
+                  <p className="text-xs sm:text-sm text-[#5D5589] leading-relaxed mt-2.5 pr-6">
                     {faq.a}
                   </p>
                 )}
