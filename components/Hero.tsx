@@ -22,15 +22,19 @@ function SlideContent({ slide }: { slide: HeroSlide }) {
   return (
     <>
       {hasCustomImage ? (
-        <Image
-          src={getMediaUrl(slide.image)}
-          alt=""
-          fill
-          priority
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 800px"
-          className="object-cover pointer-events-none"
-        />
-
+        <>
+          <Image
+            src={getMediaUrl(slide.image)}
+            alt=""
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 800px"
+            className="object-cover pointer-events-none"
+          />
+          {/* Color overlay to ensure image and text show clearly */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#171136]/85 via-[#171136]/50 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+        </>
       ) : (
         <>
           {/* Background ambient shapes (default look, no slide image set) */}
@@ -60,12 +64,12 @@ function SlideContent({ slide }: { slide: HeroSlide }) {
       )}
 
       <div className="relative z-10 px-4 py-3.5 sm:px-9 sm:py-7 lg:px-12 lg:py-10 w-full max-w-[68%] sm:max-w-[62%] lg:max-w-[560px]">
-        <h1 className="hero-content-in font-[family-name:var(--font-display)] font-extrabold text-white text-[16.5px] sm:text-[28px] lg:text-[42px] xl:text-[46px] leading-[1.12] tracking-tight">
+        <h1 className="hero-content-in font-[family-name:var(--font-display)] font-extrabold text-white text-[16.5px] sm:text-[28px] lg:text-[42px] xl:text-[46px] leading-[1.12] tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
           {slide.title}
         </h1>
         {slide.subtitle && (
           <p
-            className="hero-content-in text-[#DCD3F5] text-[10px] sm:text-[13px] lg:text-[16px] mt-1.5 sm:mt-2.5 lg:mt-4 leading-tight sm:leading-snug line-clamp-2"
+            className="hero-content-in text-white/90 text-[10px] sm:text-[13px] lg:text-[16px] mt-1.5 sm:mt-2.5 lg:mt-4 leading-tight sm:leading-snug line-clamp-2 drop-shadow-[0_1px_4px_rgba(0,0,0,0.35)]"
             style={{ animationDelay: "70ms" }}
           >
             {slide.subtitle}
@@ -78,7 +82,7 @@ function SlideContent({ slide }: { slide: HeroSlide }) {
           >
             <a
               href={slide.button_link || slide.buttonLink || "#"}
-              className="flex items-center gap-1.5 sm:gap-2 bg-[#FF4D6D] hover:bg-[#ff3358] text-white font-bold text-[10px] sm:text-[13.5px] lg:text-[15px] rounded-full h-7 sm:h-10 lg:h-13 px-3 sm:px-6 lg:px-7 shadow-sm active:scale-95 transition-all"
+              className="flex items-center gap-1.5 sm:gap-2 bg-[#FF4D6D] hover:bg-[#ff3358] text-white font-bold text-[10px] sm:text-[13.5px] lg:text-[15px] rounded-full h-7 sm:h-10 lg:h-13 px-3 sm:px-6 lg:px-7 shadow-md active:scale-95 transition-all"
             >
               {slide.button_text || slide.buttonText}
               <IconArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
