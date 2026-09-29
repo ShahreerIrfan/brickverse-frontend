@@ -99,7 +99,8 @@ const AVAILABLE_COUPONS = [
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalItems, subtotal, subtotalFormatted, clearCart } = useCart();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading, openLoginModal } = useAuth();
+
 
   // Form State
   const [firstName, setFirstName] = useState(user?.first_name || "");
@@ -206,6 +207,13 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAuthenticated) {
+      openLoginModal();
+      return;
+    }
+
+
+
     if (items.length === 0) {
       alert("Your cart is empty. Please add items before checking out.");
       return;
@@ -220,12 +228,13 @@ export default function CheckoutPage() {
       last_name: lastName,
       customer_name: `${firstName} ${lastName}`.trim(),
       customer_phone: phone,
-      customer_email: user?.email || "guest@kawaiisubete.com",
+      customer_email: user?.email || "",
       city: district,
       district: district,
       address,
       shipping_address: `${address}, ${district}`,
       total_amount: totalAmount,
+
       items: items.map((it) => ({
         id: it.id,
         productId: it.id,
@@ -342,22 +351,60 @@ export default function CheckoutPage() {
       {/* 3. MAIN CHECKOUT CONTAINER */}
       {/* ========================================================================= */}
       <main className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-12 py-6 sm:py-10">
-        {/* Page Title & Subtitle */}
-        <div className="mb-7 sm:mb-9">
-          <h1 className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[28px] text-[#171136] tracking-tight mb-1">
-            Checkout
-          </h1>
-          <p className="text-xs sm:text-sm text-[#736E9B]">
-            Pay with cash when your order arrives at your doorstep.
-          </p>
-        </div>
+        {isLoading ? (
+          <div className="py-20 flex flex-col items-center justify-center text-center">
+            <div className="w-12 h-12 border-4 border-[#FF4D6D]/30 border-t-[#FF4D6D] rounded-full animate-spin mb-4" />
+            <p className="text-sm font-bold text-[#736E9B]">Loading checkout session...</p>
+          </div>
+        ) : !isAuthenticated ? (
+          <div className="max-w-xl mx-auto my-12 bg-white rounded-3xl border border-[#EAE3F7] p-8 sm:p-12 shadow-[0_16px_40px_rgba(23,17,54,0.06)] text-center animate-in fade-in">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#FFEAF0] flex items-center justify-center text-[#FF4D6D] mx-auto mb-5 shadow-xs">
+              <IconLock className="w-8 h-8 sm:w-10 sm:h-10" />
+            </div>
+            <h2 className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-3xl text-[#171136] mb-2">
+              Login Required
+            </h2>
+            <p className="text-xs sm:text-sm text-[#736E9B] max-w-md mx-auto mb-8 leading-relaxed">
+              Guest checkout is disabled for your security. Please sign in or create an account with OTP to complete your purchase and track your order.
+            </p>
 
-        {/* 2-Column Grid: Left (Forms) + Right (Sticky Order Summary) */}
-        <form onSubmit={handlePlaceOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-          {/* ===================================================================== */}
-          {/* LEFT COLUMN: DELIVERY DETAILS & PAYMENT METHOD */}
-          {/* ===================================================================== */}
-          <div className="lg:col-span-7 xl:col-span-7 space-y-8">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={openLoginModal}
+                className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#FF4D6D] hover:bg-[#E6004C] text-white font-bold text-sm shadow-lg shadow-[#FF4D6D]/25 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>Sign In / Register</span>
+                <IconArrowRight className="w-4 h-4" />
+              </button>
+
+              <Link
+                href="/cart"
+                className="w-full sm:w-auto px-6 py-3.5 rounded-full bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#171136] font-bold text-sm transition-all cursor-pointer text-center"
+              >
+                Return to Cart
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Page Title & Subtitle */}
+            <div className="mb-7 sm:mb-9">
+              <h1 className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[28px] text-[#171136] tracking-tight mb-1">
+                Checkout
+              </h1>
+              <p className="text-xs sm:text-sm text-[#736E9B]">
+                Pay with cash when your order arrives at your doorstep.
+              </p>
+            </div>
+
+            {/* 2-Column Grid: Left (Forms) + Right (Sticky Order Summary) */}
+            <form onSubmit={handlePlaceOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+              {/* ===================================================================== */}
+              {/* LEFT COLUMN: DELIVERY DETAILS & PAYMENT METHOD */}
+              {/* ===================================================================== */}
+              <div className="lg:col-span-7 xl:col-span-7 space-y-8">
+
             {/* --- Section 1: Delivery Details --- */}
             <div className="space-y-4 sm:space-y-5">
               <h2 className="font-[family-name:var(--font-display)] font-extrabold text-lg sm:text-xl text-[#171136] tracking-tight">
@@ -792,7 +839,11 @@ export default function CheckoutPage() {
             </div>
           </div>
         </form>
-      </main>
+      </>
+    )}
+  </main>
+
+
 
       {/* ========================================================================= */}
       {/* 4. MINIMAL CHECKOUT FOOTER (Matches brickverse-checkout.svg) */}

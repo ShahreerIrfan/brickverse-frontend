@@ -5,10 +5,13 @@ import Image from "next/image";
 import { IconHeart, IconBag, IconStar } from "./icons";
 import type { Product } from "./productData";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 import { getMediaUrl } from "@/lib/api";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const isWishlisted = isInWishlist(product.id || product.slug);
   const ratingVal = product.rating ?? 5.0;
   const fullStars = Math.round(ratingVal);
   const regularPrice = product.regularPrice || product.originalPrice;
@@ -25,6 +28,12 @@ export default function ProductCard({ product }: { product: Product }) {
     e.preventDefault();
     e.stopPropagation();
     addToCart(product, 1, true);
+  };
+
+  const handleToggleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWishlist(product.id || product.slug, product.name);
   };
 
   const isPreorder = product.stock === 0 && product.productType !== "grouped";
@@ -48,15 +57,15 @@ export default function ProductCard({ product }: { product: Product }) {
         ) : null}
         <button
           type="button"
-          aria-label="Add to wishlist"
-          className="absolute right-2.5 sm:right-4 top-2.5 sm:top-4 w-7 h-7 sm:w-8.5 sm:h-8.5 rounded-full bg-white flex items-center justify-center z-10 text-[#736E9B] hover:text-[#FF4D6D] transition-colors shadow-xs cursor-pointer"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
+          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          className={`absolute right-2.5 sm:right-4 top-2.5 sm:top-4 w-7 h-7 sm:w-8.5 sm:h-8.5 rounded-full bg-white flex items-center justify-center z-10 transition-colors shadow-xs cursor-pointer ${
+            isWishlisted ? "text-[#FF4D6D]" : "text-[#736E9B] hover:text-[#FF4D6D]"
+          }`}
+          onClick={handleToggleWishlist}
         >
-          <IconHeart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <IconHeart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isWishlisted ? "fill-[#FF4D6D]" : ""}`} />
         </button>
+
         <Image
           src={imageSrc}
           alt={product.name}

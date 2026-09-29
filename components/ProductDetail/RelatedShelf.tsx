@@ -5,6 +5,7 @@ import Image from "next/image";
 import { IconArrowRight, IconHeart, IconBag, IconStar } from "../icons";
 import type { Product } from "../productData";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 
 interface RelatedShelfProps {
   products?: Product[];
@@ -12,6 +13,7 @@ interface RelatedShelfProps {
 
 export default function RelatedShelf({ products = [] }: RelatedShelfProps) {
   const { addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
 
   if (!products || products.length === 0) {
     return null;
@@ -78,15 +80,19 @@ export default function RelatedShelf({ products = [] }: RelatedShelfProps) {
 
               <button
                 type="button"
-                aria-label="Add to wishlist"
-                className="absolute right-3 top-3 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white flex items-center justify-center text-[#736E9B] hover:text-[#FF4D6D] transition-colors shadow-xs cursor-pointer z-10"
+                aria-label={isInWishlist(item.id) ? "Remove from wishlist" : "Add to wishlist"}
+                className={`absolute right-3 top-3 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white flex items-center justify-center transition-colors shadow-xs cursor-pointer z-10 ${
+                  isInWishlist(item.id) ? "text-[#FF4D6D]" : "text-[#736E9B] hover:text-[#FF4D6D]"
+                }`}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
+                  toggleWishlist(item.id, item.name);
                 }}
               >
-                <IconHeart className="w-3.5 h-3.5" />
+                <IconHeart className={`w-3.5 h-3.5 ${isInWishlist(item.id) ? "fill-[#FF4D6D]" : ""}`} />
               </button>
+
 
               <Image
                 src={item.image}

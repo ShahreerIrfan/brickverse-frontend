@@ -155,9 +155,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    await logoutUser();
+    try {
+      await logoutUser();
+    } catch (e) {
+      console.warn("Logout API call failed", e);
+    }
     setUser(null);
-    localStorage.removeItem(USER_STORAGE_KEY);
+    try {
+      localStorage.removeItem(USER_STORAGE_KEY);
+      localStorage.removeItem("brickverse_shopping_cart");
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("auth:logout"));
+      }
+    } catch (e) {
+      console.warn("Failed to clear user or cart storage on logout", e);
+    }
   };
 
   return (

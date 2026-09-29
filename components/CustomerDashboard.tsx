@@ -6,7 +6,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { User } from "./productData";
 import { useAuth } from "@/context/AuthContext";
+import { useWishlist } from "@/context/WishlistContext";
+import { useCart } from "@/context/CartContext";
 import { getCustomerOrders, trackOrder } from "@/lib/api";
+
 import { printOrderInvoice } from "@/lib/invoice";
 import {
   IconHome,
@@ -40,7 +43,10 @@ export default function CustomerDashboard({
 }: CustomerDashboardProps) {
   const router = useRouter();
   const { logout } = useAuth();
+  const { wishlistIds, removeFromWishlist } = useWishlist();
+  const { addToCart } = useCart();
   const [activeTab, setActiveTab] = useState<DashboardTab>(initialTab);
+
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
 
@@ -1195,62 +1201,74 @@ export default function CustomerDashboard({
             {/* --------------------------------------------------------------------- */}
             {activeTab === "wishlist" && (
               <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 sm:p-7 shadow-xs">
-                <h2 className="font-bold text-lg text-[#171136] mb-1">My Wishlist</h2>
-                <p className="text-xs text-[#736E9B] mb-5">
-                  Items you have saved to purchase later
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="p-4 rounded-2xl bg-[#FFF6EE] border border-[#FFE3CC] flex flex-col justify-between">
-                    <div>
-                      <span className="text-[10px] font-bold bg-[#FF4D6D] text-white px-2 py-0.5 rounded-full">
-                        ANIME FIGURE
-                      </span>
-                      <h3 className="font-bold text-sm text-[#171136] mt-2">
-                        Neon Valkyrie EVA-01
-                      </h3>
-                      <p className="text-xs text-[#736E9B] mt-0.5">1/7 Scale Pre-Painted Figure</p>
-                      <p className="font-bold text-sm text-[#FF4D6D] mt-2">৳89.99</p>
-                    </div>
-                    <button className="mt-4 w-full bg-[#171136] text-white font-bold text-xs py-2.5 rounded-xl hover:bg-[#251c4a] transition-all cursor-pointer">
-                      Move to Bag
-                    </button>
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                  <div>
+                    <h2 className="font-bold text-lg text-[#171136]">My Wishlist</h2>
+                    <p className="text-xs text-[#736E9B]">
+                      {wishlistIds.length === 0
+                        ? "You haven't saved any items yet"
+                        : `${wishlistIds.length} item${wishlistIds.length === 1 ? "" : "s"} saved in your wishlist`}
+                    </p>
                   </div>
-
-                  <div className="p-4 rounded-2xl bg-[#FFF6EE] border border-[#FFE3CC] flex flex-col justify-between">
-                    <div>
-                      <span className="text-[10px] font-bold bg-[#7B5CFF] text-white px-2 py-0.5 rounded-full">
-                        BRICKS
-                      </span>
-                      <h3 className="font-bold text-sm text-[#171136] mt-2">
-                        Cyber Blade Shinobi Set
-                      </h3>
-                      <p className="text-xs text-[#736E9B] mt-0.5">1,240 pcs articulated kit</p>
-                      <p className="font-bold text-sm text-[#FF4D6D] mt-2">৳52.50</p>
-                    </div>
-                    <button className="mt-4 w-full bg-[#171136] text-white font-bold text-xs py-2.5 rounded-xl hover:bg-[#251c4a] transition-all cursor-pointer">
-                      Move to Bag
-                    </button>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-[#FFF6EE] border border-[#FFE3CC] flex flex-col justify-between">
-                    <div>
-                      <span className="text-[10px] font-bold bg-[#00B4D8] text-white px-2 py-0.5 rounded-full">
-                        STEM KIT
-                      </span>
-                      <h3 className="font-bold text-sm text-[#171136] mt-2">
-                        Astro Rover STEM Kit
-                      </h3>
-                      <p className="text-xs text-[#736E9B] mt-0.5">Programmable Python rover</p>
-                      <p className="font-bold text-sm text-[#FF4D6D] mt-2">৳129.99</p>
-                    </div>
-                    <button className="mt-4 w-full bg-[#171136] text-white font-bold text-xs py-2.5 rounded-xl hover:bg-[#251c4a] transition-all cursor-pointer">
-                      Move to Bag
-                    </button>
-                  </div>
+                  <Link
+                    href="/shop"
+                    className="text-xs font-bold text-[#FF4D6D] hover:text-[#E6004C] transition-colors"
+                  >
+                    + Add more products
+                  </Link>
                 </div>
+
+                {wishlistIds.length === 0 ? (
+                  <div className="py-12 flex flex-col items-center justify-center text-center bg-[#FAF7FD] rounded-2xl border border-dashed border-[#D6CCE8]">
+                    <div className="w-14 h-14 rounded-full bg-[#FFEAF0] text-[#FF4D6D] flex items-center justify-center mb-3">
+                      <IconHeart className="w-7 h-7" />
+                    </div>
+                    <h3 className="font-bold text-sm text-[#171136]">Your wishlist is empty</h3>
+                    <p className="text-xs text-[#736E9B] mt-1 max-w-xs mb-4">
+                      Browse our collection of anime figures, bricks, and coding kits to save your favorites.
+                    </p>
+                    <Link
+                      href="/shop"
+                      className="px-6 py-2.5 rounded-full bg-[#FF4D6D] hover:bg-[#E6004C] text-white font-bold text-xs shadow-sm transition-all active:scale-95"
+                    >
+                      Explore Catalog
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="p-4 rounded-2xl bg-[#FFF6EE] border border-[#FFE3CC] flex flex-col justify-between">
+                      <div>
+                        <span className="text-[10px] font-bold bg-[#FF4D6D] text-white px-2 py-0.5 rounded-full">
+                          ANIME FIGURE
+                        </span>
+                        <h3 className="font-bold text-sm text-[#171136] mt-2">
+                          Neon Valkyrie EVA-01
+                        </h3>
+                        <p className="text-xs text-[#736E9B] mt-0.5">1/7 Scale Pre-Painted Figure</p>
+                        <p className="font-bold text-sm text-[#FF4D6D] mt-2">৳89.99</p>
+                      </div>
+                      <div className="flex items-center gap-2 mt-4">
+                        <button
+                          onClick={() => {
+                            addToCart({ id: "neon-valkyrie", name: "Neon Valkyrie EVA-01", price: 89.99, image: "/images/figure-samurai-red.svg" }, 1, true);
+                          }}
+                          className="flex-1 bg-[#171136] text-white font-bold text-xs py-2.5 rounded-xl hover:bg-[#251c4a] transition-all cursor-pointer"
+                        >
+                          Move to Bag
+                        </button>
+                        <button
+                          onClick={() => removeFromWishlist(wishlistIds[0] || "neon-valkyrie")}
+                          className="px-3 py-2.5 rounded-xl border border-[#EAE3F7] text-[#736E9B] hover:text-[#FF4D6D] text-xs font-bold hover:bg-white transition-colors"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
+
 
             {/* --------------------------------------------------------------------- */}
             {/* TAB 6: MY COUPONS */}

@@ -70,6 +70,10 @@ export default function RightSidebarCart() {
   }, [isCartOpen]);
 
   const handleCheckoutClick = () => {
+    if (!isAuthenticated) {
+      openLoginModal();
+      return;
+    }
     closeCart();
     router.push("/checkout");
   };

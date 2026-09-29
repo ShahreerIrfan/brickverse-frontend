@@ -3,6 +3,7 @@ import { Poppins, Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
+import { WishlistProvider } from "@/context/WishlistContext";
 import AuthModal from "@/components/AuthModal";
 import RightSidebarCart from "@/components/RightSidebarCart";
 
@@ -20,7 +21,6 @@ const inter = Inter({
   display: "swap",
   preload: true,
 });
-
 
 export const metadata: Metadata = {
   title: "kawaiisubete",
@@ -54,12 +54,15 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-[#FFF6EE]">
         <AuthProvider>
           <CartProvider>
-            {children}
-            <RightSidebarCart />
-            <AuthModal />
+            <WishlistProvider>
+              {children}
+              <RightSidebarCart />
+              <AuthModal />
+            </WishlistProvider>
           </CartProvider>
         </AuthProvider>
       </body>
     </html>
   );
 }
+

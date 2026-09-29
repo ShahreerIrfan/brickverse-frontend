@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { IconHeart, IconSpark, IconZoomIn, IconClose } from "../icons";
 import type { Product } from "../productData";
+import { useWishlist } from "@/context/WishlistContext";
 import { getMediaUrl } from "@/lib/api";
 
 interface ProductGalleryProps {
@@ -12,7 +13,8 @@ interface ProductGalleryProps {
 
 export default function ProductGallery({ product }: ProductGalleryProps) {
   const [activeThumb, setActiveThumb] = useState(0);
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const isWishlisted = isInWishlist(product.id || product.slug);
   const [zoomOpen, setZoomOpen] = useState(false);
   const [sharedToast, setSharedToast] = useState(false);
 
@@ -122,12 +124,13 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
         {/* Top-Right Action Floating Buttons */}
         <div className="absolute right-4 sm:right-6 top-4 sm:top-6 flex flex-col gap-2 z-10">
           <button
-            onClick={() => setIsWishlisted(!isWishlisted)}
-            aria-label="Add to wishlist"
+            onClick={() => toggleWishlist(product.id || product.slug, product.name)}
+            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
             className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white shadow-md flex items-center justify-center text-[#736E9B] hover:text-[#FF4D6D] hover:scale-105 active:scale-95 transition-all cursor-pointer border border-[#EAE3F7]"
           >
             <IconHeart className={`w-5 h-5 ${isWishlisted ? "text-[#FF4D6D] fill-[#FF4D6D]" : ""}`} />
           </button>
+
           <button
             onClick={handleShare}
             aria-label="Share product"

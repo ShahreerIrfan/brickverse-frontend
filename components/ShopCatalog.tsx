@@ -22,7 +22,9 @@ import { CategoryGlyph } from "./CategoryRail";
 import type { Product, Category, SubCategory } from "./productData";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 import { getMediaUrl, getProductsPage } from "@/lib/api";
+
 import ProductCardSkeleton from "./skeletons/ProductCardSkeleton";
 
 type ShopCatalogProps = {
@@ -63,7 +65,8 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
 
   // Quick view modal state
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
-  const [wishlistProductIds, setWishlistProductIds] = useState<Set<string>>(new Set());
+  const { isInWishlist, toggleWishlist: globalToggleWishlist } = useWishlist();
+
 
   // Keep state in sync if URL parameters change
   useEffect(() => {
@@ -119,16 +122,12 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
     setMobileFilterOpen(false);
   };
 
-  const toggleWishlist = (productId: string, e: React.MouseEvent) => {
+  const toggleWishlist = (product: Product, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setWishlistProductIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(productId)) next.delete(productId);
-      else next.add(productId);
-      return next;
-    });
+    globalToggleWishlist(product.id, product.name);
   };
+
 
   // Helper to extract numeric price
   const parsePrice = (priceStr?: string): number => {
@@ -490,7 +489,7 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
             <>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4.5">
                 {products.map((product) => {
-                  const isWishlisted = wishlistProductIds.has(product.id);
+                  const isWishlisted = isInWishlist(product.id);
                   const regularPrice = product.regularPrice || product.originalPrice;
                   const discountedPrice = product.discountedPrice || product.price;
                   const discountPercent =
@@ -520,13 +519,14 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
                           <button
                             type="button"
                             aria-label="Wishlist"
-                            onClick={(e) => toggleWishlist(product.id, e)}
+                            onClick={(e) => toggleWishlist(product, e)}
                             className={`w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full bg-white/95 backdrop-blur-md flex items-center justify-center shadow-xs transition-colors cursor-pointer ${
                               isWishlisted ? "text-[#FF4D6D]" : "text-[#736E9B] hover:text-[#FF4D6D]"
                             }`}
                           >
                             <IconHeart className="w-3.5 h-3.5" style={{ fill: isWishlisted ? "#FF4D6D" : "none" }} />
                           </button>
+
 
                           <button
                             type="button"

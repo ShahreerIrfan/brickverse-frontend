@@ -92,6 +92,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Listen for logout event to clear cart so old user products do not remain in guest cart
+  useEffect(() => {
+    const handleAuthLogout = () => {
+      setItems([]);
+      try {
+        localStorage.removeItem(CART_STORAGE_KEY);
+      } catch (e) {
+        console.warn("Failed to clear cart on logout", e);
+      }
+    };
+
+    window.addEventListener("auth:logout", handleAuthLogout);
+    return () => {
+      window.removeEventListener("auth:logout", handleAuthLogout);
+    };
+  }, []);
+
   // Save to localStorage on change
   useEffect(() => {
     if (isInitialized) {

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCart, formatPrice } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { useWishlist } from "@/context/WishlistContext";
 import {
   IconChevronRight,
   IconHeart,
@@ -117,6 +118,7 @@ export default function CartPage() {
   } = useCart();
 
   const { isAuthenticated, openLoginModal } = useAuth();
+  const { isInWishlist, toggleWishlist } = useWishlist();
 
   // Coupon state
   const [couponInput, setCouponInput] = useState("");
@@ -164,13 +166,19 @@ export default function CartPage() {
       showToast(`"${item.name}" moved back to active cart`);
     } else {
       setSavedForLaterIds((prev) => [...prev, item.id]);
-      showToast(`"${item.name}" saved for later!`);
+      toggleWishlist(item.id, item.name);
+      showToast(`"${item.name}" saved to your wishlist!`);
     }
   };
 
   const handleCheckout = () => {
+    if (!isAuthenticated) {
+      openLoginModal();
+      return;
+    }
     router.push("/checkout");
   };
+
 
   // Calculations
   const discountRate = appliedCoupon ? appliedCoupon.discountPercent / 100 : 0;
@@ -544,7 +552,7 @@ export default function CartPage() {
               disabled={items.length === 0}
               className="w-full py-4 rounded-full bg-[#FF4D6D] hover:bg-[#E6004C] active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none text-white font-bold text-base shadow-lg shadow-[#FF4D6D]/25 transition-all flex items-center justify-center gap-2 group cursor-pointer"
             >
-              <span>Proceed to checkout</span>
+              <span>{isAuthenticated ? "Proceed to checkout" : "Login to checkout"}</span>
               <IconArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
             </button>
 
@@ -603,11 +611,13 @@ export default function CartPage() {
                 {/* Floating Wishlist Heart */}
                 <button
                   type="button"
+                  onClick={() => toggleWishlist(prod.id, prod.name)}
                   aria-label={`Add ${prod.name} to wishlist`}
                   className="absolute top-3.5 right-3.5 w-8.5 h-8.5 rounded-full bg-white/90 hover:bg-white text-[#736E9B] hover:text-[#FF4D6D] shadow-xs flex items-center justify-center transition-all cursor-pointer active:scale-90"
                 >
-                  <IconHeart className="w-4 h-4" />
+                  <IconHeart className={`w-4 h-4 ${isInWishlist(prod.id) ? "text-[#FF4D6D] fill-[#FF4D6D]" : ""}`} />
                 </button>
+
 
                 {/* Product Illustration */}
                 <Image

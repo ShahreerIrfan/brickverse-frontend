@@ -7,10 +7,12 @@ import MobileMenu from "./MobileMenu";
 import SearchBox from "./SearchBox";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 
 export default function Navbar() {
   const { user, isAuthenticated, openLoginModal } = useAuth();
   const { totalItems, subtotalFormatted, openCart } = useCart();
+  const { wishlistCount } = useWishlist();
 
   return (
     <div className="bg-white border-b border-[#EAE3F7] relative z-40">
@@ -35,15 +37,19 @@ export default function Navbar() {
 
           {/* Mobile Right Action Icons (Row 1 Right on Mobile, Hidden on Desktop) */}
           <div className="flex lg:hidden items-center gap-1.5 shrink-0">
-            <button
+            <Link
+              href={isAuthenticated ? "/dashboard/wishlist" : "/shop"}
               aria-label="Wishlist"
               className="w-9 h-9 rounded-full bg-[#F6F1FF] hover:bg-[#EFE9FF] flex items-center justify-center relative cursor-pointer"
             >
               <IconHeart className="w-3.5 h-3.5 text-[#171136]" />
-              <span className="absolute -top-1 -right-1 bg-[#FFB800] text-[#171136] text-[9.5px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
-                3
-              </span>
-            </button>
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#FFB800] text-[#171136] text-[9.5px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
+
 
             <button
               onClick={openCart}
@@ -88,15 +94,19 @@ export default function Navbar() {
 
         {/* Desktop Right Action Icons (Hidden on Mobile, Displayed on Desktop) */}
         <div className="hidden lg:flex items-center gap-2.5 sm:gap-3 shrink-0 ml-auto">
-          <button
+          <Link
+            href={isAuthenticated ? "/dashboard/wishlist" : "/shop"}
             aria-label="Wishlist"
             className="w-11 h-11 rounded-full bg-[#F6F1FF] hover:bg-[#EFE9FF] flex items-center justify-center relative cursor-pointer transition-colors"
           >
             <IconHeart className="w-4 h-4 text-[#171136]" />
-            <span className="absolute -top-1 -right-1 bg-[#FFB800] text-[#171136] text-[10.5px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
-              3
-            </span>
-          </button>
+            {wishlistCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-[#FFB800] text-[#171136] text-[10.5px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                {wishlistCount}
+              </span>
+            )}
+          </Link>
+
 
           <button
             onClick={openCart}

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { IconHeart, IconBag, IconCheck } from "../icons";
 import type { Product } from "../productData";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
+import { useWishlist } from "@/context/WishlistContext";
 
 interface ProductBuyBoxProps {
   product: Product;
@@ -11,10 +13,13 @@ interface ProductBuyBoxProps {
 
 export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
   const { addToCart, openCart, items } = useCart();
+  const { isAuthenticated, openLoginModal } = useAuth();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const [quantity, setQuantity] = useState(1);
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const [addedToast, setAddedToast] = useState(false);
   const [buyNowModal, setBuyNowModal] = useState(false);
+
+  const isWishlisted = isInWishlist(product.id || product.slug);
 
   const priceFormatted = product.discountedPrice || product.price || "৳34.99";
   const originalPriceFormatted = product.regularPrice || product.originalPrice || "৳46.00";
@@ -40,8 +45,18 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
   };
 
   const handleBuyNow = () => {
-    addToCart(product, Math.min(quantity, maxQty), true);
+    addToCart(product, Math.min(quantity, maxQty), false);
+    if (!isAuthenticated) {
+      openLoginModal();
+    } else {
+      openCart();
+    }
   };
+
+  const handleToggleWishlist = () => {
+    toggleWishlist(product.id || product.slug, product.name);
+  };
+
 
   return (
     <div className="flex flex-col flex-1 max-w-xl">
@@ -169,12 +184,13 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
 
         {/* Wishlist Square Icon Button */}
         <button
-          onClick={() => setIsWishlisted(!isWishlisted)}
-          aria-label="Add to wishlist"
+          onClick={handleToggleWishlist}
+          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
           className="w-14 h-14 rounded-full bg-white border border-[#EAE3F7] hover:border-[#FF4D6D] flex items-center justify-center transition-all cursor-pointer shadow-xs shrink-0"
         >
-          <IconHeart className={`w-5 h-5 ${isWishlisted ? "text-[#FF4D6D] fill-[#FF4D6D]" : "text-[#FF4D6D]"}`} />
+          <IconHeart className={`w-5 h-5 ${isWishlisted ? "text-[#FF4D6D] fill-[#FF4D6D]" : "text-[#736E9B]"}`} />
         </button>
+
       </div>
 
       {/* Added to Cart Feedback Toast */}
