@@ -78,7 +78,7 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
         )}
         {discountPercent ? (
           <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-[#FF4D6D] text-white shadow-xs">
-            -{discountPercent}% OFF
+            {discountPercent}% OFF
           </span>
         ) : null}
       </div>

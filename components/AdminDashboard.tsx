@@ -2803,7 +2803,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                           const reg = p.regularPrice || p.originalPrice || "—";
                           const disc = p.discountedPrice || p.price || "—";
                           const tp = p.tradePrice || "—";
-                          const discountBadge = p.discountPercent ? `-${p.discountPercent}%` : null;
+                          const discountBadge = p.discountPercent ? `${p.discountPercent}% OFF` : null;
                           const truncatedName = p.name ? (p.name.length > 40 ? `${p.name.slice(0, 40)}...` : p.name) : "Unnamed Product";
                           const itemStock = typeof p.stock === "number" ? p.stock : (parsePrice(String(p.stock)) || 0);
                           const itemTp = parsePrice(p.tradePrice || (p as any).trade_price);
@@ -3315,7 +3315,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                       <span className="text-xs font-bold text-[#736E9B]">Calculated Discount:</span>
                       {calculatedDiscountPercent > 0 ? (
                         <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-[#FF4D6D] text-white shadow-xs animate-in zoom-in-90">
-                          -{calculatedDiscountPercent}% OFF
+                          {calculatedDiscountPercent}% OFF
                         </span>
                       ) : (
                         <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#F0EBF8] text-[#736E9B]">

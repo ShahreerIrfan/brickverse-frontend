@@ -504,7 +504,7 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
                       <div className="relative w-full aspect-square bg-[#FAF7FF] overflow-hidden">
                         {discountPercent ? (
                           <span className="absolute left-2 top-2 bg-[#FF4D6D] text-white text-[9px] sm:text-[10.5px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full z-10 shadow-xs">
-                            -{discountPercent}%
+                            {discountPercent}% OFF
                           </span>
                         ) : null}
 

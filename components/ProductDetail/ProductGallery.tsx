@@ -108,13 +108,13 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
         {product.discountPercent ? (
           <div className="absolute left-4 sm:left-6 top-4 sm:top-6 -rotate-8 z-10">
             <span className="bg-[#FF4D6D] text-white text-xs sm:text-sm font-extrabold px-3.5 py-1.5 rounded-full shadow-md inline-block">
-              -{product.discountPercent}%
+              {product.discountPercent}% OFF
             </span>
           </div>
         ) : product.badge ? (
           <div className="absolute left-4 sm:left-6 top-4 sm:top-6 -rotate-8 z-10">
             <span className="bg-[#FF4D6D] text-white text-xs sm:text-sm font-extrabold px-3.5 py-1.5 rounded-full shadow-md inline-block">
-              {product.badge}
+              {product.badge.replace(/^-(\d+%)$/, "$1 OFF")}
             </span>
           </div>
         ) : null}

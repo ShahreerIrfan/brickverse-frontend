@@ -43,7 +43,7 @@ export default function ProductCard({ product }: { product: Product }) {
           <span
             className="absolute left-2.5 sm:left-4 top-2.5 sm:top-4 -rotate-6 text-white text-[9px] sm:text-[11px] font-extrabold tracking-wide rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 z-10 bg-[#FF4D6D] shadow-xs"
           >
-            -{discountPercent}%
+            {discountPercent}% OFF
           </span>
         ) : null}
         <button

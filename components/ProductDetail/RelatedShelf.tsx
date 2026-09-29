@@ -61,14 +61,20 @@ export default function RelatedShelf({ products = [] }: RelatedShelfProps) {
               className="relative w-full aspect-square flex items-center justify-center overflow-hidden"
               style={{ backgroundColor: item.cardBg || "#FAF8FE" }}
             >
-              {item.badge && (
+              {item.discountPercent ? (
+                <span
+                  className="absolute left-3 top-3 text-white text-[9px] sm:text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-xs z-10 bg-[#FF4D6D]"
+                >
+                  {item.discountPercent}% OFF
+                </span>
+              ) : item.badge ? (
                 <span
                   className="absolute left-3 top-3 text-white text-[9px] sm:text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-xs z-10"
                   style={{ backgroundColor: item.badgeColor || item.accent }}
                 >
-                  {item.badge}
+                  {item.badge.replace(/^-(\d+%)$/, "$1 OFF")}
                 </span>
-              )}
+              ) : null}
 
               <button
                 type="button"
