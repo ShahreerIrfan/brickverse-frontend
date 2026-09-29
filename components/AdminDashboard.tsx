@@ -477,6 +477,17 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     return 0;
   }, [formRegularPrice, formDiscountedPrice]);
 
+  // Trade Price (TP) auto-calculation for grouped bundle products
+  const calculatedGroupTradePrice = useMemo(() => {
+    if (formProductType !== "grouped" || formGroupItems.length === 0) return 0;
+    const byId = new Map(products.map((p) => [p.id, p]));
+    return formGroupItems.reduce((sum, item) => {
+      const child = byId.get(item.childId);
+      const tp = parsePrice(child?.tradePrice || (child as any)?.trade_price);
+      return sum + tp * item.quantity;
+    }, 0);
+  }, [formProductType, formGroupItems, products]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
@@ -1288,7 +1299,13 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     const description = (form.get("description") as string) || "";
     const regularPrice = formRegularPrice.startsWith("৳") ? formRegularPrice : `৳${formRegularPrice}`;
     const discountedPrice = formDiscountedPrice.startsWith("৳") ? formDiscountedPrice : `৳${formDiscountedPrice}`;
-    const tradePrice = formTradePrice.startsWith("৳") ? formTradePrice : `৳${formTradePrice}`;
+    const tradePriceValue =
+      formProductType === "grouped"
+        ? calculatedGroupTradePrice > 0
+          ? calculatedGroupTradePrice.toFixed(2)
+          : "0.00"
+        : formTradePrice;
+    const tradePrice = tradePriceValue.startsWith("৳") ? tradePriceValue : `৳${tradePriceValue}`;
     const stock = Number.isFinite(Number(formStock)) ? Math.max(0, Math.floor(Number(formStock))) : 0;
 
     const data = new FormData();
@@ -3355,18 +3372,52 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                         <label className="font-bold text-xs text-[#171136]">
                           3) TP (Trade Price ৳) <span className="text-[#FF4D6D]">*</span>
                         </label>
-                        <span title="Trade / Wholesale purchase price from supplier" className="text-[#8A84A6] hover:text-[#171136] cursor-help">
+                        <span
+                          title={
+                            formProductType === "grouped"
+                              ? "Trade price is auto-calculated from the sum of constituent sample products' TP and cannot be manually edited."
+                              : "Trade / Wholesale purchase price from supplier"
+                          }
+                          className="text-[#8A84A6] hover:text-[#171136] cursor-help"
+                        >
                           <IconInfo className="w-3.5 h-3.5" />
                         </span>
                       </div>
-                      <input
-                        name="tradePrice"
-                        value={formTradePrice}
-                        onChange={(e) => setFormTradePrice(e.target.value)}
-                        required
-                        placeholder="28.00"
-                        className="w-full px-4 py-3 rounded-2xl border border-[#EAE3F7] bg-[#FAF8FD] focus:bg-white text-xs font-bold text-[#059669] focus:outline-none focus:border-[#059669] transition-all"
-                      />
+                      <div className="relative">
+                        <input
+                          name="tradePrice"
+                          value={
+                            formProductType === "grouped"
+                              ? calculatedGroupTradePrice > 0
+                                ? calculatedGroupTradePrice.toFixed(2)
+                                : "0.00"
+                              : formTradePrice
+                          }
+                          onChange={(e) => {
+                            if (formProductType !== "grouped") {
+                              setFormTradePrice(e.target.value);
+                            }
+                          }}
+                          readOnly={formProductType === "grouped"}
+                          required
+                          placeholder="28.00"
+                          className={`w-full px-4 py-3 rounded-2xl border text-xs font-bold transition-all ${
+                            formProductType === "grouped"
+                              ? "border-[#DCD3F5] bg-[#F4F1FD] text-[#5C5478] cursor-not-allowed select-none"
+                              : "border-[#EAE3F7] bg-[#FAF8FD] focus:bg-white text-[#059669] focus:outline-none focus:border-[#059669]"
+                          }`}
+                        />
+                        {formProductType === "grouped" && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9.5px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#7B5CFF]/15 text-[#7B5CFF] pointer-events-none">
+                            Auto (Sum TP)
+                          </span>
+                        )}
+                      </div>
+                      {formProductType === "grouped" && (
+                        <p className="text-[10.5px] text-[#736E9B] mt-1">
+                          Auto-calculated sum of constituent items&apos; TP. Not editable.
+                        </p>
+                      )}
                     </div>
 
                     {/* 4) Stock Quantity (simple) / derived availability (grouped) */}

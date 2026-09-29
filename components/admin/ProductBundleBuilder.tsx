@@ -49,6 +49,10 @@ export default function ProductBundleBuilder({
     (sum, { line, product }) => sum + parsePrice(product?.discountedPrice || product?.price) * line.quantity,
     0
   );
+  const totalTP = rows.reduce(
+    (sum, { line, product }) => sum + parsePrice(product?.tradePrice || (product as any)?.trade_price) * line.quantity,
+    0
+  );
   const bundlesAvailable = rows.length
     ? Math.min(...rows.map(({ line, product }) => Math.floor((product?.stock ?? 0) / line.quantity)))
     : 0;
@@ -56,13 +60,24 @@ export default function ProductBundleBuilder({
 
   const add = (id: string) => {
     if (lines.length >= MAX_LINES) return;
+    const prod = byId.get(id);
+    if (!prod || (prod.stock ?? 0) <= 0) return;
     onChange([...lines, { childId: id, quantity: 1 }]);
     setQuery("");
   };
-  // A bundle can't take more of a product than its own stock (at least 1 so the row stays valid).
+
+  // Hard limit: A bundle item quantity CANNOT exceed the sample product's available stock.
   const setQty = (id: string, quantity: number) => {
-    const max = Math.max(1, byId.get(id)?.stock ?? 1);
-    onChange(lines.map((l) => (l.childId === id ? { ...l, quantity: Math.min(max, Math.max(1, Math.floor(quantity) || 1)) } : l)));
+    const prod = byId.get(id);
+    const stock = prod?.stock ?? 1;
+    const maxStock = Math.max(1, stock);
+    const targetQty = Math.floor(quantity);
+    if (isNaN(targetQty) || targetQty < 1) {
+      onChange(lines.map((l) => (l.childId === id ? { ...l, quantity: 1 } : l)));
+      return;
+    }
+    const clampedQty = Math.min(maxStock, Math.max(1, targetQty));
+    onChange(lines.map((l) => (l.childId === id ? { ...l, quantity: clampedQty } : l)));
   };
   const remove = (id: string) => onChange(lines.filter((l) => l.childId !== id));
 
@@ -70,7 +85,7 @@ export default function ProductBundleBuilder({
     <div className="space-y-4">
       <p className="text-xs text-[#736E9B]">
         Pick existing simple products and how many of each go into one bundle. When a customer buys the bundle, that
-        quantity is taken from each product&apos;s own stock.
+        quantity is deducted from each sample product&apos;s own stock.
       </p>
 
       <div className="relative">
@@ -94,26 +109,38 @@ export default function ProductBundleBuilder({
                 {query ? "No matching simple products." : "No more simple products to add."}
               </p>
             ) : (
-              candidates.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => add(p.id)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[#F6F1FF] text-left cursor-pointer transition-colors"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.image} alt="" className="w-9 h-9 rounded-lg object-cover bg-[#F6F1FF] shrink-0" />
-                  <span className="flex-1 min-w-0">
-                    <span className="block text-xs font-bold text-[#171136] truncate">{p.name}</span>
-                    <span className="block text-[10.5px] text-[#8A84A6]">
-                      {p.sku || p.id} · {p.stock ?? 0} in stock
+              candidates.map((p) => {
+                const isOutOfStock = (p.stock ?? 0) <= 0;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    disabled={isOutOfStock}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => add(p.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors ${
+                      isOutOfStock
+                        ? "opacity-50 bg-[#F9F9FB] cursor-not-allowed"
+                        : "hover:bg-[#F6F1FF] cursor-pointer"
+                    }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.image} alt="" className="w-9 h-9 rounded-lg object-cover bg-[#F6F1FF] shrink-0" />
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-xs font-bold text-[#171136] truncate">{p.name}</span>
+                      <span className="block text-[10.5px] text-[#8A84A6]">
+                        {p.sku || p.id} ·{" "}
+                        <span className={isOutOfStock ? "text-red-500 font-bold" : "text-[#171136] font-semibold"}>
+                          {p.stock ?? 0} in stock {isOutOfStock ? "(Out of stock)" : ""}
+                        </span>
+                        {p.tradePrice ? ` · TP: ${p.tradePrice}` : ""}
+                      </span>
                     </span>
-                  </span>
-                  <span className="text-xs font-extrabold text-[#FF4D6D] shrink-0">{p.discountedPrice || p.price}</span>
-                  <IconPlus className="w-4 h-4 text-[#7B5CFF] shrink-0" />
-                </button>
-              ))
+                    <span className="text-xs font-extrabold text-[#FF4D6D] shrink-0">{p.discountedPrice || p.price}</span>
+                    {!isOutOfStock && <IconPlus className="w-4 h-4 text-[#7B5CFF] shrink-0" />}
+                  </button>
+                );
+              })
             )}
           </div>
         )}
@@ -129,6 +156,7 @@ export default function ProductBundleBuilder({
           {rows.map(({ line, product }) => {
             const stock = product?.stock ?? 0;
             const unit = parsePrice(product?.discountedPrice || product?.price);
+            const tp = parsePrice(product?.tradePrice || (product as any)?.trade_price);
             const short = line.quantity > stock;
             return (
               <div key={line.childId} className="flex items-center gap-3 rounded-2xl border border-[#EAE3F7] px-3 py-2.5 bg-[#FAF8FE]">
@@ -137,11 +165,12 @@ export default function ProductBundleBuilder({
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-bold text-[#171136] truncate">{product?.name || line.childId}</p>
                   <p className="text-[10.5px] text-[#8A84A6]">
-                    {money(unit)} each · {stock} in stock{line.quantity >= stock && stock > 0 ? " (max)" : ""}
+                    {money(unit)} each {tp > 0 ? `· TP: ${money(tp)}` : ""} · <span className="font-semibold text-[#171136]">{stock} in stock</span>
+                    {line.quantity >= stock && stock > 0 ? " (Max stock reached)" : ""}
                   </p>
                   {short && (
                     <p className="text-[10.5px] font-bold text-[#E8590C]">
-                      Only {stock} in stock - this bundle can&apos;t be sold until you restock.
+                      Only {stock} in stock - quantity limited to max available stock.
                     </p>
                   )}
                 </div>
@@ -158,23 +187,36 @@ export default function ProductBundleBuilder({
                   <input
                     type="number"
                     min={1}
+                    max={Math.max(1, stock)}
                     value={line.quantity}
-                    onChange={(e) => setQty(line.childId, Number(e.target.value))}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      if (!isNaN(val)) {
+                        setQty(line.childId, val);
+                      }
+                    }}
                     className="w-10 h-8 text-center text-xs font-extrabold text-[#171136] bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <button
                     type="button"
                     onClick={() => setQty(line.childId, line.quantity + 1)}
-                    disabled={line.quantity >= stock}
+                    disabled={line.quantity >= stock || stock <= 0}
                     aria-label="Increase quantity"
                     className="w-8 h-8 text-[#171136] hover:bg-[#F6F1FF] disabled:opacity-30 rounded-r-xl cursor-pointer disabled:cursor-not-allowed"
                   >
                     +
                   </button>
                 </div>
-                <span className="w-20 text-right text-xs font-extrabold text-[#171136] shrink-0">
-                  {money(unit * line.quantity)}
-                </span>
+                <div className="w-24 text-right shrink-0">
+                  <span className="block text-xs font-extrabold text-[#171136]">
+                    {money(unit * line.quantity)}
+                  </span>
+                  {tp > 0 && (
+                    <span className="block text-[10px] font-semibold text-[#059669]">
+                      TP: {money(tp * line.quantity)}
+                    </span>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={() => remove(line.childId)}
@@ -187,7 +229,7 @@ export default function ProductBundleBuilder({
             );
           })}
 
-          <div className="rounded-2xl bg-[#F6F1FF] px-4 py-3 grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+          <div className="rounded-2xl bg-[#F6F1FF] px-4 py-3 grid grid-cols-2 sm:grid-cols-4 gap-3 items-center">
             <div>
               <p className="text-[10.5px] font-bold uppercase tracking-wide text-[#736E9B]">Items value</p>
               <p className="text-base font-extrabold text-[#171136]">{money(itemsValue)}</p>
@@ -200,18 +242,23 @@ export default function ProductBundleBuilder({
               </button>
             </div>
             <div>
+              <p className="text-[10.5px] font-bold uppercase tracking-wide text-[#736E9B]">Bundle TP (Sum)</p>
+              <p className="text-base font-extrabold text-[#059669]">{money(totalTP)}</p>
+              <p className="text-[11px] text-[#736E9B]">Auto-synced to Trade Price</p>
+            </div>
+            <div>
               <p className="text-[10.5px] font-bold uppercase tracking-wide text-[#736E9B]">Customer saves</p>
               <p className={`text-base font-extrabold ${savings > 0 ? "text-[#1E9B6C]" : "text-[#8A84A6]"}`}>
                 {savings > 0 ? money(savings) : "—"}
               </p>
-              <p className="text-[11px] text-[#8A84A6]">vs. buying the items separately</p>
+              <p className="text-[11px] text-[#8A84A6]">vs. buying separately</p>
             </div>
             <div>
               <p className="text-[10.5px] font-bold uppercase tracking-wide text-[#736E9B]">Bundles available</p>
               <p className={`text-base font-extrabold ${bundlesAvailable > 0 ? "text-[#171136]" : "text-[#E8590C]"}`}>
                 {bundlesAvailable}
               </p>
-              <p className="text-[11px] text-[#8A84A6]">limited by the scarcest item</p>
+              <p className="text-[11px] text-[#8A84A6]">limited by stock</p>
             </div>
           </div>
         </div>
