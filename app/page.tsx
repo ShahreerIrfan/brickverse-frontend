@@ -11,6 +11,8 @@ import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import { getProductSections, getHomepageSections, getCategories, getHeroSlides, getServerApiBaseUrl } from "@/lib/api";
 
+export const revalidate = 60;
+
 export default async function Home() {
   const apiBase = await getServerApiBaseUrl();
   const [fixedSections, categorySections, categories, heroSlides] = await Promise.all([
