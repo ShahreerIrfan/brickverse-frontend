@@ -23,6 +23,7 @@ import type { Product, Category, SubCategory } from "./productData";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { getMediaUrl, getProductsPage } from "@/lib/api";
+import ProductCardSkeleton from "./skeletons/ProductCardSkeleton";
 
 type ShopCatalogProps = {
   initialProducts: Product[];
@@ -461,7 +462,13 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
           )}
 
           {/* Grid of Products */}
-          {!loadingFirst && products.length === 0 ? (
+          {loadingFirst ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4.5">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : products.length === 0 ? (
             <div className="bg-white border border-[#EAE3F7] rounded-[24px] p-8 sm:p-12 text-center flex flex-col items-center justify-center">
               <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#FFF1F4] flex items-center justify-center mb-4">
                 <IconSearch className="w-7 h-7 sm:w-8 sm:h-8 text-[#FF4D6D]" />
@@ -615,11 +622,12 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
 
               {/* Infinite scroll: the next page is requested when this marker nears the viewport */}
               <div ref={sentinelRef} aria-hidden className="h-px" />
-              <div className="mt-6 flex flex-col items-center gap-3 min-h-10" aria-live="polite">
-                {(loadingMore || loadingFirst) && (
-                  <div className="flex items-center gap-2 text-xs font-semibold text-[#736E9B]">
-                    <span className="w-5 h-5 border-2 border-[#FF4D6D] border-t-transparent rounded-full animate-spin" />
-                    Loading more products...
+              <div className="mt-6 flex flex-col items-center gap-4 min-h-10 w-full" aria-live="polite">
+                {loadingMore && (
+                  <div className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <ProductCardSkeleton key={`more-${i}`} />
+                    ))}
                   </div>
                 )}
                 {loadError && (
