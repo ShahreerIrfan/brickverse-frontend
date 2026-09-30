@@ -9,6 +9,10 @@ import { useAuth } from "@/context/AuthContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
 import { getCustomerOrders, trackOrder, getProductsByIds, getMediaUrl } from "@/lib/api";
+import Navbar from "./Navbar";
+import NavLinks from "./NavLinks";
+import Footer from "./Footer";
+import BottomNav from "./BottomNav";
 
 import { printOrderInvoice } from "@/lib/invoice";
 import {
@@ -214,42 +218,13 @@ export default function CustomerDashboard({
   };
 
   return (
-    <div className="min-h-screen bg-[#FFF6EE] text-[#171136]">
-      {/* Top Navigation Header */}
-      <header className="bg-white border-b border-[#EAE3F7] sticky top-0 z-30 shadow-xs">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center">
-              <Image src="/logo.png" alt="Kawaii Subete" width={130} height={40} className="h-8 sm:h-9 w-auto object-contain" />
-            </Link>
-
-            <span className="hidden sm:inline-flex items-center gap-1 px-3 py-1 bg-[#FFF1F4] text-[#FF4D6D] text-xs font-bold rounded-full border border-[#FF4D6D]/20">
-              ⭐ VIP Collector
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#171136] bg-[#F6F1FF] hover:bg-[#EFE9FF] border border-[#EAE3F7] px-4 py-2 rounded-xl transition-all shadow-2xs"
-            >
-              <IconStore className="w-4 h-4 text-[#FF4D6D]" />
-              Storefront
-            </Link>
-
-            <button
-              onClick={logout}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-red-600 hover:bg-red-50 px-3.5 py-2 rounded-xl transition-all cursor-pointer"
-            >
-              <IconLogOut className="w-4 h-4" />
-              Sign out
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="flex flex-col min-h-screen bg-[#FFF6EE] text-[#171136] pb-16 lg:pb-0">
+      {/* Top Header Bars (Same as other website pages) */}
+      <Navbar />
+      <NavLinks />
 
       {/* Main 2-Column Dashboard Container */}
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
           {/* ========================================================================= */}
           {/* LEFT SIDEBAR MENU (Strictly 5 Standard Tabs - No Extra Track Order Menu) */}
@@ -1506,6 +1481,9 @@ export default function CustomerDashboard({
           </main>
         </div>
       </div>
+
+      <Footer />
+      <BottomNav />
     </div>
   );
 }
