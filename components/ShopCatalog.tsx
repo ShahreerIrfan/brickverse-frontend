@@ -46,6 +46,7 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
   const paramCategory = searchParams.get("category") || "all";
   const paramSubcategory = searchParams.get("subcategory") || "all";
   const paramSearch = searchParams.get("search") || "";
+  const paramDeals = searchParams.get("deals") === "true" || searchParams.get("deals") === "1";
 
   // Local filter states
   const [selectedCategory, setSelectedCategory] = useState<string>(paramCategory);
@@ -165,7 +166,7 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
   const requestRef = useRef(0);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   // Query the server-rendered first page corresponds to (the unfiltered shop with initial random seed).
-  const loadedKey = useRef(JSON.stringify(["all", "all", "", null, null, null, false, "random"]));
+  const loadedKey = useRef(JSON.stringify(["all", "all", "", null, null, false, "random", paramDeals]));
 
   const queryKey = JSON.stringify([
     selectedCategory,
@@ -175,6 +176,7 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
     appliedMaxPrice,
     onSaleOnly,
     sortBy,
+    paramDeals,
   ]);
 
   const buildQuery = useCallback(
@@ -185,10 +187,11 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
       minPrice: appliedMinPrice,
       maxPrice: appliedMaxPrice,
       onSale: onSaleOnly,
+      deals: paramDeals,
       sort: sortBy,
       seed: sortBy === "random" ? seed : undefined,
     }),
-    [selectedCategory, selectedSubcategory, searchQuery, appliedMinPrice, appliedMaxPrice, onSaleOnly, sortBy, seed]
+    [selectedCategory, selectedSubcategory, searchQuery, appliedMinPrice, appliedMaxPrice, onSaleOnly, sortBy, seed, paramDeals]
   );
 
 
@@ -285,20 +288,31 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
           Home
         </Link>
         <IconChevronRight className="w-3.5 h-3.5 text-[#A59FC2] shrink-0" />
-        <button
-          onClick={handleResetFilters}
-          className={`hover:text-[#FF4D6D] transition-colors font-medium shrink-0 ${
-            selectedCategory === "all" ? "text-[#171136] font-bold" : ""
-          }`}
-        >
-          All Products
-        </button>
+        {paramDeals ? (
+          <Link
+            href="/shop?deals=true"
+            className={`hover:text-[#FF4D6D] transition-colors font-medium shrink-0 ${
+              selectedCategory === "all" ? "text-[#171136] font-bold" : ""
+            }`}
+          >
+            Deals
+          </Link>
+        ) : (
+          <button
+            onClick={handleResetFilters}
+            className={`hover:text-[#FF4D6D] transition-colors font-medium shrink-0 ${
+              selectedCategory === "all" ? "text-[#171136] font-bold" : ""
+            }`}
+          >
+            All Products
+          </button>
+        )}
         {currentCategoryObj && (
           <>
             <IconChevronRight className="w-3.5 h-3.5 text-[#A59FC2] shrink-0" />
             {currentSubcategoryObj ? (
               <Link
-                href={`/shop?category=${encodeURIComponent(selectedCategory)}`}
+                href={`/shop?category=${encodeURIComponent(selectedCategory)}${paramDeals ? "&deals=true" : ""}`}
                 className="hover:text-[#FF4D6D] transition-colors font-medium shrink-0"
               >
                 {currentCategoryObj.label}
@@ -320,11 +334,11 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 sm:gap-4 pb-4 border-b border-[#EAE3F7] mb-5 sm:mb-6">
         <div>
           <h1 className="font-[family-name:var(--font-display)] font-extrabold text-xl sm:text-3xl text-[#171136] tracking-tight">
-            {activeCategoryLabel || "All Products"}
+            {paramDeals && selectedCategory === "all" ? "Exclusive Deals & Bundles" : (activeCategoryLabel || "All Products")}
           </h1>
           <p className="text-xs sm:text-sm text-[#736E9B] mt-0.5 sm:mt-1 font-medium">
             Showing <span className="font-bold text-[#171136]">{totalCount}</span>{" "}
-            products {searchQuery ? `for "${searchQuery}"` : ""}
+            {paramDeals ? "bundle deal products" : "products"} {searchQuery ? `for "${searchQuery}"` : ""}
           </p>
         </div>
 

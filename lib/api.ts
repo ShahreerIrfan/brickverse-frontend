@@ -622,8 +622,9 @@ export type ShopProductQuery = {
   search?: string;
   minPrice?: number | null;
   maxPrice?: number | null;
-  minRating?: number | null;
   onSale?: boolean;
+  deals?: boolean;
+  productType?: string;
   sort?: string;
   seed?: string;
 };
@@ -644,8 +645,9 @@ export async function getProductsPage(
   if (query.search?.trim()) qs.set("search", query.search.trim());
   if (query.minPrice != null) qs.set("min_price", String(query.minPrice));
   if (query.maxPrice != null) qs.set("max_price", String(query.maxPrice));
-  if (query.minRating != null) qs.set("min_rating", String(query.minRating));
   if (query.onSale) qs.set("on_sale", "1");
+  if (query.deals) qs.set("deals", "true");
+  if (query.productType) qs.set("product_type", query.productType);
   if (query.sort) qs.set("sort", query.sort);
   if (query.seed) qs.set("seed", query.seed);
 
