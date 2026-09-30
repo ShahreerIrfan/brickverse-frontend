@@ -48,11 +48,11 @@ export default function ProductBreadcrumb({ product }: ProductBreadcrumbProps) {
   return (
     <div className="flex items-center justify-between py-3 text-xs sm:text-[13px] border-b border-[#EAE3F7]/80 flex-wrap gap-2">
       <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 sm:gap-2 text-[#736E9B] overflow-x-auto whitespace-nowrap py-1">
-        <Link href="/" className="hover:text-[#FF4D6D] transition-colors font-medium">
+        <Link href="/" prefetch={true} className="hover:text-[#FF4D6D] transition-colors font-medium">
           Home
         </Link>
         <IconChevronRight className="w-3.5 h-3.5 text-[#B9B2DA] shrink-0" />
-        <Link href="/shop" className="hover:text-[#FF4D6D] transition-colors font-medium">
+        <Link href="/shop" prefetch={true} className="hover:text-[#FF4D6D] transition-colors font-medium">
           Shop
         </Link>
         {path.map((node, i) => (

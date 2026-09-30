@@ -23,7 +23,7 @@ export default function Navbar() {
           {/* Brand Logo & Mobile Menu */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             <MobileMenu />
-            <Link href="/" className="flex items-center shrink-0">
+            <Link href="/" prefetch={true} className="flex items-center shrink-0">
               <Image
                 src="/logo.png"
                 alt="Kawaii Subete"

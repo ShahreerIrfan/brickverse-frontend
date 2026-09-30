@@ -45,21 +45,7 @@ export function getApiBaseUrl(): string {
   return envUrl || "http://127.0.0.1:8000/api";
 }
 
-// Server-only: resolves the API base from the actual incoming request's
-// Host header, so a Server Component's fetch targets the same backend the
-// visitor's browser would (per resolveApiBaseFromHost), instead of trusting
-// a NEXT_PUBLIC_API_URL build-time env var that may not match the domain
-// this deployment is actually being served under. Falls back to
-// getApiBaseUrl() if headers() isn't available (e.g. outside a request).
 export async function getServerApiBaseUrl(): Promise<string> {
-  try {
-    const { headers } = await import("next/headers");
-    const h = await headers();
-    const host = h.get("host");
-    if (host) return resolveApiBaseFromHost(host);
-  } catch {
-    // not in a request context (e.g. build-time) - fall through
-  }
   return getApiBaseUrl();
 }
 

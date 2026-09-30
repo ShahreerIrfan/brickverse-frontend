@@ -284,7 +284,7 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
     <div className="max-w-[1440px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-28 sm:pb-12">
       {/* 1. Breadcrumbs */}
       <nav className="flex items-center gap-2 text-xs text-[#736E9B] mb-4 sm:mb-6 overflow-x-auto whitespace-nowrap">
-        <Link href="/" className="hover:text-[#FF4D6D] transition-colors font-medium shrink-0">
+        <Link href="/" prefetch={true} className="hover:text-[#FF4D6D] transition-colors font-medium shrink-0">
           Home
         </Link>
         <IconChevronRight className="w-3.5 h-3.5 text-[#A59FC2] shrink-0" />

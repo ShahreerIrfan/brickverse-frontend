@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   IconMenu,
   IconClose,
@@ -66,9 +67,9 @@ export default function MobileMenu() {
         }`}
       >
         <div className="flex items-center justify-between gap-3 bg-white px-5 py-4 border-b border-[#EAE3F7] shrink-0">
-          <a href="/" className="flex items-center" onClick={() => setOpen(false)}>
+          <Link href="/" prefetch={true} className="flex items-center" onClick={() => setOpen(false)}>
             <Image src="/logo.png" alt="Kawaii Subete" width={120} height={38} className="h-8 w-auto object-contain" />
-          </a>
+          </Link>
           <button
             aria-label="Close menu"
             onClick={() => setOpen(false)}
@@ -107,14 +108,15 @@ export default function MobileMenu() {
               </div>
 
               <div className="mt-3 pt-2.5 border-t border-[#EAE3F7] flex flex-col gap-2 text-xs">
-                <a
+                <Link
                   href="/dashboard"
+                  prefetch={true}
                   onClick={() => setOpen(false)}
                   className="flex items-center justify-between font-bold text-[#171136] hover:text-[#FF4D6D]"
                 >
                   <span>📊 {user.role === "admin" ? "Admin Dashboard" : "Customer Dashboard"}</span>
                   <IconChevronRight className="w-3.5 h-3.5 text-[#736E9B]" />
-                </a>
+                </Link>
 
                 <div className="flex items-center justify-between pt-1">
                   {user.role === "admin" ? (
@@ -197,9 +199,10 @@ export default function MobileMenu() {
 
           <nav className="flex flex-col px-5 py-5 gap-4">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.label}
                 href={link.href}
+                prefetch={true}
                 onClick={() => setOpen(false)}
                 className={`flex items-center gap-2 text-[14px] ${
                   link.active ? "font-bold text-[#FF4D6D]" : "font-medium text-[#3B3468]"
@@ -211,7 +214,7 @@ export default function MobileMenu() {
                     HOT
                   </span>
                 )}
-              </a>
+              </Link>
             ))}
           </nav>
         </div>

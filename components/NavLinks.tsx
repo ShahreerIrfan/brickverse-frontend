@@ -18,6 +18,7 @@ export default function NavLinks() {
             <Link
               key={link.label}
               href={link.href}
+              prefetch={true}
               className="relative text-sm font-medium text-[#3B3468] hover:text-[#FF4D6D] transition-colors"
             >
               {link.label}

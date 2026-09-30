@@ -1483,7 +1483,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
         <div>
           {/* Brand Header */}
           <div className="p-4 sm:p-5 flex items-center justify-between border-b border-[#2E2760]">
-            <Link href="/" className="flex items-center overflow-hidden">
+            <Link href="/" prefetch={true} className="flex items-center overflow-hidden">
               {/* Brickverse Brand Logo */}
               <Image
                 src="/logo.png"

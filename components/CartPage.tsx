@@ -205,7 +205,7 @@ export default function CartPage() {
       {/* 1. BREADCRUMBS (Matches brickverse-cart.svg) */}
       {/* ========================================================================= */}
       <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-[#736E9B] mb-3">
-        <Link href="/" className="hover:text-[#171136] transition-colors">
+        <Link href="/" prefetch={true} className="hover:text-[#171136] transition-colors">
           Home
         </Link>
         <IconChevronRight className="w-3.5 h-3.5 text-[#B9B2DA]" />
