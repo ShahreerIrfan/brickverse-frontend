@@ -1573,3 +1573,130 @@ export async function uploadBlogMedia(file: File): Promise<{ success: boolean; u
   }
 }
 
+// -------------------------------------------------------------
+// Marketing & Coupons APIs
+// -------------------------------------------------------------
+export interface Coupon {
+  id: number;
+  code: string;
+  description: string;
+  discount_type: "percentage" | "fixed";
+  value: number | string;
+  min_order_amount?: number | string | null;
+  max_discount?: number | string | null;
+  usage_limit?: number | string | null;
+  per_user_limit?: number | string | null;
+  times_used: number;
+  start_date?: string | null;
+  end_date?: string | null;
+  is_active: boolean;
+  is_valid?: boolean;
+  status_text?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function getCoupons(params?: { search?: string; status?: string }): Promise<Coupon[]> {
+  try {
+    const query = new URLSearchParams();
+    if (params?.search) query.set("search", params.search);
+    if (params?.status) query.set("status", params.status);
+    const qs = query.toString() ? `?${query.toString()}` : "";
+    const res = await fetch(`${getApiBaseUrl()}/coupons/${qs}`, { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : data?.results ?? [];
+  } catch (error) {
+    console.warn("[API] Failed to fetch coupons:", error);
+    return [];
+  }
+}
+
+export async function createCoupon(payload: Partial<Coupon>): Promise<{ success: boolean; data?: Coupon; error?: string }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/coupons/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      let errMsg = "Failed to create coupon";
+      if (data) {
+        if (typeof data === "string") errMsg = data;
+        else if (data.code) errMsg = `Code error: ${Array.isArray(data.code) ? data.code.join(", ") : data.code}`;
+        else if (data.detail) errMsg = data.detail;
+        else errMsg = JSON.stringify(data);
+      }
+      return { success: false, error: errMsg };
+    }
+    return { success: true, data };
+  } catch (error: any) {
+    return { success: false, error: error?.message || "Failed to create coupon" };
+  }
+}
+
+export async function updateCoupon(id: number | string, payload: Partial<Coupon>): Promise<{ success: boolean; data?: Coupon; error?: string }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/coupons/${id}/`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      let errMsg = "Failed to update coupon";
+      if (data) {
+        if (typeof data === "string") errMsg = data;
+        else if (data.code) errMsg = `Code error: ${Array.isArray(data.code) ? data.code.join(", ") : data.code}`;
+        else if (data.detail) errMsg = data.detail;
+        else errMsg = JSON.stringify(data);
+      }
+      return { success: false, error: errMsg };
+    }
+    return { success: true, data };
+  } catch (error: any) {
+    return { success: false, error: error?.message || "Failed to update coupon" };
+  }
+}
+
+export async function deleteCoupon(id: number | string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/coupons/${id}/`, {
+      method: "DELETE",
+    });
+    return { success: res.ok };
+  } catch (error: any) {
+    return { success: false, error: error?.message || "Failed to delete coupon" };
+  }
+}
+
+export async function validateCoupon(code: string, subtotal: number): Promise<{
+  valid: boolean;
+  id?: number;
+  code?: string;
+  discount_type?: "percentage" | "fixed";
+  value?: number;
+  discount_amount?: number;
+  min_order_amount?: number;
+  max_discount?: number;
+  message?: string;
+  error?: string;
+}> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/coupons/validate/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, subtotal }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.valid) {
+      return { valid: false, error: data?.error || "Invalid coupon code." };
+    }
+    return data;
+  } catch (error: any) {
+    return { valid: false, error: "Network error validating coupon." };
+  }
+}
+
+

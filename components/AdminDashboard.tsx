@@ -78,6 +78,8 @@ import {
   IconKey,
   IconEye,
   IconEyeOff,
+  IconMegaphone,
+  IconTicket,
 } from "./icons";
 import PartnerStoresList from "./admin/PartnerStoresList";
 import PartnerStoreDetail from "./admin/PartnerStoreDetail";
@@ -92,6 +94,7 @@ import BlogPostEditor from "./admin/BlogPostEditor";
 import BlogTaxonomyManager from "./admin/BlogTaxonomyManager";
 import RichTextEditor from "./admin/RichTextEditor";
 import ProductBundleBuilder, { type BundleLine, parsePrice } from "./admin/ProductBundleBuilder";
+import CouponsManager from "./admin/CouponsManager";
 import { printOrderInvoice } from "@/lib/invoice";
 
 interface AdminDashboardProps {
@@ -110,6 +113,7 @@ type ActiveNav =
   | "appearance-mega-menu"
   | "appearance-hero-slides"
   | "appearance-homepage-sections"
+  | "marketing-coupons"
   | "orders-all"
   | "orders-single"
   | "users-all"
@@ -147,6 +151,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [productsMenuOpen, setProductsMenuOpen] = useState(initialNav ? initialNav.startsWith("products") : false);
   const [appearanceMenuOpen, setAppearanceMenuOpen] = useState(initialNav ? initialNav.startsWith("appearance") : false);
+  const [marketingMenuOpen, setMarketingMenuOpen] = useState(initialNav ? initialNav.startsWith("marketing") : false);
   const [ordersMenuOpen, setOrdersMenuOpen] = useState(initialNav ? initialNav.startsWith("orders") : false);
   const [usersMenuOpen, setUsersMenuOpen] = useState(initialNav ? initialNav.startsWith("users") : false);
   const [storesMenuOpen, setStoresMenuOpen] = useState(initialNav ? initialNav.startsWith("stores") : false);
@@ -201,6 +206,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     "appearance-mega-menu": "/en/admin/appearance/mega-menu",
     "appearance-hero-slides": "/en/admin/appearance/hero-slides",
     "appearance-homepage-sections": "/en/admin/appearance/homepage-sections",
+    "marketing-coupons": "/en/admin/marketing/coupons",
     "orders-all": "/en/admin/orders",
     "orders-single": "/en/admin/orders",
     "users-all": "/en/admin/users",
@@ -218,6 +224,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     setActiveNav(nav);
     if (nav.startsWith("products")) setProductsMenuOpen(true);
     if (nav.startsWith("appearance")) setAppearanceMenuOpen(true);
+    if (nav.startsWith("marketing")) setMarketingMenuOpen(true);
     if (nav.startsWith("orders")) setOrdersMenuOpen(true);
     if (nav.startsWith("users")) setUsersMenuOpen(true);
     if (nav.startsWith("stores")) setStoresMenuOpen(true);
@@ -235,6 +242,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       setActiveNav(initialNav);
       if (initialNav.startsWith("products")) setProductsMenuOpen(true);
       if (initialNav.startsWith("appearance")) setAppearanceMenuOpen(true);
+      if (initialNav.startsWith("marketing")) setMarketingMenuOpen(true);
       if (initialNav.startsWith("orders")) setOrdersMenuOpen(true);
       if (initialNav.startsWith("users")) setUsersMenuOpen(true);
       if (initialNav.startsWith("stores")) setStoresMenuOpen(true);
@@ -274,6 +282,9 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       } else if (path.includes("/appearance/mega-menu")) {
         setActiveNav("appearance-mega-menu");
         setAppearanceMenuOpen(true);
+      } else if (path.includes("/marketing") || path.includes("/coupons")) {
+        setActiveNav("marketing-coupons");
+        setMarketingMenuOpen(true);
       } else if (path.includes("/products")) {
         setActiveNav("products-all");
         setProductsMenuOpen(true);
@@ -1685,6 +1696,67 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                     <span className="w-1.5 h-1.5 rounded-full bg-current" />
                     <span>Categories &amp; Tags</span>
                   </button>
+                </div>
+              )}
+            </div>
+
+            {/* 2d) Marketing Accordion */}
+            <div className="space-y-1">
+              <button
+                onClick={() => setMarketingMenuOpen(!marketingMenuOpen)}
+                title="Marketing"
+                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-bold text-xs sm:text-[13.5px] transition-all cursor-pointer relative ${
+                  activeNav.startsWith("marketing")
+                    ? "bg-[#2A2159] text-white before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-sm before:bg-[#FF4D6D]"
+                    : "text-[#C7C0E8] hover:bg-[#2A2159]/60 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <IconMegaphone className={`w-4 h-4 shrink-0 ${activeNav.startsWith("marketing") ? "text-white" : "text-[#A79FD1]"}`} />
+                  {!sidebarCollapsed && <span>Marketing</span>}
+                </div>
+                {!sidebarCollapsed && (
+                  <IconChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      marketingMenuOpen ? "rotate-0 text-white" : "-rotate-90 text-[#A79FD1]"
+                    }`}
+                  />
+                )}
+              </button>
+
+              {marketingMenuOpen && !sidebarCollapsed && (
+                <div className="pl-6 pr-1 py-1 space-y-1">
+                  <button
+                    onClick={() => navigateTo("marketing-coupons")}
+                    className={`w-full text-left px-3.5 py-2 rounded-2xl text-xs font-bold flex items-center gap-2.5 transition-all cursor-pointer ${
+                      activeNav === "marketing-coupons"
+                        ? "text-[#FF1774] bg-[#FFEAF0] shadow-xs"
+                        : "text-[#C7C0E8] hover:text-white hover:bg-[#2A2159]/40"
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${activeNav === "marketing-coupons" ? "bg-[#FF1774]" : "bg-[#7A72A8]"}`} />
+                    <span className="truncate">Coupons &amp; Discounts</span>
+                  </button>
+
+                  <div className="w-full px-3.5 py-2 rounded-2xl text-xs font-semibold flex items-center justify-between text-[#8880B5] opacity-60 cursor-not-allowed select-none">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-2 h-2 rounded-full bg-[#5D5585] shrink-0" />
+                      <span>Campaigns</span>
+                    </div>
+                    <span className="px-1.5 py-0.5 rounded-md bg-[#2A2159] text-[9.5px] font-extrabold text-[#A79FD1] tracking-wider">
+                      SOON
+                    </span>
+                  </div>
+
+                  <div className="w-full px-3.5 py-2 rounded-2xl text-xs font-semibold flex items-center justify-between text-[#8880B5] opacity-60 cursor-not-allowed select-none">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-2 h-2 rounded-full bg-[#5D5585] shrink-0" />
+                      <span>Email Templates</span>
+                    </div>
+                    <span className="px-1.5 py-0.5 rounded-md bg-[#2A2159] text-[9.5px] font-extrabold text-[#A79FD1] tracking-wider">
+                      SOON
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
@@ -5082,6 +5154,11 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
               </div>
             </div>
           )}
+
+          {/* ============================================================= */}
+          {/* VIEW: MARKETING -> COUPONS & DISCOUNTS */}
+          {/* ============================================================= */}
+          {activeNav === "marketing-coupons" && <CouponsManager />}
         </main>
       </div>
 

@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCart, formatPrice } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-import { createOrder } from "@/lib/api";
+import { createOrder, validateCoupon } from "@/lib/api";
 import {
   IconLock,
   IconBag,
@@ -149,8 +149,14 @@ export default function CheckoutPage() {
 
   // Coupon State
   const [couponInput, setCouponInput] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountPercent: number } | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountType: "percentage" | "fixed";
+    value: number;
+    discountAmount: number;
+  } | null>(null);
   const [couponError, setCouponError] = useState("");
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
 
   // Submission State
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -166,27 +172,53 @@ export default function CheckoutPage() {
   }, [user]);
 
   // Calculations (NO TAX per user requirements)
-  const discountRate = appliedCoupon ? appliedCoupon.discountPercent / 100 : 0;
-  const discountAmount = subtotal * discountRate;
+  const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const discountedSubtotal = Math.max(0, subtotal - discountAmount);
   const shippingCost = subtotal === 0 ? 0 : 60;
   const totalAmount = discountedSubtotal + (discountedSubtotal > 0 ? shippingCost : 0);
 
-  const handleApplyCoupon = () => {
+  const handleApplyCoupon = async () => {
     const code = couponInput.trim().toUpperCase();
     if (!code) return;
 
-    const matched = AVAILABLE_COUPONS.find((c) => c.code === code);
-    if (matched) {
-      if (code === "BRICK20" && subtotal < 1000) {
-        setCouponError("BRICK20 requires minimum order of ৳1,000.00");
-        return;
+    setApplyingCoupon(true);
+    setCouponError("");
+
+    try {
+      const res = await validateCoupon(code, subtotal);
+      if (res.valid && res.code) {
+        setAppliedCoupon({
+          code: res.code,
+          discountType: res.discount_type || "percentage",
+          value: Number(res.value || 0),
+          discountAmount: Number(res.discount_amount || 0),
+        });
+        setCouponError("");
+        setCouponInput("");
+      } else {
+        const matched = AVAILABLE_COUPONS.find((c) => c.code === code);
+        if (matched) {
+          if (code === "BRICK20" && subtotal < 1000) {
+            setCouponError("BRICK20 requires minimum order of ৳1,000.00");
+            return;
+          }
+          const calcDisc = (subtotal * matched.discountPercent) / 100;
+          setAppliedCoupon({
+            code: matched.code,
+            discountType: "percentage",
+            value: matched.discountPercent,
+            discountAmount: calcDisc,
+          });
+          setCouponError("");
+          setCouponInput("");
+        } else {
+          setCouponError(res.error || "Invalid promo code. Try BUILD10 or BRICK20");
+        }
       }
-      setAppliedCoupon(matched);
-      setCouponError("");
-      setCouponInput("");
-    } else {
-      setCouponError("Invalid promo code. Try BUILD10 or BRICK20");
+    } catch {
+      setCouponError("Could not validate coupon. Please try again.");
+    } finally {
+      setApplyingCoupon(false);
     }
   };
 
@@ -760,7 +792,13 @@ export default function CheckoutPage() {
 
                 {appliedCoupon && (
                   <div className="flex items-center justify-between bg-[#EBFDF5] rounded-xl px-3 py-1.5 border border-[#A7F3D0] text-xs font-bold text-[#065F46]">
-                    <span>{appliedCoupon.code} applied ({appliedCoupon.discountPercent}% OFF)</span>
+                    <span>
+                      {appliedCoupon.code} applied (
+                      {appliedCoupon.discountType === "percentage"
+                        ? `${appliedCoupon.value}% OFF`
+                        : `৳${appliedCoupon.value} OFF`}
+                      )
+                    </span>
                     <button
                       type="button"
                       onClick={handleRemoveCoupon}

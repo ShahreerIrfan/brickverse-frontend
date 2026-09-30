@@ -33,6 +33,7 @@ export default function AdminRoutePage({ params }: PageProps) {
     | "appearance-mega-menu"
     | "appearance-hero-slides"
     | "appearance-homepage-sections"
+    | "marketing-coupons"
     | "orders-all"
     | "orders-single"
     | "users-all"
@@ -64,6 +65,8 @@ export default function AdminRoutePage({ params }: PageProps) {
     initialNav = "appearance-hero-slides";
   } else if (slug[0] === "appearance" && slug[1] === "homepage-sections") {
     initialNav = "appearance-homepage-sections";
+  } else if (slug[0] === "marketing" || slug[0] === "coupons") {
+    initialNav = "marketing-coupons";
   } else if (slug[0] === "orders") {
     if (slug.length >= 2) {
       initialNav = "orders-single";
