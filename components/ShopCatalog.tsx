@@ -7,7 +7,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import {
   IconHeart,
   IconBag,
-  IconStar,
   IconSearch,
   IconChevronRight,
   IconChevronLeft,
@@ -56,7 +55,6 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
   const [maxPriceInput, setMaxPriceInput] = useState<string>("");
   const [appliedMinPrice, setAppliedMinPrice] = useState<number | null>(null);
   const [appliedMaxPrice, setAppliedMaxPrice] = useState<number | null>(null);
-  const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [onSaleOnly, setOnSaleOnly] = useState<boolean>(false);
   const [sortBy, setSortBy] = useState<string>("random");
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
@@ -116,7 +114,6 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
     setSearchQuery("");
     setMinPriceInput("");
     setMaxPriceInput("");
-    setSelectedRating(null);
     setOnSaleOnly(false);
     setSortBy("random");
     setMobileFilterOpen(false);
@@ -176,7 +173,6 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
     searchQuery,
     appliedMinPrice,
     appliedMaxPrice,
-    selectedRating,
     onSaleOnly,
     sortBy,
   ]);
@@ -188,12 +184,11 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
       search: searchQuery,
       minPrice: appliedMinPrice,
       maxPrice: appliedMaxPrice,
-      minRating: selectedRating,
       onSale: onSaleOnly,
       sort: sortBy,
       seed: sortBy === "random" ? seed : undefined,
     }),
-    [selectedCategory, selectedSubcategory, searchQuery, appliedMinPrice, appliedMaxPrice, selectedRating, onSaleOnly, sortBy, seed]
+    [selectedCategory, selectedSubcategory, searchQuery, appliedMinPrice, appliedMaxPrice, onSaleOnly, sortBy, seed]
   );
 
 
@@ -279,7 +274,6 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
     (selectedCategory !== "all" ? 1 : 0) +
     (selectedSubcategory !== "all" ? 1 : 0) +
     (appliedMinPrice !== null || appliedMaxPrice !== null ? 1 : 0) +
-    (selectedRating !== null ? 1 : 0) +
     (onSaleOnly ? 1 : 0) +
     (searchQuery.trim() ? 1 : 0);
 
@@ -361,7 +355,6 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
               <option value="newest">Newest Arrivals</option>
               <option value="price_asc">Price: Low to High</option>
               <option value="price_desc">Price: High to Low</option>
-              <option value="rating">Top Customer Rated</option>
               <option value="discount">Biggest Discount</option>
               <option value="name_asc">Name: A to Z</option>
             </select>
@@ -389,8 +382,6 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
             setMinPriceInput={setMinPriceInput}
             setMaxPriceInput={setMaxPriceInput}
             handleApplyPrice={handleApplyPrice}
-            selectedRating={selectedRating}
-            setSelectedRating={setSelectedRating}
             onSaleOnly={onSaleOnly}
             setOnSaleOnly={setOnSaleOnly}
             handleResetFilters={handleResetFilters}
@@ -440,16 +431,6 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
                   </button>
                 </span>
               )}
-
-              {selectedRating !== null && (
-                <span className="inline-flex items-center gap-1.5 bg-white border border-[#EAE3F7] text-[#171136] text-xs font-bold px-2.5 py-1 rounded-full shadow-xs">
-                  ★ {selectedRating} stars & up
-                  <button onClick={() => setSelectedRating(null)} className="hover:opacity-75">
-                    <IconX className="w-3 h-3" />
-                  </button>
-                </span>
-              )}
-
 
               <button
                 onClick={handleResetFilters}
@@ -678,8 +659,6 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
               setMinPriceInput={setMinPriceInput}
               setMaxPriceInput={setMaxPriceInput}
               handleApplyPrice={handleApplyPrice}
-              selectedRating={selectedRating}
-              setSelectedRating={setSelectedRating}
               onSaleOnly={onSaleOnly}
               setOnSaleOnly={setOnSaleOnly}
               handleResetFilters={handleResetFilters}
@@ -782,8 +761,6 @@ function FilterSidebarContent({
   setMinPriceInput,
   setMaxPriceInput,
   handleApplyPrice,
-  selectedRating,
-  setSelectedRating,
   onSaleOnly,
   setOnSaleOnly,
   handleResetFilters,
@@ -914,48 +891,6 @@ function FilterSidebarContent({
             Apply
           </button>
         </form>
-      </div>
-
-      <hr className="border-[#F0EBF9]" />
-
-      {/* 3. CUSTOMER RATING (Exact Match to Reference Image) */}
-      <div>
-        <h4 className="text-[12px] font-extrabold tracking-wider text-[#171136] uppercase mb-3">
-          CUSTOMER RATING
-        </h4>
-        <div className="space-y-2">
-          {[
-            { stars: 5, label: "only" },
-            { stars: 4, label: "& up" },
-            { stars: 3, label: "& up" },
-            { stars: 2, label: "& up" },
-            { stars: 1, label: "& up" },
-          ].map((item) => {
-            const isChecked = selectedRating === item.stars;
-            return (
-              <label
-                key={item.stars}
-                onClick={() => setSelectedRating(isChecked ? null : item.stars)}
-                className="flex items-center gap-2.5 cursor-pointer text-xs group"
-              >
-                <input
-                  type="radio"
-                  checked={isChecked}
-                  onChange={() => {}}
-                  className="w-3.5 h-3.5 text-[#FF4D6D] accent-[#FF4D6D] cursor-pointer"
-                />
-                <div className="flex items-center gap-0.5 text-[#FFB800]">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <IconStar key={i} className="w-3 h-3" filled={i < item.stars} />
-                  ))}
-                </div>
-                <span className="text-[#736E9B] group-hover:text-[#171136] font-medium text-[11.5px]">
-                  {item.label}
-                </span>
-              </label>
-            );
-          })}
-        </div>
       </div>
 
       {/* 5. RESET ALL FILTERS */}
