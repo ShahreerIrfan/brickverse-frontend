@@ -3,7 +3,6 @@ import NavLinks from "@/components/NavLinks";
 import CategoryRail from "@/components/CategoryRail";
 import Hero from "@/components/Hero";
 import PromoColumns from "@/components/PromoColumns";
-import TrustStrip from "@/components/TrustStrip";
 import ProductGrid from "@/components/ProductGrid";
 import PromoBanner from "@/components/PromoBanner";
 import Newsletter from "@/components/Newsletter";
@@ -41,8 +40,6 @@ export default async function Home() {
             <PromoColumns />
           </div>
         </div>
-
-        <TrustStrip />
 
         {sections.map((section) => (
           <ProductGrid key={section.id} section={section} />
