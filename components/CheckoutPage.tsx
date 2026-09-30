@@ -337,25 +337,15 @@ export default function CheckoutPage() {
       <header className="bg-white border-b border-[#EAE3F7]">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 h-20 sm:h-22 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative">
-              <div className="w-10 h-8.5 bg-[#FF4D6D] rounded-xl flex items-center justify-center shadow-xs">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                  <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                </div>
-              </div>
-              <div className="absolute -top-1 left-1.5 w-3 h-2 bg-[#FF4D6D] rounded-xs" />
-              <div className="absolute -top-1 right-1.5 w-3 h-2 bg-[#FF4D6D] rounded-xs" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-[family-name:var(--font-display)] font-extrabold text-xl sm:text-2xl text-[#171136] tracking-tight leading-none">
-                Kawaii Subete
-              </span>
-              <span className="text-[10px] sm:text-[10.5px] font-medium text-[#736E9B]">
-                figures · bricks · code kits
-              </span>
-            </div>
+          <Link href="/" className="flex items-center shrink-0">
+            <Image
+              src="/logo.png"
+              alt="Kawaii Subete"
+              width={140}
+              height={45}
+              className="h-8 sm:h-10 w-auto object-contain"
+              priority
+            />
           </Link>
 
           {/* Center/Right Trust Message */}
@@ -892,17 +882,15 @@ export default function CheckoutPage() {
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 space-y-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             {/* Logo */}
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-7 bg-[#FF4D6D] rounded-lg flex items-center justify-center">
-                <div className="flex items-center gap-1">
-                  <div className="w-1 h-1 rounded-full bg-white" />
-                  <div className="w-1 h-1 rounded-full bg-white" />
-                </div>
-              </div>
-              <span className="font-[family-name:var(--font-display)] font-extrabold text-lg text-[#171136]">
-                Kawaii Subete
-              </span>
-            </div>
+            <Link href="/" className="flex items-center shrink-0">
+              <Image
+                src="/logo.png"
+                alt="Kawaii Subete"
+                width={120}
+                height={38}
+                className="h-7 sm:h-8 w-auto object-contain"
+              />
+            </Link>
 
             {/* Footer Links */}
             <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-[#736E9B] font-medium">
