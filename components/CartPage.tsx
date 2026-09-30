@@ -173,11 +173,12 @@ export default function CartPage() {
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
-      openLoginModal();
+      openLoginModal("/checkout");
       return;
     }
     router.push("/checkout");
   };
+
 
 
   // Calculations

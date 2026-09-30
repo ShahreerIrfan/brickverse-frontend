@@ -47,11 +47,12 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
   const handleBuyNow = () => {
     addToCart(product, Math.min(quantity, maxQty), false);
     if (!isAuthenticated) {
-      openLoginModal();
+      openLoginModal("/checkout");
     } else {
       openCart();
     }
   };
+
 
   const handleToggleWishlist = () => {
     toggleWishlist(product.id || product.slug, product.name);

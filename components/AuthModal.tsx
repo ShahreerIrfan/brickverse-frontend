@@ -20,6 +20,7 @@ export default function AuthModal() {
     isAuthModalOpen,
     closeAuthModal,
     authMode,
+    authRedirectUrl,
     setAuthMode,
     login,
     sendOtp,
@@ -46,6 +47,20 @@ export default function AuthModal() {
   const [successMsg, setSuccessMsg] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+
+  const performPostAuthRedirect = () => {
+    closeAuthModal();
+    const isCheckoutPage =
+      typeof window !== "undefined" &&
+      (window.location.pathname === "/checkout" || window.location.pathname.startsWith("/checkout"));
+
+    const target = authRedirectUrl || (isCheckoutPage ? "/checkout" : "/dashboard");
+    if (typeof window !== "undefined" && target) {
+      if (window.location.pathname !== target) {
+        router.push(target);
+      }
+    }
+  };
 
   // Resend Timer countdown
   useEffect(() => {
@@ -91,12 +106,12 @@ export default function AuthModal() {
     setLoading(false);
 
     if (res.success) {
-      closeAuthModal();
-      router.push("/dashboard");
+      performPostAuthRedirect();
     } else {
       setErrorMsg(res.message || "Invalid credentials. Please try again.");
     }
   };
+
 
   // Step 1: Request OTP
   const handleRequestOtp = async (e: React.FormEvent) => {
@@ -196,12 +211,12 @@ export default function AuthModal() {
     setLoading(false);
 
     if (res.success) {
-      closeAuthModal();
-      router.push("/dashboard");
+      performPostAuthRedirect();
     } else {
       setErrorMsg(res.error || res.message || "Invalid verification code. Please try again.");
     }
   };
+
 
   // Resend OTP in Modal
   const handleResendCode = async () => {

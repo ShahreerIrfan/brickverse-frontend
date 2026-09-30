@@ -208,9 +208,10 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAuthenticated) {
-      openLoginModal();
+      openLoginModal("/checkout");
       return;
     }
+
 
 
 
@@ -371,12 +372,13 @@ export default function CheckoutPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
                 type="button"
-                onClick={openLoginModal}
+                onClick={() => openLoginModal("/checkout")}
                 className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#FF4D6D] hover:bg-[#E6004C] text-white font-bold text-sm shadow-lg shadow-[#FF4D6D]/25 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
               >
                 <span>Sign In / Register</span>
                 <IconArrowRight className="w-4 h-4" />
               </button>
+
 
               <Link
                 href="/cart"

@@ -20,10 +20,12 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthModalOpen: boolean;
   authMode: AuthMode;
-  openLoginModal: () => void;
-  openSignupModal: () => void;
+  authRedirectUrl: string | null;
+  openLoginModal: (redirectUrl?: string | any) => void;
+  openSignupModal: (redirectUrl?: string | any) => void;
   closeAuthModal: () => void;
   setAuthMode: (mode: AuthMode) => void;
+  setAuthRedirectUrl: (url: string | null) => void;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   signup: (data: {
     email: string;
@@ -54,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
+  const [authRedirectUrl, setAuthRedirectUrl] = useState<string | null>(null);
 
   // Load user from localStorage or API on initial render
   useEffect(() => {
@@ -85,19 +88,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
   }, []);
 
-  const openLoginModal = () => {
+  const openLoginModal = (redirectUrl?: string | any) => {
     setAuthMode("login");
+    setAuthRedirectUrl(typeof redirectUrl === "string" ? redirectUrl : null);
     setIsAuthModalOpen(true);
   };
 
-  const openSignupModal = () => {
+  const openSignupModal = (redirectUrl?: string | any) => {
     setAuthMode("signup");
+    setAuthRedirectUrl(typeof redirectUrl === "string" ? redirectUrl : null);
     setIsAuthModalOpen(true);
   };
+
 
   const closeAuthModal = () => {
     setIsAuthModalOpen(false);
   };
+
 
   const login = async (email: string, password: string) => {
     const res = await loginUser(email, password);
@@ -180,10 +187,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         isAuthModalOpen,
         authMode,
+        authRedirectUrl,
         openLoginModal,
         openSignupModal,
         closeAuthModal,
         setAuthMode,
+        setAuthRedirectUrl,
         login,
         signup,
         sendOtp,
@@ -191,6 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         resendOtp,
         logout,
       }}
+
     >
       {children}
     </AuthContext.Provider>

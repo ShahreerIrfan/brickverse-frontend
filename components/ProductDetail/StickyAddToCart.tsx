@@ -5,13 +5,15 @@ import Image from "next/image";
 import { IconBag, IconStar, IconCheck } from "../icons";
 import type { Product } from "../productData";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface StickyAddToCartProps {
   product: Product;
 }
 
 export default function StickyAddToCart({ product }: StickyAddToCartProps) {
-  const { addToCart, items } = useCart();
+  const { addToCart, openCart, items } = useCart();
+  const { isAuthenticated, openLoginModal } = useAuth();
   const [visible, setVisible] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [addedToast, setAddedToast] = useState(false);
@@ -40,6 +42,16 @@ export default function StickyAddToCart({ product }: StickyAddToCartProps) {
     setAddedToast(true);
     setTimeout(() => setAddedToast(false), 2500);
   };
+
+  const handleBuyNow = () => {
+    addToCart(product, Math.min(quantity, maxQty), false);
+    if (!isAuthenticated) {
+      openLoginModal("/checkout");
+    } else {
+      openCart();
+    }
+  };
+
 
   if (!visible) return null;
 
@@ -133,11 +145,12 @@ export default function StickyAddToCart({ product }: StickyAddToCartProps) {
 
           {/* Buy Now */}
           <button
-            onClick={handleAdd}
+            onClick={handleBuyNow}
             className="hidden sm:inline-flex h-10 sm:h-11 px-4 sm:px-5 rounded-full bg-[#171136] hover:bg-[#251c4a] text-white font-bold text-xs sm:text-sm items-center justify-center shadow-sm active:scale-95 transition-all cursor-pointer"
           >
             Buy now
           </button>
+
         </div>
       </div>
     </div>

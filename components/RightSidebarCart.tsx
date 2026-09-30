@@ -71,9 +71,11 @@ export default function RightSidebarCart() {
 
   const handleCheckoutClick = () => {
     if (!isAuthenticated) {
-      openLoginModal();
+      closeCart();
+      openLoginModal("/checkout");
       return;
     }
+
     closeCart();
     router.push("/checkout");
   };
