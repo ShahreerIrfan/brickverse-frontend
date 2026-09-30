@@ -20,11 +20,6 @@ export default function ProductCardSkeleton() {
           {/* Product Title */}
           <div className="w-full h-4 rounded-md bg-[#EAE3F7]" />
           <div className="w-3/4 h-3.5 rounded-md bg-[#F0EBF8]" />
-          {/* Rating */}
-          <div className="flex items-center gap-1.5 pt-0.5">
-            <div className="w-16 h-3 rounded-full bg-[#F0EBF8]" />
-            <div className="w-6 h-3 rounded-full bg-[#F0EBF8]" />
-          </div>
         </div>
 
         {/* Price & Action Button Row */}

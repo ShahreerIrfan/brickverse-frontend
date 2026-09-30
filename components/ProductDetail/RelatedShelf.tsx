@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { IconArrowRight, IconHeart, IconBag, IconStar } from "../icons";
+import { IconArrowRight, IconHeart, IconBag } from "../icons";
 import type { Product } from "../productData";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
@@ -121,18 +121,6 @@ export default function RelatedShelf({ products = [] }: RelatedShelfProps) {
                 <p className="text-[11px] sm:text-xs text-[#736E9B] mt-0.5 line-clamp-1">
                   {item.subtitle}
                 </p>
-
-                {/* Stars */}
-                <div className="flex items-center gap-1 mt-1.5 sm:mt-2">
-                  <div className="flex items-center gap-0.5">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <IconStar key={i} className="w-2.5 h-2.5 sm:w-3 sm:h-3" filled={i < Math.floor(item.rating ?? 5.0)} />
-                    ))}
-                  </div>
-                  <span className="text-[9.5px] sm:text-[11px] font-medium text-[#736E9B]">
-                    {(item.rating ?? 5.0).toFixed(1)} ({item.reviews ?? 0})
-                  </span>
-                </div>
               </div>
 
               {/* Price & Cart */}

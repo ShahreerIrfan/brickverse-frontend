@@ -569,20 +569,6 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
                           </Link>
                         </div>
 
-                        {/* Ratings */}
-                        <div className="flex items-center gap-0.5 sm:gap-1">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <IconStar
-                              key={i}
-                              className="w-2.5 h-2.5 sm:w-3 sm:h-3"
-                              filled={i < Math.round(product.rating ?? 5)}
-                            />
-                          ))}
-                          <span className="text-[9.5px] sm:text-[11px] text-[#736E9B] font-medium ml-1">
-                            ({product.reviews ?? 0})
-                          </span>
-                        </div>
-
                         {/* Price & Add to Cart Action Button */}
                         <div className="pt-2 sm:pt-2.5 border-t border-[#F0EBF9] flex items-center justify-between gap-1.5 mt-auto">
                           <div className="flex flex-col min-w-0">

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { IconHeart, IconBag, IconStar } from "./icons";
+import { IconHeart, IconBag } from "./icons";
 import type { Product } from "./productData";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
@@ -12,8 +12,6 @@ export default function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const isWishlisted = isInWishlist(product.id || product.slug);
-  const ratingVal = product.rating ?? 5.0;
-  const fullStars = Math.round(ratingVal);
   const regularPrice = product.regularPrice || product.originalPrice;
   const discountedPrice = product.discountedPrice || product.price;
   const discountPercent = product.discountPercent || (() => {
@@ -89,15 +87,6 @@ export default function ProductCard({ product }: { product: Product }) {
           >
             {product.name}
           </Link>
-        </div>
-
-        <div className="flex items-center gap-1 sm:gap-1.5 mt-1.5 sm:mt-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <IconStar key={i} className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" filled={i < fullStars} />
-          ))}
-          <span className="text-[9px] sm:text-[11.5px] font-medium text-[#736E9B] ml-0.5 sm:ml-1">
-            {ratingVal.toFixed(1)}
-          </span>
         </div>
 
         <div className="border-t border-[#EAE3F7] mt-2 sm:mt-4 pt-2 sm:pt-4 flex items-center justify-between gap-1">

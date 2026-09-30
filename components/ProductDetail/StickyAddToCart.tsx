@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { IconBag, IconStar, IconCheck } from "../icons";
+import { IconBag, IconCheck } from "../icons";
 import type { Product } from "../productData";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -78,17 +78,9 @@ export default function StickyAddToCart({ product }: StickyAddToCartProps) {
               {product.name}
             </h4>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="hidden sm:inline text-[11.5px] font-mono text-[#736E9B] font-bold truncate">
+              <span className="text-[11.5px] font-mono text-[#736E9B] font-bold truncate">
                 {product.sku || product.id}
               </span>
-              <div className="flex items-center gap-0.5">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <IconStar key={i} className="w-2.5 h-2.5 sm:w-3 sm:h-3" filled={i < Math.floor(product.rating || 5)} />
-                ))}
-                <span className="text-[10px] text-[#736E9B] font-semibold ml-0.5">
-                  {(product.rating || 4.8).toFixed(1)} ({product.reviews || 128})
-                </span>
-              </div>
             </div>
           </div>
         </div>

@@ -647,16 +647,6 @@ export default function CartPage() {
                     {prod.name}
                   </Link>
                   <p className="text-xs text-[#736E9B] line-clamp-1">{prod.subtitle}</p>
-
-                  {/* Rating Stars */}
-                  <div className="flex items-center gap-1.5 pt-1">
-                    <div className="flex items-center text-[#FFC93C] text-xs">
-                      {"★★★★★".slice(0, Math.floor(prod.rating))}
-                    </div>
-                    <span className="text-[11.5px] font-medium text-[#736E9B]">
-                      {prod.rating} ({prod.reviews})
-                    </span>
-                  </div>
                 </div>
 
                 <hr className="border-[#EAE3F7]" />
