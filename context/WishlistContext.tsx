@@ -5,10 +5,10 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 interface WishlistContextType {
   wishlistIds: string[];
   wishlistCount: number;
-  isInWishlist: (productId?: string | number | null) => boolean;
-  toggleWishlist: (productId?: string | number | null, productName?: string) => void;
+  isInWishlist: (productId?: string | number | null, slug?: string | null) => boolean;
+  toggleWishlist: (productId?: string | number | null, productName?: string, slug?: string | null) => void;
   addToWishlist: (productId?: string | number | null, productName?: string) => void;
-  removeFromWishlist: (productId?: string | number | null) => void;
+  removeFromWishlist: (productId?: string | number | null, slug?: string | null) => void;
   wishlistToast: string | null;
   closeWishlistToast: () => void;
 }
@@ -55,10 +55,11 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const isInWishlist = useCallback(
-    (productId?: string | number | null) => {
-      if (productId === undefined || productId === null) return false;
-      const idStr = String(productId);
-      return wishlistIds.includes(idStr);
+    (productId?: string | number | null, slug?: string | null) => {
+      if (productId === undefined && !slug) return false;
+      const idStr = productId !== undefined && productId !== null ? String(productId) : null;
+      const slugStr = slug ? String(slug) : null;
+      return (idStr !== null && wishlistIds.includes(idStr)) || (slugStr !== null && wishlistIds.includes(slugStr));
     },
     [wishlistIds]
   );
@@ -76,24 +77,29 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     }, 2800);
   }, []);
 
-  const removeFromWishlist = useCallback((productId?: string | number | null) => {
-    if (productId === undefined || productId === null) return;
-    const idStr = String(productId);
-    setWishlistIds((prev) => prev.filter((id) => id !== idStr));
+  const removeFromWishlist = useCallback((productId?: string | number | null, slug?: string | null) => {
+    if (productId === undefined && !slug) return;
+    const idStr = productId !== undefined && productId !== null ? String(productId) : null;
+    const slugStr = slug ? String(slug) : null;
+    setWishlistIds((prev) =>
+      prev.filter((id) => (idStr === null || id !== idStr) && (slugStr === null || id !== slugStr))
+    );
   }, []);
 
   const toggleWishlist = useCallback(
-    (productId?: string | number | null, productName?: string) => {
-      if (productId === undefined || productId === null) return;
-      const idStr = String(productId);
-      if (wishlistIds.includes(idStr)) {
-        removeFromWishlist(idStr);
+    (productId?: string | number | null, productName?: string, slug?: string | null) => {
+      if (productId === undefined && !slug) return;
+      const idStr = productId !== undefined && productId !== null ? String(productId) : null;
+      const slugStr = slug ? String(slug) : null;
+      const alreadyIn = (idStr !== null && wishlistIds.includes(idStr)) || (slugStr !== null && wishlistIds.includes(slugStr));
+      if (alreadyIn) {
+        removeFromWishlist(idStr, slugStr);
         setWishlistToast(productName ? `Removed "${productName}" from wishlist` : "Removed from wishlist");
         setTimeout(() => {
           setWishlistToast(null);
         }, 2500);
       } else {
-        addToWishlist(idStr, productName);
+        addToWishlist(idStr || slugStr!, productName);
       }
     },
     [wishlistIds, addToWishlist, removeFromWishlist]

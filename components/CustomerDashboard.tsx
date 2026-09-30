@@ -4,11 +4,11 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { User } from "./productData";
+import { User, Product } from "./productData";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
-import { getCustomerOrders, trackOrder } from "@/lib/api";
+import { getCustomerOrders, trackOrder, getProductsByIds, getMediaUrl } from "@/lib/api";
 
 import { printOrderInvoice } from "@/lib/invoice";
 import {
@@ -47,8 +47,39 @@ export default function CustomerDashboard({
   const { addToCart } = useCart();
   const [activeTab, setActiveTab] = useState<DashboardTab>(initialTab);
 
+  const [wishlistProducts, setWishlistProducts] = useState<Product[]>([]);
+  const [loadingWishlist, setLoadingWishlist] = useState<boolean>(false);
+
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+
+  // Load wishlist products whenever wishlistIds changes
+  useEffect(() => {
+    if (!wishlistIds || wishlistIds.length === 0) {
+      setWishlistProducts([]);
+      setLoadingWishlist(false);
+      return;
+    }
+    let isCancelled = false;
+    setLoadingWishlist(true);
+    getProductsByIds(wishlistIds)
+      .then((prods) => {
+        if (!isCancelled) {
+          setWishlistProducts(prods);
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to fetch wishlist products:", err);
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setLoadingWishlist(false);
+        }
+      });
+    return () => {
+      isCancelled = true;
+    };
+  }, [wishlistIds]);
 
   // Single Order View state
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
@@ -1201,7 +1232,7 @@ export default function CustomerDashboard({
             {/* --------------------------------------------------------------------- */}
             {activeTab === "wishlist" && (
               <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 sm:p-7 shadow-xs">
-                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
                   <div>
                     <h2 className="font-bold text-lg text-[#171136]">My Wishlist</h2>
                     <p className="text-xs text-[#736E9B]">
@@ -1218,7 +1249,22 @@ export default function CustomerDashboard({
                   </Link>
                 </div>
 
-                {wishlistIds.length === 0 ? (
+                {loadingWishlist ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {Array.from({ length: Math.min(wishlistIds.length || 3, 6) }).map((_, i) => (
+                      <div key={i} className="p-4 rounded-2xl bg-[#FAF7FD] border border-[#EAE3F7] animate-pulse flex flex-col gap-3">
+                        <div className="w-full aspect-4/3 bg-[#EAE3F7] rounded-xl" />
+                        <div className="w-16 h-3.5 bg-[#EAE3F7] rounded-md" />
+                        <div className="w-3/4 h-4 bg-[#EAE3F7] rounded-md" />
+                        <div className="w-20 h-4 bg-[#EAE3F7] rounded-md" />
+                        <div className="flex gap-2 pt-2">
+                          <div className="flex-1 h-9 bg-[#EAE3F7] rounded-xl" />
+                          <div className="w-20 h-9 bg-[#EAE3F7] rounded-xl" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : wishlistIds.length === 0 || wishlistProducts.length === 0 ? (
                   <div className="py-12 flex flex-col items-center justify-center text-center bg-[#FAF7FD] rounded-2xl border border-dashed border-[#D6CCE8]">
                     <div className="w-14 h-14 rounded-full bg-[#FFEAF0] text-[#FF4D6D] flex items-center justify-center mb-3">
                       <IconHeart className="w-7 h-7" />
@@ -1236,34 +1282,96 @@ export default function CustomerDashboard({
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="p-4 rounded-2xl bg-[#FFF6EE] border border-[#FFE3CC] flex flex-col justify-between">
-                      <div>
-                        <span className="text-[10px] font-bold bg-[#FF4D6D] text-white px-2 py-0.5 rounded-full">
-                          ANIME FIGURE
-                        </span>
-                        <h3 className="font-bold text-sm text-[#171136] mt-2">
-                          Neon Valkyrie EVA-01
-                        </h3>
-                        <p className="text-xs text-[#736E9B] mt-0.5">1/7 Scale Pre-Painted Figure</p>
-                        <p className="font-bold text-sm text-[#FF4D6D] mt-2">৳89.99</p>
-                      </div>
-                      <div className="flex items-center gap-2 mt-4">
-                        <button
-                          onClick={() => {
-                            addToCart({ id: "neon-valkyrie", name: "Neon Valkyrie EVA-01", price: 89.99, image: "/images/figure-samurai-red.svg" }, 1, true);
-                          }}
-                          className="flex-1 bg-[#171136] text-white font-bold text-xs py-2.5 rounded-xl hover:bg-[#251c4a] transition-all cursor-pointer"
+                    {wishlistProducts.map((product) => {
+                      const isPreorder = product.stock === 0 && product.productType !== "grouped";
+                      const soldOut = product.stock === 0 && product.productType === "grouped";
+                      const priceFormatted = product.discountedPrice || product.price || "৳0.00";
+                      const originalPriceFormatted = product.regularPrice || product.originalPrice;
+                      const imageSrc = getMediaUrl(product.image || product.image_file);
+
+                      return (
+                        <div
+                          key={product.id}
+                          className="group relative p-3.5 sm:p-4 rounded-2xl bg-white border border-[#EAE3F7] hover:border-[#FF4D6D]/40 shadow-xs hover:shadow-md transition-all flex flex-col justify-between gap-3"
                         >
-                          Move to Bag
-                        </button>
-                        <button
-                          onClick={() => removeFromWishlist(wishlistIds[0] || "neon-valkyrie")}
-                          className="px-3 py-2.5 rounded-xl border border-[#EAE3F7] text-[#736E9B] hover:text-[#FF4D6D] text-xs font-bold hover:bg-white transition-colors"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
+                          {/* Clickable Product Body */}
+                          <Link
+                            href={`/product/${product.slug || product.id}`}
+                            className="block flex-1 group"
+                          >
+                            <div
+                              className="relative w-full aspect-4/3 rounded-xl overflow-hidden flex items-center justify-center mb-3"
+                              style={{ backgroundColor: product.cardBg || "#FAF5FE" }}
+                            >
+                              <Image
+                                src={imageSrc}
+                                alt={product.name}
+                                fill
+                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
+                              />
+                            </div>
+
+                            <span
+                              className="text-[9.5px] sm:text-[10.5px] font-bold tracking-wide uppercase block truncate mb-1"
+                              style={{ color: product.categoryColor || "#FF4D6D" }}
+                            >
+                              {product.category || "COLLECTION"}
+                            </span>
+
+                            <h3 className="font-[family-name:var(--font-display)] font-extrabold text-xs sm:text-sm text-[#171136] group-hover:text-[#FF4D6D] transition-colors line-clamp-2 leading-snug">
+                              {product.name}
+                            </h3>
+
+                            <div className="flex items-baseline gap-1.5 mt-2">
+                              <span className="font-[family-name:var(--font-display)] font-extrabold text-sm sm:text-base text-[#171136]">
+                                {priceFormatted}
+                              </span>
+                              {originalPriceFormatted && originalPriceFormatted !== priceFormatted && (
+                                <span className="text-[11px] text-[#736E9B] line-through font-medium">
+                                  {originalPriceFormatted}
+                                </span>
+                              )}
+                            </div>
+                          </Link>
+
+                          {/* Action Buttons Row */}
+                          <div className="flex items-center gap-2 pt-2 border-t border-[#F0EBF9] mt-auto">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                addToCart(product, 1, true);
+                              }}
+                              disabled={soldOut}
+                              className={`flex-1 font-bold text-xs py-2.5 px-3 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 shadow-xs ${
+                                isPreorder
+                                  ? "bg-[#FF4D6D] hover:bg-[#e63956] text-white"
+                                  : soldOut
+                                  ? "bg-[#EAE3F7] text-[#736E9B] cursor-not-allowed opacity-60"
+                                  : "bg-[#171136] hover:bg-[#FF4D6D] text-white"
+                              }`}
+                            >
+                              <IconBag className="w-3.5 h-3.5 text-white" />
+                              <span>{isPreorder ? "Pre-order" : soldOut ? "Sold out" : "Add to Cart"}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                removeFromWishlist(product.id, product.slug);
+                              }}
+                              className="px-3 py-2.5 rounded-xl border border-[#EAE3F7] text-[#736E9B] hover:text-[#FF4D6D] hover:border-[#FF4D6D]/30 text-xs font-bold hover:bg-[#FFF1F4] transition-colors cursor-pointer"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

@@ -414,6 +414,25 @@ export async function getProductById(id: string): Promise<Product | null> {
   return null;
 }
 
+export async function getProductsByIds(ids: (string | number)[]): Promise<Product[]> {
+  if (!ids || ids.length === 0) return [];
+  try {
+    const cleanIds = ids.map((id) => String(id).trim()).filter(Boolean);
+    if (cleanIds.length === 0) return [];
+    const res = await fetch(`${getApiBaseUrl()}/products/?ids=${encodeURIComponent(cleanIds.join(","))}`, {
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data.results)) return data.results;
+    }
+  } catch (error) {
+    console.warn("[API] Failed to fetch products by ids:", error);
+  }
+  return [];
+}
+
 export async function getRelatedProducts(category?: string, excludeId?: string): Promise<Product[]> {
   try {
     const url = category
