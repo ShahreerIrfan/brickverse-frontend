@@ -850,22 +850,6 @@ export default function CheckoutPage() {
                 <IconCash className="w-5 h-5" />
                 <span>{isSubmitting ? "Placing order..." : "Place order (COD)"}</span>
               </button>
-
-              {/* 3 Trust Columns under Summary */}
-              <div className="pt-2 grid grid-cols-3 gap-2 text-center text-[10.5px] text-[#736E9B] font-medium border-t border-[#EAE3F7]">
-                <div className="flex flex-col items-center gap-1">
-                  <IconShield className="w-4 h-4 text-[#736E9B]" />
-                  <span>Buyer protection</span>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <IconReturn className="w-4 h-4 text-[#736E9B]" />
-                  <span>7-day returns</span>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <IconTruck className="w-4 h-4 text-[#736E9B]" />
-                  <span>Ships in 24h</span>
-                </div>
-              </div>
             </div>
           </div>
         </form>
