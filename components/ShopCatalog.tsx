@@ -261,16 +261,52 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
     return () => observer.disconnect();
   }, [hasMore, loadError, loadMore, products.length]);
 
-  // Current active category (and, if one is selected, subcategory) objects.
-  const currentCategoryObj = initialCategories.find(
-    (c) => c.id.toLowerCase() === selectedCategory.toLowerCase()
-  );
-  const currentSubcategoryObj =
-    selectedSubcategory !== "all"
-      ? initialCategories
-          .flatMap((c) => c.subcategories || [])
-          .find((sc) => sc.id.toLowerCase() === selectedSubcategory.toLowerCase())
-      : undefined;
+  // Resolve active category and subcategory objects accurately
+  let parentCategory: Category | undefined = undefined;
+  let subCategory: Category | undefined = undefined;
+
+  if (selectedSubcategory && selectedSubcategory !== "all") {
+    for (const cat of initialCategories) {
+      const match = (cat.subcategories || []).find(
+        (sc) => sc.id.toLowerCase() === selectedSubcategory.toLowerCase()
+      );
+      if (match) {
+        subCategory = match;
+        parentCategory = cat;
+        break;
+      }
+    }
+  }
+
+  if (!parentCategory && selectedCategory && selectedCategory !== "all") {
+    const topMatch = initialCategories.find(
+      (c) => c.id.toLowerCase() === selectedCategory.toLowerCase()
+    );
+    if (topMatch) {
+      parentCategory = topMatch;
+    } else {
+      for (const cat of initialCategories) {
+        const subMatch = (cat.subcategories || []).find(
+          (sc) => sc.id.toLowerCase() === selectedCategory.toLowerCase()
+        );
+        if (subMatch) {
+          subCategory = subMatch;
+          parentCategory = cat;
+          break;
+        }
+      }
+    }
+  } else if (parentCategory && selectedCategory && selectedCategory !== "all" && parentCategory.id.toLowerCase() !== selectedCategory.toLowerCase()) {
+    const explicitTopMatch = initialCategories.find(
+      (c) => c.id.toLowerCase() === selectedCategory.toLowerCase()
+    );
+    if (explicitTopMatch) {
+      parentCategory = explicitTopMatch;
+    }
+  }
+
+  const currentCategoryObj = parentCategory;
+  const currentSubcategoryObj = subCategory;
   const activeCategoryLabel = currentSubcategoryObj?.label || currentCategoryObj?.label;
 
   const activeFilterCount =
@@ -413,8 +449,15 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
 
               {selectedCategory !== "all" && (
                 <span className="inline-flex items-center gap-1.5 bg-white border border-[#FF4D6D]/30 text-[#FF4D6D] text-xs font-bold px-2.5 py-1 rounded-full shadow-xs">
-                  Category: {activeCategoryLabel || selectedCategory}
-                  <button onClick={() => setSelectedCategory("all")} className="hover:opacity-75">
+                  Category: {parentCategory?.label || selectedCategory}
+                  <button
+                    onClick={() => {
+                      setSelectedCategory("all");
+                      setSelectedSubcategory("all");
+                    }}
+                    className="hover:opacity-75 cursor-pointer"
+                    title="Remove category filter"
+                  >
                     <IconX className="w-3 h-3" />
                   </button>
                 </span>
@@ -422,8 +465,12 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
 
               {selectedSubcategory !== "all" && (
                 <span className="inline-flex items-center gap-1.5 bg-white border border-[#7B5CFF]/30 text-[#7B5CFF] text-xs font-bold px-2.5 py-1 rounded-full shadow-xs">
-                  Subcategory: {selectedSubcategory}
-                  <button onClick={() => setSelectedSubcategory("all")} className="hover:opacity-75">
+                  Subcategory: {subCategory?.label || selectedSubcategory}
+                  <button
+                    onClick={() => setSelectedSubcategory("all")}
+                    className="hover:opacity-75 cursor-pointer"
+                    title="Remove subcategory filter"
+                  >
                     <IconX className="w-3 h-3" />
                   </button>
                 </span>
