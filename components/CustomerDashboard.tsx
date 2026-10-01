@@ -774,24 +774,52 @@ export default function CustomerDashboard({
 
                       <div className="divide-y divide-[#EAE3F7]">
                         {selectedOrder.items && selectedOrder.items.length > 0 ? (
-                          selectedOrder.items.map((item: any) => (
-                            <div key={item.id} className="py-4 flex items-center justify-between gap-4">
-                              <div className="flex items-center gap-3.5">
-                                <div className="w-12 h-12 rounded-2xl bg-[#F8F6FD] border border-[#EAE3F7] flex items-center justify-center text-xl shrink-0">
-                                  🧱
+                          selectedOrder.items.map((item: any) => {
+                            const itemImg = item.image || item.image_file || item.product?.image || item.product?.image_file;
+                            const targetProductId = item.productId || item.product_id || (typeof item.product === "string" || typeof item.product === "number" ? item.product : item.product?.id);
+                            return (
+                              <div key={item.id} className="py-4 flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-3.5">
+                                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#F8F6FD] border border-[#EAE3F7] flex items-center justify-center overflow-hidden shrink-0 relative p-1.5 shadow-2xs">
+                                    {itemImg ? (
+                                      <img
+                                        src={getMediaUrl(itemImg)}
+                                        alt={item.product_name}
+                                        className="w-full h-full object-contain rounded-xl"
+                                        onError={(e) => {
+                                          (e.target as HTMLImageElement).src = "/images/figure-samurai-red.svg";
+                                        }}
+                                      />
+                                    ) : (
+                                      <img
+                                        src="/images/figure-samurai-red.svg"
+                                        alt={item.product_name}
+                                        className="w-full h-full object-contain rounded-xl"
+                                      />
+                                    )}
+                                  </div>
+                                  <div>
+                                    {targetProductId ? (
+                                      <Link
+                                        href={`/product/${targetProductId}`}
+                                        className="font-bold text-sm text-[#171136] hover:text-[#FF4D6D] transition-colors"
+                                      >
+                                        {item.product_name}
+                                      </Link>
+                                    ) : (
+                                      <h4 className="font-bold text-sm text-[#171136]">{item.product_name}</h4>
+                                    )}
+                                    <p className="text-xs text-[#736E9B] mt-0.5">
+                                      Qty: <strong className="text-[#171136]">{item.quantity}</strong> · Unit Price: ৳{item.price}
+                                    </p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <h4 className="font-bold text-sm text-[#171136]">{item.product_name}</h4>
-                                  <p className="text-xs text-[#736E9B] mt-0.5">
-                                    Qty: <strong className="text-[#171136]">{item.quantity}</strong> · Unit Price: ৳{item.price}
-                                  </p>
-                                </div>
+                                <span className="font-extrabold text-sm sm:text-base text-[#171136]">
+                                  ৳{(parseFloat(item.price) * item.quantity).toFixed(2)}
+                                </span>
                               </div>
-                              <span className="font-extrabold text-sm sm:text-base text-[#171136]">
-                                ৳{(parseFloat(item.price) * item.quantity).toFixed(2)}
-                              </span>
-                            </div>
-                          ))
+                            );
+                          })
                         ) : (
                           <div className="py-4 text-xs text-[#736E9B]">
                             Collector Edition Kit
@@ -1117,26 +1145,54 @@ export default function CustomerDashboard({
 
                         <div className="divide-y divide-[#EAE3F7]">
                           {trackedOrder.items && trackedOrder.items.length > 0 ? (
-                            trackedOrder.items.map((item: any) => (
-                              <div key={item.id} className="py-3.5 flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-11 h-11 rounded-xl bg-[#F8F6FD] border border-[#EAE3F7] flex items-center justify-center text-lg shrink-0">
-                                    🧱
+                            trackedOrder.items.map((item: any) => {
+                              const itemImg = item.image || item.image_file || item.product?.image || item.product?.image_file;
+                              const targetProductId = item.productId || item.product_id || (typeof item.product === "string" || typeof item.product === "number" ? item.product : item.product?.id);
+                              return (
+                                <div key={item.id} className="py-3.5 flex items-center justify-between gap-4">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#F8F6FD] border border-[#EAE3F7] flex items-center justify-center overflow-hidden shrink-0 relative p-1 shadow-2xs">
+                                      {itemImg ? (
+                                        <img
+                                          src={getMediaUrl(itemImg)}
+                                          alt={item.product_name}
+                                          className="w-full h-full object-contain rounded-xl"
+                                          onError={(e) => {
+                                            (e.target as HTMLImageElement).src = "/images/figure-samurai-red.svg";
+                                          }}
+                                        />
+                                      ) : (
+                                        <img
+                                          src="/images/figure-samurai-red.svg"
+                                          alt={item.product_name}
+                                          className="w-full h-full object-contain rounded-xl"
+                                        />
+                                      )}
+                                    </div>
+                                    <div>
+                                      {targetProductId ? (
+                                        <Link
+                                          href={`/product/${targetProductId}`}
+                                          className="font-bold text-xs sm:text-sm text-[#171136] hover:text-[#FF4D6D] transition-colors"
+                                        >
+                                          {item.product_name}
+                                        </Link>
+                                      ) : (
+                                        <p className="font-bold text-xs sm:text-sm text-[#171136]">
+                                          {item.product_name}
+                                        </p>
+                                      )}
+                                      <p className="text-[11px] text-[#736E9B]">
+                                        Qty: <strong className="text-[#171136]">{item.quantity}</strong> × ৳{item.price}
+                                      </p>
+                                    </div>
                                   </div>
-                                  <div>
-                                    <p className="font-bold text-xs sm:text-sm text-[#171136]">
-                                      {item.product_name}
-                                    </p>
-                                    <p className="text-[11px] text-[#736E9B]">
-                                      Qty: <strong className="text-[#171136]">{item.quantity}</strong> × ৳{item.price}
-                                    </p>
-                                  </div>
+                                  <span className="font-extrabold text-xs sm:text-sm text-[#171136]">
+                                    ৳{(parseFloat(item.price) * item.quantity).toFixed(2)}
+                                  </span>
                                 </div>
-                                <span className="font-extrabold text-xs sm:text-sm text-[#171136]">
-                                  ৳{(parseFloat(item.price) * item.quantity).toFixed(2)}
-                                </span>
-                              </div>
-                            ))
+                              );
+                            })
                           ) : (
                             <div className="py-4 text-xs text-[#736E9B]">
                               Anime Figures & Collector Building Kits
