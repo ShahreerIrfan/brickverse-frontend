@@ -13,9 +13,6 @@ import {
   IconCopy,
   IconTruck,
   IconArrowRight,
-  IconMail,
-  IconPhone,
-  IconReturn,
 } from "./icons";
 
 interface OrderItem {
@@ -496,58 +493,6 @@ export default function ThankYouPage() {
             </div>
           </div>
         </div>
-
-        {/* ========================================================================= */}
-        {/* 5. BOTTOM 3 HELP / SUPPORT CARDS (Matches brickverse-thankyou.svg) */}
-        {/* ========================================================================= */}
-        <section className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-            {/* Card 1: Need help? (Email) */}
-            <div className="bg-white rounded-2xl border border-[#EAE3F7] p-5 shadow-[0_4px_16px_rgba(23,17,54,0.04)] flex items-center gap-4 hover:shadow-md transition-all">
-              <div className="w-11 h-11 rounded-2xl bg-[#FFEAF0] flex items-center justify-center text-[#FF4D6D] shrink-0">
-                <IconMail className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-[family-name:var(--font-display)] font-extrabold text-sm sm:text-[15px] text-[#171136]">
-                  Need help?
-                </h3>
-                <p className="text-xs text-[#736E9B] mt-0.5">
-                  Reach us at <a href="mailto:hi@kawaiisubete.com" className="hover:text-[#FF4D6D] underline">hi@kawaiisubete.com</a>
-                </p>
-              </div>
-            </div>
-
-            {/* Card 2: Call us (Phone) */}
-            <div className="bg-white rounded-2xl border border-[#EAE3F7] p-5 shadow-[0_4px_16px_rgba(23,17,54,0.04)] flex items-center gap-4 hover:shadow-md transition-all">
-              <div className="w-11 h-11 rounded-2xl bg-[#E4F7F8] flex items-center justify-center text-[#13BFC9] shrink-0">
-                <IconPhone className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-[family-name:var(--font-display)] font-extrabold text-sm sm:text-[15px] text-[#171136]">
-                  Call us
-                </h3>
-                <p className="text-xs text-[#736E9B] mt-0.5">
-                  +880 1700-000001 · Mon–Fri 9am–5pm
-                </p>
-              </div>
-            </div>
-
-            {/* Card 3: Returns (Policy) */}
-            <div className="bg-white rounded-2xl border border-[#EAE3F7] p-5 shadow-[0_4px_16px_rgba(23,17,54,0.04)] flex items-center gap-4 hover:shadow-md transition-all">
-              <div className="w-11 h-11 rounded-2xl bg-[#EFE9FF] flex items-center justify-center text-[#7B5CFF] shrink-0">
-                <IconReturn className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-[family-name:var(--font-display)] font-extrabold text-sm sm:text-[15px] text-[#171136]">
-                  Returns
-                </h3>
-                <p className="text-xs text-[#736E9B] mt-0.5">
-                  Changed your mind? 7-day easy returns
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
 
       {/* ========================================================================= */}
