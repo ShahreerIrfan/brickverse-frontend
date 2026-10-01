@@ -15,6 +15,7 @@ interface ShopPageProps {
     subcategory?: string;
     search?: string;
     deals?: string;
+    sort?: string;
   }>;
 }
 
@@ -24,10 +25,16 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   const randomSeed = Math.random().toString(36).substring(2, 10);
   const apiBase = await getServerApiBaseUrl();
 
+  const hasCategoryFilter = Boolean(
+    (resolvedParams?.category && resolvedParams.category !== "all") ||
+    (resolvedParams?.subcategory && resolvedParams.subcategory !== "all")
+  );
+  const initialSort = resolvedParams?.sort || (hasCategoryFilter ? "newest" : "random");
+
   const qs = new URLSearchParams({
     page: "1",
     page_size: "20",
-    sort: "random",
+    sort: initialSort,
     seed: randomSeed,
   });
   if (isDeals) {
@@ -63,6 +70,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
           initialHasMore={Boolean(firstPage?.hasMore)}
           initialCategories={categories}
           initialSeed={randomSeed}
+          initialSort={initialSort}
         />
       </main>
 

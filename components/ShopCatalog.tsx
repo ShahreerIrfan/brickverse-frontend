@@ -32,9 +32,10 @@ type ShopCatalogProps = {
   initialHasMore: boolean;
   initialCategories: Category[];
   initialSeed?: string;
+  initialSort?: string;
 };
 
-function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, initialCategories, initialSeed }: ShopCatalogProps) {
+function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, initialCategories, initialSeed, initialSort }: ShopCatalogProps) {
   const searchParams = useSearchParams();
   const { addToCart } = useCart();
   const router = useRouter();
@@ -46,7 +47,10 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
   const paramCategory = searchParams.get("category") || "all";
   const paramSubcategory = searchParams.get("subcategory") || "all";
   const paramSearch = searchParams.get("search") || "";
+  const paramSort = searchParams.get("sort") || "";
   const paramDeals = searchParams.get("deals") === "true" || searchParams.get("deals") === "1";
+
+  const defaultSortForParams = paramSort || initialSort || ((paramCategory !== "all" || paramSubcategory !== "all") ? "newest" : "random");
 
   // Local filter states
   const [selectedCategory, setSelectedCategory] = useState<string>(paramCategory);
@@ -57,7 +61,7 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
   const [appliedMinPrice, setAppliedMinPrice] = useState<number | null>(null);
   const [appliedMaxPrice, setAppliedMaxPrice] = useState<number | null>(null);
   const [onSaleOnly, setOnSaleOnly] = useState<boolean>(false);
-  const [sortBy, setSortBy] = useState<string>("random");
+  const [sortBy, setSortBy] = useState<string>(defaultSortForParams);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [mobileFilterOpen, setMobileFilterOpen] = useState<boolean>(false);
 
@@ -67,7 +71,7 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
   const { isInWishlist, toggleWishlist: globalToggleWishlist } = useWishlist();
 
 
-  const updateUrl = useCallback((newCat: string, newSub: string) => {
+  const updateUrl = useCallback((newCat: string, newSub: string, newSort?: string) => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (newCat && newCat !== "all") {
@@ -80,6 +84,14 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
     } else {
       params.delete("subcategory");
     }
+    if (newSort) {
+      if ((newCat === "all" && newSub === "all" && newSort === "random") ||
+          ((newCat !== "all" || newSub !== "all") && newSort === "newest")) {
+        params.delete("sort");
+      } else {
+        params.set("sort", newSort);
+      }
+    }
     const qs = params.toString();
     const newPath = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
     window.history.pushState(null, "", newPath);
@@ -89,11 +101,15 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
   useEffect(() => {
     const syncFromUrl = () => {
       const params = new URLSearchParams(window.location.search);
-      setSelectedCategory(params.get("category") || "all");
-      setSelectedSubcategory(params.get("subcategory") || "all");
+      const cat = params.get("category") || "all";
+      const sub = params.get("subcategory") || "all";
+      const sort = params.get("sort");
+      setSelectedCategory(cat);
+      setSelectedSubcategory(sub);
       if (params.get("search")) {
         setSearchQuery(params.get("search") || "");
       }
+      setSortBy(sort || (cat !== "all" || sub !== "all" ? "newest" : "random"));
     };
     syncFromUrl();
     window.addEventListener("popstate", syncFromUrl);
@@ -115,16 +131,19 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
   const handleSelectCategory = (catId: string) => {
     setSelectedCategory(catId);
     setSelectedSubcategory("all");
+    const nextSort = catId !== "all" ? "newest" : "random";
+    setSortBy(nextSort);
     setExpandedCategories((prev) => ({ ...prev, [catId]: true }));
     setMobileFilterOpen(false);
-    updateUrl(catId, "all");
+    updateUrl(catId, "all", nextSort);
   };
 
   const handleSelectSubcategory = (catId: string, subId: string) => {
     setSelectedCategory(catId);
     setSelectedSubcategory(subId);
+    setSortBy("newest");
     setMobileFilterOpen(false);
-    updateUrl(catId, subId);
+    updateUrl(catId, subId, "newest");
   };
 
   const handleApplyPrice = (e: React.FormEvent) => {
@@ -144,7 +163,7 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
     setOnSaleOnly(false);
     setSortBy("random");
     setMobileFilterOpen(false);
-    updateUrl("all", "all");
+    updateUrl("all", "all", "random");
   };
 
   const toggleWishlist = (product: Product, e: React.MouseEvent) => {
@@ -192,8 +211,8 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
   const pageRef = useRef(1);
   const requestRef = useRef(0);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  // Query the server-rendered first page corresponds to (the unfiltered shop with initial random seed).
-  const loadedKey = useRef(JSON.stringify(["all", "all", "", null, null, false, "random", paramDeals]));
+  // Query the server-rendered first page corresponds to.
+  const loadedKey = useRef(JSON.stringify([paramCategory, paramSubcategory, paramSearch, null, null, false, defaultSortForParams, paramDeals]));
 
   const queryKey = JSON.stringify([
     selectedCategory,
@@ -425,7 +444,11 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
             <span className="hidden sm:inline text-xs font-semibold text-[#736E9B]">Sort by:</span>
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={(e) => {
+                const nextSort = e.target.value;
+                setSortBy(nextSort);
+                updateUrl(selectedCategory, selectedSubcategory, nextSort);
+              }}
               className="bg-white border border-[#EAE3F7] text-[#171136] font-semibold text-xs sm:text-sm rounded-xl px-2.5 sm:px-3.5 py-2 sm:py-2.5 outline-none focus:border-[#FF4D6D] shadow-xs cursor-pointer"
             >
               <option value="random">Random / Featured</option>
@@ -481,7 +504,8 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
                     onClick={() => {
                       setSelectedCategory("all");
                       setSelectedSubcategory("all");
-                      updateUrl("all", "all");
+                      setSortBy("random");
+                      updateUrl("all", "all", "random");
                     }}
                     className="hover:opacity-75 cursor-pointer"
                     title="Remove category filter"
@@ -497,7 +521,9 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
                   <button
                     onClick={() => {
                       setSelectedSubcategory("all");
-                      updateUrl(selectedCategory, "all");
+                      const nextSort = selectedCategory !== "all" ? "newest" : "random";
+                      setSortBy(nextSort);
+                      updateUrl(selectedCategory, "all", nextSort);
                     }}
                     className="hover:opacity-75 cursor-pointer"
                     title="Remove subcategory filter"
