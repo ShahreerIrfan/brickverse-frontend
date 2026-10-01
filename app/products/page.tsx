@@ -1,7 +1,6 @@
 import Navbar from "@/components/Navbar";
 import NavLinks from "@/components/NavLinks";
 import ShopCatalog from "@/components/ShopCatalog";
-import TrustStrip from "@/components/TrustStrip";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import { getCategories, getServerApiBaseUrl } from "@/lib/api";
@@ -32,10 +31,6 @@ export default async function ProductsPage() {
           initialCategories={categories}
         />
       </main>
-
-      <div className="max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <TrustStrip />
-      </div>
 
       <Footer />
       <BottomNav />
