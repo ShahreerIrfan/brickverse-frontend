@@ -581,7 +581,7 @@ export default function CustomerDashboard({
                             </div>
                             <p className="text-[11px] text-[#736E9B] mt-0.5">
                               Placed on {new Date(order.created_at).toLocaleDateString()} · Carrier:{" "}
-                              {order.carrier || "Australia Post / Pathao"}
+                              {order.carrier ? order.carrier.replace(/Australia Post \/ Pathao|Pathao Express|Australia Post|Pathao/gi, "Steadfast Courier") : "Steadfast Courier"}
                             </p>
                           </div>
 
@@ -738,7 +738,7 @@ export default function CustomerDashboard({
                             <span>Carrier & Delivery</span>
                           </div>
                           <p className="font-extrabold text-sm text-[#171136]">
-                            {selectedOrder.carrier || "Pathao Express / Standard"}
+                            {selectedOrder.carrier ? selectedOrder.carrier.replace(/Pathao Express \/ Standard|Pathao Express|Australia Post|Pathao/gi, "Steadfast Courier (COD)") : "Steadfast Courier (COD)"}
                           </p>
                           <p className="text-xs text-[#736E9B] mt-1">
                             Tracking: <strong className="text-[#171136]">{selectedOrder.tracking_number || "Auto-assigned on dispatch"}</strong>
@@ -1010,7 +1010,7 @@ export default function CustomerDashboard({
                             <p className="text-[10px] sm:text-[11px] font-bold text-[#736E9B] uppercase tracking-wider">Carrier & Tracking</p>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <span className="text-xs sm:text-sm font-extrabold text-[#171136]">
-                                {trackedOrder.carrier || "Australia Post / Pathao Express"}
+                                {trackedOrder.carrier ? trackedOrder.carrier.replace(/Australia Post \/ Pathao Express|Pathao Express|Australia Post|Pathao/gi, "Steadfast Courier") : "Steadfast Courier"}
                               </span>
                               {trackedOrder.tracking_number && (
                                 <span className="text-xs font-mono font-bold text-[#7B5CFF]">

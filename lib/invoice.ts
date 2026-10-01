@@ -338,7 +338,7 @@ export function generateInvoiceHtml(order: OrderInvoiceData): string {
         </td>
         <td class="meta-box" style="width: 50%;">
           <div class="meta-label">Shipping & Logistics</div>
-          <div class="meta-value">${order.carrier || "Pathao Express / Standard"}</div>
+          <div class="meta-value">${order.carrier ? order.carrier.replace(/Pathao Express \/ Standard|Pathao Express|Australia Post|Pathao/gi, "Steadfast Courier (COD)") : "Steadfast Courier (COD)"}</div>
           <div class="meta-sub">
             <strong>Tracking Number:</strong> <span style="font-family: monospace; font-weight: 700; color: #171136;">${order.tracking_number || "Auto-assigned on dispatch"}</span><br>
             <strong>Transit Time:</strong> 24-48 Hours Nationwide<br>
