@@ -26,6 +26,9 @@ export interface OrderInvoiceData {
   carrier?: string;
   created_at?: string;
   items?: OrderItem[];
+  shipping_cost?: number | string;
+  shipping_fee?: number | string;
+  delivery_charge?: number | string;
   discount_code?: string;
   discount_amount?: number | string;
 }
@@ -48,8 +51,10 @@ export function generateInvoiceHtml(order: OrderInvoiceData): string {
     0
   );
   const totalAmount = Number(order.total_amount || subtotal);
-  const deliveryFee = 0; // Standard Free Shipping or included
   const discountAmount = Number(order.discount_amount || 0);
+  const deliveryFee = typeof order.shipping_cost === "number" || typeof order.shipping_fee === "number" || typeof order.delivery_charge === "number"
+    ? Number(order.shipping_cost ?? order.shipping_fee ?? order.delivery_charge ?? 0)
+    : Math.max(0, totalAmount - subtotal + discountAmount);
 
   const formattedDate = order.created_at
     ? new Date(order.created_at).toLocaleDateString("en-US", {
@@ -381,8 +386,8 @@ export function generateInvoiceHtml(order: OrderInvoiceData): string {
             </tr>
             <tr>
               <td style="color: #6B7280; font-weight: 600;">Delivery Charge:</td>
-              <td style="text-align: right; font-family: monospace; font-weight: 700; color: #059669;">
-                ৳${deliveryFee.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} (Free)
+              <td style="text-align: right; font-family: monospace; font-weight: 700; color: ${deliveryFee > 0 ? '#374151' : '#059669'};">
+                ৳${deliveryFee.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}${deliveryFee === 0 ? ' (Free)' : ''}
               </td>
             </tr>
             ${

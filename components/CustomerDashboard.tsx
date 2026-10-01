@@ -827,22 +827,37 @@ export default function CustomerDashboard({
                         )}
                       </div>
 
-                      <div className="mt-6 pt-4 border-t border-[#EAE3F7] flex flex-col gap-2 max-w-xs ml-auto text-xs">
-                        <div className="flex items-center justify-between text-[#736E9B]">
-                          <span>Items Subtotal:</span>
-                          <span className="font-bold text-[#171136]">৳{selectedOrder.total_amount}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-[#736E9B]">
-                          <span>Shipping & Handling:</span>
-                          <span className="font-bold text-emerald-600">Free Collector Delivery</span>
-                        </div>
-                        <div className="flex items-center justify-between pt-2 border-t border-[#EAE3F7] text-sm">
-                          <span className="font-extrabold text-[#171136]">Final Amount:</span>
-                          <span className="font-[family-name:var(--font-display)] font-extrabold text-lg text-[#FF4D6D]">
-                            ৳{selectedOrder.total_amount}
-                          </span>
-                        </div>
-                      </div>
+                      {(() => {
+                        const itemsSubtotal = (selectedOrder.items || []).reduce(
+                          (sum: number, it: any) => sum + Number(it.price || 0) * Number(it.quantity || 1),
+                          0
+                        );
+                        const orderTotal = Number(selectedOrder.total_amount || itemsSubtotal);
+                        const deliveryFee = typeof selectedOrder.shipping_cost === "number" || typeof selectedOrder.shipping_fee === "number" || typeof selectedOrder.delivery_charge === "number"
+                          ? Number(selectedOrder.shipping_cost ?? selectedOrder.shipping_fee ?? selectedOrder.delivery_charge ?? 0)
+                          : Math.max(0, orderTotal - itemsSubtotal);
+
+                        return (
+                          <div className="mt-6 pt-4 border-t border-[#EAE3F7] flex flex-col gap-2 max-w-xs ml-auto text-xs">
+                            <div className="flex items-center justify-between text-[#736E9B]">
+                              <span>Items Subtotal:</span>
+                              <span className="font-bold text-[#171136]">৳{itemsSubtotal.toFixed(2)}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-[#736E9B]">
+                              <span>Shipping & Handling:</span>
+                              <span className={`font-bold ${deliveryFee > 0 ? "text-[#171136]" : "text-emerald-600"}`}>
+                                {deliveryFee > 0 ? `৳${deliveryFee.toFixed(2)}` : "Free Collector Delivery"}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between pt-2 border-t border-[#EAE3F7] text-sm">
+                              <span className="font-extrabold text-[#171136]">Final Amount:</span>
+                              <span className="font-[family-name:var(--font-display)] font-extrabold text-lg text-[#FF4D6D]">
+                                ৳{selectedOrder.total_amount}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 ) : (

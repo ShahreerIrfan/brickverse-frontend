@@ -4298,6 +4298,10 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
             ];
 
             const subtotal = items.reduce((acc: number, item: any) => acc + (Number(item.price || 0) * (item.quantity || 1)), 0);
+            const orderTotal = Number(currentOrder.total_amount || subtotal);
+            const deliveryFee = typeof currentOrder.shipping_cost === "number" || typeof currentOrder.shipping_fee === "number" || typeof currentOrder.delivery_charge === "number"
+              ? Number(currentOrder.shipping_cost ?? currentOrder.shipping_fee ?? currentOrder.delivery_charge ?? 0)
+              : Math.max(0, orderTotal - subtotal);
 
             const statusLevels: Record<string, number> = {
               pending: 1,
@@ -4608,7 +4612,9 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                         </div>
                         <div className="flex justify-end gap-8 text-[#736E9B]">
                           <span>Standard Delivery</span>
-                          <span className="font-semibold text-emerald-600 w-24">৳0</span>
+                          <span className={`font-semibold w-24 ${deliveryFee > 0 ? "text-[#171136]" : "text-emerald-600"}`}>
+                            {deliveryFee > 0 ? `৳${deliveryFee.toLocaleString()}` : "৳0"}
+                          </span>
                         </div>
                       </div>
                     </div>
