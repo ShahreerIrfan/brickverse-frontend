@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { IconHeart, IconSpark, IconZoomIn, IconClose } from "../icons";
+import { IconHeart, IconZoomIn, IconClose } from "../icons";
 import type { Product } from "../productData";
 import { useWishlist } from "@/context/WishlistContext";
 import { getMediaUrl } from "@/lib/api";
@@ -16,7 +16,6 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
   const { isInWishlist, toggleWishlist } = useWishlist();
   const isWishlisted = isInWishlist(product.id || product.slug);
   const [zoomOpen, setZoomOpen] = useState(false);
-  const [sharedToast, setSharedToast] = useState(false);
 
   // Deduplicate and resolve primary + gallery images
   const rawPrimary = getMediaUrl(product.image || product.image_file);
@@ -63,14 +62,6 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
   }
 
   const thumbs = allImages;
-
-  const handleShare = () => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.href);
-      setSharedToast(true);
-      setTimeout(() => setSharedToast(false), 2500);
-    }
-  };
 
   return (
     <div className="flex flex-col-reverse md:flex-row gap-4 lg:gap-6 items-start">
@@ -130,19 +121,6 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
           >
             <IconHeart className={`w-5 h-5 ${isWishlisted ? "text-[#FF4D6D] fill-[#FF4D6D]" : ""}`} />
           </button>
-
-          <button
-            onClick={handleShare}
-            aria-label="Share product"
-            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white shadow-md flex items-center justify-center text-[#736E9B] hover:text-[#7B5CFF] hover:scale-105 active:scale-95 transition-all cursor-pointer relative border border-[#EAE3F7]"
-          >
-            <IconSpark className="w-5 h-5" />
-          </button>
-          {sharedToast && (
-            <div className="absolute right-13 top-10 bg-[#171136] text-white text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-xl whitespace-nowrap animate-in fade-in">
-              Link Copied! ✓
-            </div>
-          )}
         </div>
 
         {/* Active Product Artwork Preview */}
