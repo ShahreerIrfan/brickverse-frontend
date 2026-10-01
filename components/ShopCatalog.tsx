@@ -67,13 +67,37 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
   const { isInWishlist, toggleWishlist: globalToggleWishlist } = useWishlist();
 
 
-  // Keep state in sync if URL parameters change
-  useEffect(() => {
-    setSelectedCategory(searchParams.get("category") || "all");
-    setSelectedSubcategory(searchParams.get("subcategory") || "all");
-    if (searchParams.get("search")) {
-      setSearchQuery(searchParams.get("search") || "");
+  const updateUrl = useCallback((newCat: string, newSub: string) => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (newCat && newCat !== "all") {
+      params.set("category", newCat);
+    } else {
+      params.delete("category");
     }
+    if (newSub && newSub !== "all") {
+      params.set("subcategory", newSub);
+    } else {
+      params.delete("subcategory");
+    }
+    const qs = params.toString();
+    const newPath = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    window.history.pushState(null, "", newPath);
+  }, []);
+
+  // Keep state in sync if URL parameters change (e.g. popstate / back / forward navigation)
+  useEffect(() => {
+    const syncFromUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      setSelectedCategory(params.get("category") || "all");
+      setSelectedSubcategory(params.get("subcategory") || "all");
+      if (params.get("search")) {
+        setSearchQuery(params.get("search") || "");
+      }
+    };
+    syncFromUrl();
+    window.addEventListener("popstate", syncFromUrl);
+    return () => window.removeEventListener("popstate", syncFromUrl);
   }, [searchParams]);
 
   // Auto-expand category if selected from URL
@@ -93,12 +117,14 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
     setSelectedSubcategory("all");
     setExpandedCategories((prev) => ({ ...prev, [catId]: true }));
     setMobileFilterOpen(false);
+    updateUrl(catId, "all");
   };
 
   const handleSelectSubcategory = (catId: string, subId: string) => {
     setSelectedCategory(catId);
     setSelectedSubcategory(subId);
     setMobileFilterOpen(false);
+    updateUrl(catId, subId);
   };
 
   const handleApplyPrice = (e: React.FormEvent) => {
@@ -118,6 +144,7 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
     setOnSaleOnly(false);
     setSortBy("random");
     setMobileFilterOpen(false);
+    updateUrl("all", "all");
   };
 
   const toggleWishlist = (product: Product, e: React.MouseEvent) => {
@@ -454,6 +481,7 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
                     onClick={() => {
                       setSelectedCategory("all");
                       setSelectedSubcategory("all");
+                      updateUrl("all", "all");
                     }}
                     className="hover:opacity-75 cursor-pointer"
                     title="Remove category filter"
@@ -467,7 +495,10 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
                 <span className="inline-flex items-center gap-1.5 bg-white border border-[#7B5CFF]/30 text-[#7B5CFF] text-xs font-bold px-2.5 py-1 rounded-full shadow-xs">
                   Subcategory: {subCategory?.label || selectedSubcategory}
                   <button
-                    onClick={() => setSelectedSubcategory("all")}
+                    onClick={() => {
+                      setSelectedSubcategory("all");
+                      updateUrl(selectedCategory, "all");
+                    }}
                     className="hover:opacity-75 cursor-pointer"
                     title="Remove subcategory filter"
                   >
