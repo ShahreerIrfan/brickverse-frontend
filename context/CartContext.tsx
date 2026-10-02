@@ -46,7 +46,8 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const CART_STORAGE_KEY = "brickverse_shopping_cart";
-const FREE_DELIVERY_THRESHOLD = 500; // ৳500 / $60 threshold
+// Free delivery threshold removed per policy: delivery is always charged (৳60 inside Dhaka, ৳120 outside Dhaka)
+const FREE_DELIVERY_THRESHOLD = 0;
 
 export function parsePrice(priceVal: string | number | undefined): number {
   if (typeof priceVal === "number") return priceVal;
@@ -133,8 +134,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return formatPrice(subtotal);
   }, [subtotal]);
 
-  const isFreeDeliveryUnlocked = subtotal >= FREE_DELIVERY_THRESHOLD;
-  const freeDeliveryRemaining = Math.max(0, FREE_DELIVERY_THRESHOLD - subtotal);
+  // Delivery is never free
+  const isFreeDeliveryUnlocked = false;
+  const freeDeliveryRemaining = 0;
 
   const openCart = () => setIsCartOpen(true);
   const closeCart = () => setIsCartOpen(false);

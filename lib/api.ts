@@ -929,9 +929,11 @@ export async function createOrder(orderData: {
   customer_phone: string;
   customer_email?: string;
   city: string;
+  district?: string;
   address: string;
   shipping_address?: string;
   total_amount: number;
+  shipping_cost?: number;
   items: Array<{
     name: string;
     price: number;

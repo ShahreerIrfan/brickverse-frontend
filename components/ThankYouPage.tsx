@@ -58,7 +58,7 @@ const DEFAULT_DEMO_ORDER: OrderDetails = {
   total_amount: 130.98,
   subtotal: 130.98,
   discount_amount: 0,
-  shipping_cost: 0,
+  shipping_cost: 60,
   items: [
     {
       id: "neo-samurai",
@@ -118,18 +118,22 @@ export default function ThankYouPage() {
             cardBg: it.cardBg || bgColors[idx % bgColors.length],
           }));
 
+          const resolvedDistrict = parsed.district || parsed.city || "Dhaka";
+          const isDhakaOrder = resolvedDistrict.toLowerCase().includes("dhaka") || (parsed.shipping_address || "").toLowerCase().includes("dhaka");
+          const defaultShippingFee = isDhakaOrder ? 60 : 120;
+
           setOrder({
             order_number: parsed.order_number || `#KS-${Math.floor(10000 + Math.random() * 90000)}`,
             customer_name: parsed.customer_name || (parsed.first_name ? `${parsed.first_name} ${parsed.last_name || ""}`.trim() : "Valued Customer"),
             customer_email: parsed.customer_email || user?.email || "customer@kawaiisubete.com",
             customer_phone: parsed.customer_phone || "+880 1XXX-XXXXXX",
-            district: parsed.district || parsed.city || "Dhaka",
-            shipping_address: parsed.shipping_address || (parsed.address ? `${parsed.address}, ${parsed.district || "Dhaka"}, Bangladesh` : "House 12, Road 4, Uttara, Dhaka"),
+            district: resolvedDistrict,
+            shipping_address: parsed.shipping_address || (parsed.address ? `${parsed.address}, ${resolvedDistrict}, Bangladesh` : "House 12, Road 4, Uttara, Dhaka"),
             total_amount: Number(parsed.total_amount) || normalizedItems.reduce((s: number, i: any) => s + i.price * i.quantity, 0),
             subtotal: normalizedItems.reduce((s: number, i: any) => s + i.price * i.quantity, 0),
             discount_amount: Number(parsed.discount_amount) || 0,
             discount_code: parsed.discount_code,
-            shipping_cost: Number(parsed.shipping_cost) || 0,
+            shipping_cost: typeof parsed.shipping_cost === "number" && parsed.shipping_cost > 0 ? Number(parsed.shipping_cost) : defaultShippingFee,
             items: normalizedItems.length > 0 ? normalizedItems : DEFAULT_DEMO_ORDER.items,
           });
           return;
@@ -431,7 +435,7 @@ export default function ThankYouPage() {
               <div className="flex items-center justify-between">
                 <span>Shipping</span>
                 <span className="font-bold text-[#3B3468] font-mono">
-                  {formatPrice(order.shipping_cost !== undefined ? order.shipping_cost : 60)}
+                  {formatPrice(order.shipping_cost !== undefined && order.shipping_cost > 0 ? order.shipping_cost : ((order.district || order.shipping_address || "").toLowerCase().includes("dhaka") ? 60 : 120))}
                 </span>
               </div>
             </div>

@@ -52,9 +52,15 @@ export function generateInvoiceHtml(order: OrderInvoiceData): string {
   );
   const totalAmount = Number(order.total_amount || subtotal);
   const discountAmount = Number(order.discount_amount || 0);
-  const deliveryFee = typeof order.shipping_cost === "number" || typeof order.shipping_fee === "number" || typeof order.delivery_charge === "number"
-    ? Number(order.shipping_cost ?? order.shipping_fee ?? order.delivery_charge ?? 0)
-    : Math.max(0, totalAmount - subtotal + discountAmount);
+  const computedFee = Math.max(0, totalAmount - subtotal + discountAmount);
+  const fallbackFee = (order.shipping_address || "").toLowerCase().includes("dhaka") ? 60 : 120;
+  const deliveryFee = typeof order.shipping_cost === "number" && order.shipping_cost > 0
+    ? Number(order.shipping_cost)
+    : (typeof order.shipping_fee === "number" && order.shipping_fee > 0
+      ? Number(order.shipping_fee)
+      : (typeof order.delivery_charge === "number" && order.delivery_charge > 0
+        ? Number(order.delivery_charge)
+        : (computedFee > 0 ? computedFee : fallbackFee)));
 
   const formattedDate = order.created_at
     ? new Date(order.created_at).toLocaleDateString("en-US", {
@@ -386,8 +392,8 @@ export function generateInvoiceHtml(order: OrderInvoiceData): string {
             </tr>
             <tr>
               <td style="color: #6B7280; font-weight: 600;">Delivery Charge:</td>
-              <td style="text-align: right; font-family: monospace; font-weight: 700; color: ${deliveryFee > 0 ? '#374151' : '#059669'};">
-                ৳${deliveryFee.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}${deliveryFee === 0 ? ' (Free)' : ''}
+              <td style="text-align: right; font-family: monospace; font-weight: 700; color: #374151;">
+                ৳${deliveryFee.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
               </td>
             </tr>
             ${

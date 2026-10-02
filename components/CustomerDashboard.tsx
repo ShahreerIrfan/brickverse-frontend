@@ -833,9 +833,14 @@ export default function CustomerDashboard({
                           0
                         );
                         const orderTotal = Number(selectedOrder.total_amount || itemsSubtotal);
-                        const deliveryFee = typeof selectedOrder.shipping_cost === "number" || typeof selectedOrder.shipping_fee === "number" || typeof selectedOrder.delivery_charge === "number"
-                          ? Number(selectedOrder.shipping_cost ?? selectedOrder.shipping_fee ?? selectedOrder.delivery_charge ?? 0)
-                          : Math.max(0, orderTotal - itemsSubtotal);
+                        const fallbackFee = (selectedOrder.shipping_address || "").toLowerCase().includes("dhaka") ? 60 : 120;
+                        const deliveryFee = typeof selectedOrder.shipping_cost === "number" && selectedOrder.shipping_cost > 0
+                          ? Number(selectedOrder.shipping_cost)
+                          : (typeof selectedOrder.shipping_fee === "number" && selectedOrder.shipping_fee > 0
+                            ? Number(selectedOrder.shipping_fee)
+                            : (typeof selectedOrder.delivery_charge === "number" && selectedOrder.delivery_charge > 0
+                              ? Number(selectedOrder.delivery_charge)
+                              : (orderTotal > itemsSubtotal ? orderTotal - itemsSubtotal : fallbackFee)));
 
                         return (
                           <div className="mt-6 pt-4 border-t border-[#EAE3F7] flex flex-col gap-2 max-w-xs ml-auto text-xs">
@@ -845,8 +850,8 @@ export default function CustomerDashboard({
                             </div>
                             <div className="flex items-center justify-between text-[#736E9B]">
                               <span>Shipping & Handling:</span>
-                              <span className={`font-bold ${deliveryFee > 0 ? "text-[#171136]" : "text-emerald-600"}`}>
-                                {deliveryFee > 0 ? `৳${deliveryFee.toFixed(2)}` : "Free Collector Delivery"}
+                              <span className="font-bold text-[#171136]">
+                                ৳{deliveryFee.toFixed(2)}
                               </span>
                             </div>
                             <div className="flex items-center justify-between pt-2 border-t border-[#EAE3F7] text-sm">

@@ -172,10 +172,15 @@ export default function CheckoutPage() {
   }, [user]);
 
   // Calculations (NO TAX per user requirements)
+  // Delivery Charge Policy:
+  // - Inside Dhaka: ৳60
+  // - All other 63 districts: ৳120
+  // - Delivery charge is never free (no free shipping threshold for >= ৳500)
+  const isInsideDhaka = district.trim().toLowerCase() === "dhaka";
   const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const discountedSubtotal = Math.max(0, subtotal - discountAmount);
-  const shippingCost = subtotal === 0 ? 0 : 60;
-  const totalAmount = discountedSubtotal + (discountedSubtotal > 0 ? shippingCost : 0);
+  const shippingCost = items.length === 0 ? 0 : (isInsideDhaka ? 60 : 120);
+  const totalAmount = items.length === 0 ? 0 : discountedSubtotal + shippingCost;
 
   const handleApplyCoupon = async () => {
     const code = couponInput.trim().toUpperCase();
@@ -267,6 +272,7 @@ export default function CheckoutPage() {
       address,
       shipping_address: `${address}, ${district}`,
       total_amount: totalAmount,
+      shipping_cost: shippingCost,
 
       items: items.map((it) => ({
         id: it.id,
@@ -292,6 +298,7 @@ export default function CheckoutPage() {
             discount_amount: discountAmount,
             discount_code: appliedCoupon?.code,
             shipping_cost: shippingCost,
+            district: district,
             items: items.map((it) => ({
               id: it.id,
               name: it.name,
@@ -526,9 +533,16 @@ export default function CheckoutPage() {
                     isDistrictDropdownOpen ? "border-[#FF4D6D] ring-2 ring-[#FF4D6D]/10" : "border-[#EAE3F7]"
                   } rounded-xl px-4 py-3 text-sm font-semibold text-[#171136] flex items-center justify-between shadow-2xs hover:border-[#FF4D6D] transition-all cursor-pointer text-left`}
                 >
-                  <span className={district ? "text-[#171136]" : "text-[#736E9B]"}>
-                    {district || "Select District"}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={district ? "text-[#171136]" : "text-[#736E9B]"}>
+                      {district || "Select District"}
+                    </span>
+                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
+                      isInsideDhaka ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-[#F3EFFB] text-[#7B5CFF] border border-[#EAE3F7]"
+                    }`}>
+                      {isInsideDhaka ? "Inside Dhaka · ৳60" : "Outside Dhaka · ৳120"}
+                    </span>
+                  </div>
                   <IconChevronDown
                     className={`w-4 h-4 text-[#736E9B] transition-transform duration-200 ${
                       isDistrictDropdownOpen ? "rotate-180 text-[#FF4D6D]" : ""
@@ -569,7 +583,8 @@ export default function CheckoutPage() {
                         </div>
                       ) : (
                         filteredDistricts.map((d) => {
-                          const isSelected = district === d;
+                          const isSelected = district.toLowerCase() === d.toLowerCase();
+                          const isDhk = d.toLowerCase() === "dhaka";
                           return (
                             <button
                               key={d}
@@ -585,7 +600,14 @@ export default function CheckoutPage() {
                                   : "text-[#171136] hover:bg-[#F6F1FF] hover:text-[#FF4D6D]"
                               }`}
                             >
-                              <span>{d}</span>
+                              <div className="flex items-center gap-2">
+                                <span>{d}</span>
+                                <span className={`text-[10.5px] px-1.5 py-0.5 rounded-md font-bold ${
+                                  isDhk ? "bg-emerald-50 text-emerald-600" : "bg-[#F3EFFB] text-[#736E9B]"
+                                }`}>
+                                  ৳{isDhk ? "60" : "120"}
+                                </span>
+                              </div>
                               {isSelected && <IconCheck className="w-4 h-4 text-[#FF4D6D]" />}
                             </button>
                           );
@@ -817,7 +839,12 @@ export default function CheckoutPage() {
                 )}
 
                 <div className="flex items-center justify-between">
-                  <span>Shipping</span>
+                  <div className="flex items-center gap-1.5">
+                    <span>Shipping</span>
+                    <span className="text-[11px] text-[#736E9B] font-normal">
+                      ({isInsideDhaka ? "Inside Dhaka" : `${district}`})
+                    </span>
+                  </div>
                   <span className="font-bold text-[#3B3468] font-mono">
                     {formatPrice(shippingCost)}
                   </span>
