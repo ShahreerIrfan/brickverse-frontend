@@ -91,11 +91,6 @@ const BANGLADESH_DISTRICTS = [
   "Thakurgaon",
 ];
 
-const AVAILABLE_COUPONS = [
-  { code: "BUILD10", discountPercent: 10, description: "10% off on your entire cart" },
-  { code: "BRICK20", discountPercent: 20, description: "20% off on orders over ৳1,000" },
-];
-
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalItems, subtotal, subtotalFormatted, clearCart } = useCart();
@@ -201,24 +196,7 @@ export default function CheckoutPage() {
         setCouponError("");
         setCouponInput("");
       } else {
-        const matched = AVAILABLE_COUPONS.find((c) => c.code === code);
-        if (matched) {
-          if (code === "BRICK20" && subtotal < 1000) {
-            setCouponError("BRICK20 requires minimum order of ৳1,000.00");
-            return;
-          }
-          const calcDisc = (subtotal * matched.discountPercent) / 100;
-          setAppliedCoupon({
-            code: matched.code,
-            discountType: "percentage",
-            value: matched.discountPercent,
-            discountAmount: calcDisc,
-          });
-          setCouponError("");
-          setCouponInput("");
-        } else {
-          setCouponError(res.error || "Invalid promo code. Try BUILD10 or BRICK20");
-        }
+        setCouponError(res.error || "Invalid promo code.");
       }
     } catch {
       setCouponError("Could not validate coupon. Please try again.");
@@ -781,7 +759,7 @@ export default function CheckoutPage() {
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
-                    placeholder="Promo code (e.g. BUILD10)"
+                    placeholder="Promo code"
                     value={couponInput}
                     onChange={(e) => {
                       setCouponInput(e.target.value.toUpperCase());

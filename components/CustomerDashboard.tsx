@@ -8,7 +8,7 @@ import { User, Product } from "./productData";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
-import { getCustomerOrders, trackOrder, getProductsByIds, getMediaUrl } from "@/lib/api";
+import { getCustomerOrders, trackOrder, getProductsByIds, getMediaUrl, getCoupons, Coupon } from "@/lib/api";
 import Navbar from "./Navbar";
 import NavLinks from "./NavLinks";
 import Footer from "./Footer";
@@ -102,6 +102,11 @@ export default function CustomerDashboard({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordMsg, setPasswordMsg] = useState("");
 
+  // Coupons state
+  const [activeCoupons, setActiveCoupons] = useState<Coupon[]>([]);
+  const [loadingCoupons, setLoadingCoupons] = useState(false);
+  const [copiedCoupon, setCopiedCoupon] = useState<string | null>(null);
+
   // Navigation helper that updates both activeTab and browser URL cleanly
   const navigateToTab = (tab: DashboardTab, orderParam?: string) => {
     setActiveTab(tab);
@@ -152,6 +157,17 @@ export default function CustomerDashboard({
       })
       .finally(() => setLoadingOrders(false));
   }, [user.email, initialTab, initialOrderParam]);
+
+  // Load active coupons when coupons tab is opened
+  useEffect(() => {
+    if (activeTab === "coupons") {
+      setLoadingCoupons(true);
+      getCoupons({ status: "active" })
+        .then((data) => setActiveCoupons(Array.isArray(data) ? data : []))
+        .catch(() => setActiveCoupons([]))
+        .finally(() => setLoadingCoupons(false));
+    }
+  }, [activeTab]);
 
   const handleTrackOrder = async (orderNumToTrack?: string) => {
     const target = (orderNumToTrack || searchOrderNumber || "").trim();
@@ -1436,53 +1452,68 @@ export default function CustomerDashboard({
               <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 sm:p-7 shadow-xs">
                 <h2 className="font-bold text-lg text-[#171136] mb-1">My Coupons & Discounts</h2>
                 <p className="text-xs text-[#736E9B] mb-5">
-                  Exclusive active vouchers for your account
+                  Available active promo codes and discounts
                 </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-5 rounded-2xl bg-[#FFF1F4] border border-[#FF4D6D]/20 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-extrabold text-base text-[#FF4D6D]">10% OFF</span>
-                        <span className="text-[10px] font-bold uppercase bg-white text-[#FF4D6D] px-2 py-0.5 rounded-full border border-[#FF4D6D]/20">
-                          Active
-                        </span>
-                      </div>
-                      <p className="font-bold text-xs text-[#171136]">First Order Welcome Bonus</p>
-                      <p className="text-xs text-[#736E9B] mt-1">
-                        Use code <strong className="text-[#FF4D6D]">BUILD10</strong> at checkout
-                        to get 10% off your entire cart.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => navigator.clipboard?.writeText("BUILD10")}
-                      className="mt-4 bg-[#FF4D6D] text-white text-xs font-bold py-2 rounded-xl hover:bg-[#ff3358] transition-all cursor-pointer text-center"
-                    >
-                      Copy Code: BUILD10
-                    </button>
+                {loadingCoupons ? (
+                  <div className="py-10 text-center text-xs text-[#736E9B]">
+                    Loading coupons...
                   </div>
-
-                  <div className="p-5 rounded-2xl bg-[#EFE9FF] border border-[#7B5CFF]/20 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-extrabold text-base text-[#7B5CFF]">20% OFF</span>
-                        <span className="text-[10px] font-bold uppercase bg-[#7B5CFF] text-white px-2 py-0.5 rounded-full">
-                          BRICK20
-                        </span>
-                      </div>
-                      <p className="font-bold text-xs text-[#171136]">20% Off Orders Over ৳1,000</p>
-                      <p className="text-xs text-[#736E9B] mt-1">
-                        Use promo code BRICK20 at checkout for 20% off on orders over ৳1,000.
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => navigator.clipboard?.writeText("BRICK20")}
-                      className="mt-4 bg-[#7B5CFF] text-white text-xs font-bold py-2 rounded-xl hover:bg-[#6847ff] transition-all text-center block cursor-pointer"
-                    >
-                      Copy Code: BRICK20
-                    </button>
+                ) : activeCoupons.length === 0 ? (
+                  <div className="bg-[#FAF7FF] border border-[#EAE3F7] rounded-2xl p-8 text-center flex flex-col items-center justify-center">
+                    <IconTag className="w-10 h-10 text-[#736E9B] mb-2 opacity-60" />
+                    <h3 className="font-bold text-sm text-[#171136]">No active coupons right now</h3>
+                    <p className="text-xs text-[#736E9B] mt-1 max-w-sm">
+                      Check back soon for exclusive promotions and discount offers!
+                    </p>
                   </div>
-                </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {activeCoupons.map((cpn) => {
+                      const isCopied = copiedCoupon === cpn.code;
+                      const discountLabel =
+                        cpn.discount_type === "percentage"
+                          ? `${cpn.value}% OFF`
+                          : `৳${cpn.value} OFF`;
+                      return (
+                        <div
+                          key={cpn.id}
+                          className="p-5 rounded-2xl bg-[#FFF1F4] border border-[#FF4D6D]/20 flex flex-col justify-between"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-extrabold text-base text-[#FF4D6D]">
+                                {discountLabel}
+                              </span>
+                              <span className="text-[10px] font-bold uppercase bg-white text-[#FF4D6D] px-2 py-0.5 rounded-full border border-[#FF4D6D]/20">
+                                Active
+                              </span>
+                            </div>
+                            <p className="font-bold text-xs text-[#171136]">{cpn.code}</p>
+                            {cpn.description && (
+                              <p className="text-xs text-[#736E9B] mt-1">{cpn.description}</p>
+                            )}
+                            {cpn.min_order_amount && cpn.min_order_amount > 0 ? (
+                              <p className="text-[11px] text-[#736E9B] mt-1 font-medium">
+                                Min. order: ৳{cpn.min_order_amount}
+                              </p>
+                            ) : null}
+                          </div>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard?.writeText(cpn.code);
+                              setCopiedCoupon(cpn.code);
+                              setTimeout(() => setCopiedCoupon(null), 2000);
+                            }}
+                            className="mt-4 bg-[#FF4D6D] text-white text-xs font-bold py-2 rounded-xl hover:bg-[#ff3358] transition-all cursor-pointer text-center"
+                          >
+                            {isCopied ? "✓ Copied!" : `Copy Code: ${cpn.code}`}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 

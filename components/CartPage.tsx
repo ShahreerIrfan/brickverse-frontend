@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useCart, formatPrice } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist } from "@/context/WishlistContext";
+import { validateCoupon } from "@/lib/api";
 import {
   IconChevronRight,
   IconHeart,
@@ -99,11 +100,6 @@ const UPSELL_PRODUCTS = [
   },
 ];
 
-const AVAILABLE_COUPONS = [
-  { code: "BUILD10", discountPercent: 10, description: "10% off on your entire cart" },
-  { code: "BRICK20", discountPercent: 20, description: "20% off on orders over ৳1,000" },
-];
-
 export default function CartPage() {
   const router = useRouter();
   const {
@@ -122,9 +118,13 @@ export default function CartPage() {
 
   // Coupon state
   const [couponInput, setCouponInput] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountPercent: number } | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountType: "percentage" | "fixed";
+    value: number;
+    discountAmount: number;
+  } | null>(null);
   const [couponError, setCouponError] = useState("");
-  const [showCouponsModal, setShowCouponsModal] = useState(false);
   const [savedForLaterIds, setSavedForLaterIds] = useState<string[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -135,22 +135,27 @@ export default function CartPage() {
     }, 3000);
   };
 
-  const handleApplyCoupon = (codeToApply?: string) => {
+  const handleApplyCoupon = async (codeToApply?: string) => {
     const code = (codeToApply || couponInput).trim().toUpperCase();
     if (!code) return;
 
-    const matched = AVAILABLE_COUPONS.find((c) => c.code === code);
-    if (matched) {
-      if (code === "BRICK20" && subtotal < 1000) {
-        setCouponError("BRICK20 requires minimum order value of ৳1,000.00");
-        return;
+    try {
+      const res = await validateCoupon(code, subtotal);
+      if (res.valid && res.code) {
+        setAppliedCoupon({
+          code: res.code,
+          discountType: res.discount_type || "percentage",
+          value: Number(res.value || 0),
+          discountAmount: Number(res.discount_amount || 0),
+        });
+        setCouponError("");
+        setCouponInput("");
+        showToast(`Coupon "${res.code}" applied!`);
+      } else {
+        setCouponError(res.error || "Invalid promo code.");
       }
-      setAppliedCoupon(matched);
-      setCouponError("");
-      setCouponInput("");
-      showToast(`Coupon "${matched.code}" applied! (${matched.discountPercent}% OFF)`);
-    } else {
-      setCouponError("Invalid promo code. Try BUILD10 or BRICK20");
+    } catch {
+      setCouponError("Could not validate coupon. Please try again.");
     }
   };
 
@@ -182,8 +187,7 @@ export default function CartPage() {
 
 
   // Calculations
-  const discountRate = appliedCoupon ? appliedCoupon.discountPercent / 100 : 0;
-  const discountAmount = subtotal * discountRate;
+  const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const discountedSubtotal = Math.max(0, subtotal - discountAmount);
   const estimatedTotal = discountedSubtotal;
 
@@ -432,25 +436,16 @@ export default function CartPage() {
           <div className="p-5 sm:p-6 space-y-5">
             {/* Promo Code Box */}
             <div className="bg-[#FFF1F4] rounded-2xl p-3.5 sm:p-4 border border-[#FFD9E2] space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs sm:text-[13px] font-bold text-[#FF4D6D]">
-                  <IconTicket className="w-4 h-4 shrink-0" />
-                  <span>Have a promo code?</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowCouponsModal(!showCouponsModal)}
-                  className="text-xs font-bold text-[#FF4D6D] underline hover:text-[#E6004C] transition-colors cursor-pointer"
-                >
-                  {showCouponsModal ? "Hide coupons" : "Available coupons"}
-                </button>
+              <div className="flex items-center gap-2 text-xs sm:text-[13px] font-bold text-[#FF4D6D]">
+                <IconTicket className="w-4 h-4 shrink-0" />
+                <span>Have a promo code?</span>
               </div>
 
               {/* Promo Input Row */}
               <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  placeholder="Enter code (e.g. BUILD10)"
+                  placeholder="Promo code"
                   value={couponInput}
                   onChange={(e) => {
                     setCouponInput(e.target.value.toUpperCase());
@@ -478,7 +473,13 @@ export default function CartPage() {
                     <span className="w-4 h-4 rounded-full bg-[#10B981] text-white flex items-center justify-center text-[10px] font-extrabold">
                       ✓
                     </span>
-                    <span>{appliedCoupon.code} applied ({appliedCoupon.discountPercent}% OFF)</span>
+                    <span>
+                      {appliedCoupon.code} applied (
+                      {appliedCoupon.discountType === "percentage"
+                        ? `${appliedCoupon.value}% OFF`
+                        : `৳${appliedCoupon.value} OFF`}
+                      )
+                    </span>
                   </div>
                   <button
                     type="button"
@@ -488,28 +489,6 @@ export default function CartPage() {
                   >
                     <IconClose className="w-3 h-3" />
                   </button>
-                </div>
-              )}
-
-              {/* Expanded Available Coupons List */}
-              {showCouponsModal && (
-                <div className="pt-2 border-t border-[#FFD9E2] space-y-2">
-                  <p className="text-[11px] font-bold text-[#736E9B]">Click to apply coupon:</p>
-                  {AVAILABLE_COUPONS.map((cpn) => (
-                    <div
-                      key={cpn.code}
-                      onClick={() => handleApplyCoupon(cpn.code)}
-                      className="bg-white p-2.5 rounded-xl border border-[#FFD9E2] hover:border-[#FF4D6D] cursor-pointer transition-all flex items-center justify-between gap-2"
-                    >
-                      <div>
-                        <span className="text-xs font-extrabold text-[#FF4D6D] bg-[#FFF1F4] px-2 py-0.5 rounded-md">
-                          {cpn.code}
-                        </span>
-                        <p className="text-[11px] text-[#736E9B] mt-1">{cpn.description}</p>
-                      </div>
-                      <span className="text-xs font-bold text-[#FF4D6D]">Apply →</span>
-                    </div>
-                  ))}
                 </div>
               )}
             </div>

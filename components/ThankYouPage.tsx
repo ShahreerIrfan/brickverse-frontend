@@ -427,7 +427,7 @@ export default function ThankYouPage() {
 
               {order.discount_amount && order.discount_amount > 0 ? (
                 <div className="flex items-center justify-between text-[#2ECC8F]">
-                  <span className="font-semibold">Discount · {order.discount_code || "BUILD10"}</span>
+                  <span className="font-semibold">Discount · {order.discount_code || "Coupon"}</span>
                   <span className="font-bold font-mono">-{formatPrice(order.discount_amount)}</span>
                 </div>
               ) : null}
