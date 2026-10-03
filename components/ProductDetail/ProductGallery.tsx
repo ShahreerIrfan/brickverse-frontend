@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
-import { IconHeart, IconZoomIn, IconClose } from "../icons";
+import { IconHeart } from "../icons";
 import type { Product } from "../productData";
 import { useWishlist } from "@/context/WishlistContext";
 import { getMediaUrl } from "@/lib/api";
@@ -15,7 +15,36 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
   const [activeThumb, setActiveThumb] = useState(0);
   const { isInWishlist, toggleWishlist } = useWishlist();
   const isWishlisted = isInWishlist(product.id || product.slug);
-  const [zoomOpen, setZoomOpen] = useState(false);
+
+  // Hover Zoom State
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const [isHovering, setIsHovering] = useState(false);
+  const [lensPos, setLensPos] = useState({ x: 0, y: 0 });
+  const [bgPos, setBgPos] = useState({ x: 0, y: 0 });
+
+  const LENS_WIDTH = 180;
+  const LENS_HEIGHT = 180;
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!imageContainerRef.current) return;
+    const rect = imageContainerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const halfW = LENS_WIDTH / 2;
+    const halfH = LENS_HEIGHT / 2;
+    const maxLensX = Math.max(0, rect.width - LENS_WIDTH);
+    const maxLensY = Math.max(0, rect.height - LENS_HEIGHT);
+
+    const clampedX = Math.max(0, Math.min(x - halfW, maxLensX));
+    const clampedY = Math.max(0, Math.min(y - halfH, maxLensY));
+
+    setLensPos({ x: clampedX, y: clampedY });
+
+    const percentX = maxLensX > 0 ? (clampedX / maxLensX) * 100 : 50;
+    const percentY = maxLensY > 0 ? (clampedY / maxLensY) * 100 : 50;
+    setBgPos({ x: percentX, y: percentY });
+  };
 
   // Deduplicate and resolve primary + gallery images
   const rawPrimary = getMediaUrl(product.image || product.image_file);
@@ -62,9 +91,10 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
   }
 
   const thumbs = allImages;
+  const currentImageSrc = thumbs[activeThumb]?.src || thumbs[0]?.src;
 
   return (
-    <div className="flex flex-col-reverse md:flex-row gap-4 lg:gap-6 items-start">
+    <div className="flex flex-col-reverse md:flex-row gap-4 lg:gap-6 items-start relative">
       {/* ------------------------------------------------------------- */}
       {/* Left Vertical Thumbnail Rail */}
       {/* ------------------------------------------------------------- */}
@@ -94,90 +124,88 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* Main Showcase Hero Display Card */}
+      {/* Main Showcase Hero Display Card with Hover Zoom */}
       {/* ------------------------------------------------------------- */}
-      <div className="relative w-full max-w-[560px] aspect-square rounded-[26px] overflow-hidden flex items-center justify-center select-none shadow-[0_8px_24px_rgba(23,17,54,0.04)] border border-[#EAE3F7] bg-white">
-        {/* Top-Left Discount Badge */}
-        {product.discountPercent ? (
-          <div className="absolute left-4 sm:left-6 top-4 sm:top-6 -rotate-8 z-10">
-            <span className="bg-[#FF4D6D] text-white text-xs sm:text-sm font-extrabold px-3.5 py-1.5 rounded-full shadow-md inline-block">
-              {product.discountPercent}% OFF
-            </span>
-          </div>
-        ) : product.badge ? (
-          <div className="absolute left-4 sm:left-6 top-4 sm:top-6 -rotate-8 z-10">
-            <span className="bg-[#FF4D6D] text-white text-xs sm:text-sm font-extrabold px-3.5 py-1.5 rounded-full shadow-md inline-block">
-              {product.badge.replace(/^-(\d+%)$/, "$1 OFF")}
-            </span>
-          </div>
-        ) : null}
-
-        {/* Top-Right Action Floating Buttons */}
-        <div className="absolute right-4 sm:right-6 top-4 sm:top-6 flex flex-col gap-2 z-10">
-          <button
-            onClick={() => toggleWishlist(product.id || product.slug, product.name)}
-            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white shadow-md flex items-center justify-center text-[#736E9B] hover:text-[#FF4D6D] hover:scale-105 active:scale-95 transition-all cursor-pointer border border-[#EAE3F7]"
-          >
-            <IconHeart className={`w-5 h-5 ${isWishlisted ? "text-[#FF4D6D] fill-[#FF4D6D]" : ""}`} />
-          </button>
-        </div>
-
-        {/* Active Product Artwork Preview */}
-        <div className="relative w-full h-full p-2 sm:p-4 z-0 transition-transform duration-300 hover:scale-102 flex items-center justify-center">
-          <Image
-            src={thumbs[activeThumb]?.src || thumbs[0]?.src}
-            alt={product.name}
-            fill
-            priority
-            sizes="(max-width: 1024px) 100vw, 560px"
-            className="object-contain"
-          />
-        </div>
-
-        {/* Bottom Interactive Toolbar (Zoom) */}
-        <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 z-10">
-          <button
-            onClick={() => setZoomOpen(true)}
-            className="inline-flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#171136] font-bold text-xs sm:text-[13px] px-3.5 sm:px-4 py-2 rounded-full shadow-md border border-[#EAE3F7] backdrop-blur-sm transition-all active:scale-95 cursor-pointer"
-          >
-            <IconZoomIn className="w-4 h-4 text-[#171136]" />
-            <span>Zoom</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ------------------------------------------------------------- */}
-      {/* Lightbox / Zoom Modal */}
-      {/* ------------------------------------------------------------- */}
-      {zoomOpen && (
+      <div className="relative w-full max-w-[560px] aspect-square select-none">
         <div
-          className="fixed inset-0 z-50 bg-[#171136]/80 backdrop-blur-md flex items-center justify-center p-4"
-          onClick={() => setZoomOpen(false)}
+          ref={imageContainerRef}
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+          onMouseMove={handleMouseMove}
+          className="relative w-full h-full rounded-[26px] overflow-hidden flex items-center justify-center shadow-[0_8px_24px_rgba(23,17,54,0.04)] border border-[#EAE3F7] bg-white cursor-crosshair"
         >
-          <div
-            className="relative bg-white rounded-3xl p-6 max-w-2xl w-full flex flex-col items-center justify-center shadow-2xl animate-in fade-in zoom-in-95"
-            onClick={(e) => e.stopPropagation()}
-          >
+          {/* Top-Left Discount Badge */}
+          {product.discountPercent ? (
+            <div className="absolute left-4 sm:left-6 top-4 sm:top-6 -rotate-8 z-20 pointer-events-none">
+              <span className="bg-[#FF4D6D] text-white text-xs sm:text-sm font-extrabold px-3.5 py-1.5 rounded-full shadow-md inline-block">
+                {product.discountPercent}% OFF
+              </span>
+            </div>
+          ) : product.badge ? (
+            <div className="absolute left-4 sm:left-6 top-4 sm:top-6 -rotate-8 z-20 pointer-events-none">
+              <span className="bg-[#FF4D6D] text-white text-xs sm:text-sm font-extrabold px-3.5 py-1.5 rounded-full shadow-md inline-block">
+                {product.badge.replace(/^-(\d+%)$/, "$1 OFF")}
+              </span>
+            </div>
+          ) : null}
+
+          {/* Top-Right Action Floating Buttons */}
+          <div className="absolute right-4 sm:right-6 top-4 sm:top-6 flex flex-col gap-2 z-30">
             <button
-              onClick={() => setZoomOpen(false)}
-              className="absolute right-4 top-4 w-9 h-9 rounded-full bg-[#F6F1FF] hover:bg-[#EFE9FF] flex items-center justify-center text-[#171136] transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleWishlist(product.id || product.slug, product.name);
+              }}
+              aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white shadow-md flex items-center justify-center text-[#736E9B] hover:text-[#FF4D6D] hover:scale-105 active:scale-95 transition-all cursor-pointer border border-[#EAE3F7]"
             >
-              <IconClose className="w-4 h-4" />
+              <IconHeart className={`w-5 h-5 ${isWishlisted ? "text-[#FF4D6D] fill-[#FF4D6D]" : ""}`} />
             </button>
-            <h3 className="font-extrabold text-base text-[#171136] mb-1">{product.name} — High Res Gallery</h3>
-            <p className="text-xs text-[#736E9B] mb-4">Hand-painted details & 1/7 collector scale</p>
-            <div className="relative w-full h-[360px] sm:h-[420px] rounded-2xl bg-[#FFF6EE] flex items-center justify-center p-4">
-              <Image
-                src={thumbs[activeThumb].src}
-                alt={product.name}
-                fill
-                className="object-contain p-4 drop-shadow-xl"
-              />
+          </div>
+
+          {/* Active Product Artwork Preview */}
+          <div className="relative w-full h-full p-2 sm:p-4 z-0 flex items-center justify-center">
+            <Image
+              src={currentImageSrc}
+              alt={product.name}
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 560px"
+              className="object-contain"
+            />
+          </div>
+
+          {/* Hover Zoom Lens (Rectangle highlight following mouse) */}
+          {isHovering && (
+            <div
+              className="hidden lg:block absolute pointer-events-none border-2 border-[#FF4D6D] bg-[#FF4D6D]/15 rounded-xl z-20 shadow-xs"
+              style={{
+                width: `${LENS_WIDTH}px`,
+                height: `${LENS_HEIGHT}px`,
+                left: `${lensPos.x}px`,
+                top: `${lensPos.y}px`,
+              }}
+            />
+          )}
+        </div>
+
+        {/* Zoomed-in High-Res Preview Window on Desktop */}
+        {isHovering && (
+          <div
+            className="hidden lg:block absolute left-[calc(100%+20px)] top-0 w-[480px] h-[480px] xl:w-[560px] xl:h-[560px] z-50 bg-white border border-[#EAE3F7] rounded-[26px] shadow-[0_20px_50px_-10px_rgba(23,17,54,0.18)] overflow-hidden pointer-events-none animate-in fade-in zoom-in-95 duration-100"
+            style={{
+              backgroundImage: `url(${currentImageSrc})`,
+              backgroundPosition: `${bgPos.x}% ${bgPos.y}%`,
+              backgroundSize: "280% 280%",
+              backgroundRepeat: "no-repeat",
+            }}
+          >
+            <div className="absolute bottom-3 right-4 bg-white/90 backdrop-blur-xs text-[#736E9B] text-[11px] font-bold px-2.5 py-1 rounded-full border border-[#EAE3F7] shadow-xs">
+              High-Res Zoom
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
