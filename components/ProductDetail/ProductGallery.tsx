@@ -16,18 +16,28 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
   const { isInWishlist, toggleWishlist } = useWishlist();
   const isWishlisted = isInWishlist(product.id || product.slug);
 
-  // Hover Zoom State
+  // High-performance hardware-accelerated Hover Zoom State (Direct DOM refs + RAF, 0 re-render lag)
   const imageContainerRef = useRef<HTMLDivElement>(null);
+  const lensRef = useRef<HTMLDivElement>(null);
+  const zoomImgRef = useRef<HTMLImageElement>(null);
   const [isHovering, setIsHovering] = useState(false);
-  const [lensPos, setLensPos] = useState({ x: 0, y: 0 });
-  const [bgPos, setBgPos] = useState({ x: 0, y: 0 });
+  const rectRef = useRef<DOMRect | null>(null);
+  const rafIdRef = useRef<number | null>(null);
 
   const LENS_WIDTH = 180;
   const LENS_HEIGHT = 180;
 
-  const updateZoomPosition = (clientX: number, clientY: number) => {
-    if (!imageContainerRef.current) return;
-    const rect = imageContainerRef.current.getBoundingClientRect();
+  const updateRect = () => {
+    if (imageContainerRef.current) {
+      rectRef.current = imageContainerRef.current.getBoundingClientRect();
+    }
+  };
+
+  const applyZoomTransform = (clientX: number, clientY: number) => {
+    if (!rectRef.current) updateRect();
+    const rect = rectRef.current;
+    if (!rect || rect.width === 0 || rect.height === 0) return;
+
     const x = clientX - rect.left;
     const y = clientY - rect.top;
 
@@ -39,23 +49,49 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
     const clampedX = Math.max(0, Math.min(x - halfW, maxLensX));
     const clampedY = Math.max(0, Math.min(y - halfH, maxLensY));
 
-    setLensPos({ x: clampedX, y: clampedY });
+    const scaleX = rect.width / LENS_WIDTH;
+    const scaleY = rect.height / LENS_HEIGHT;
 
-    const percentX = maxLensX > 0 ? (clampedX / maxLensX) * 100 : 50;
-    const percentY = maxLensY > 0 ? (clampedY / maxLensY) * 100 : 50;
-    setBgPos({ x: percentX, y: percentY });
+    const zoomX = clampedX * scaleX;
+    const zoomY = clampedY * scaleY;
+
+    if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+    rafIdRef.current = requestAnimationFrame(() => {
+      if (lensRef.current) {
+        lensRef.current.style.transform = `translate3d(${clampedX}px, ${clampedY}px, 0)`;
+      }
+      if (zoomImgRef.current) {
+        zoomImgRef.current.style.transform = `translate3d(-${zoomX}px, -${zoomY}px, 0)`;
+      }
+    });
+  };
+
+  const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+    updateRect();
+    setIsHovering(true);
+    applyZoomTransform(e.clientX, e.clientY);
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isHovering) setIsHovering(true);
-    updateZoomPosition(e.clientX, e.clientY);
+    if (!isHovering) {
+      updateRect();
+      setIsHovering(true);
+    }
+    applyZoomTransform(e.clientX, e.clientY);
   };
 
-  // Detect mouse immediately if user lands on the page with cursor already positioned over the image
+  const handleMouseLeave = () => {
+    setIsHovering(false);
+    if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+  };
+
+  // Immediate detection if mouse is already inside upon navigation + resize/scroll bounds caching
   useEffect(() => {
+    updateRect();
+
     const handleGlobalMouseMove = (e: MouseEvent) => {
       if (!imageContainerRef.current) return;
-      const rect = imageContainerRef.current.getBoundingClientRect();
+      const rect = rectRef.current || imageContainerRef.current.getBoundingClientRect();
       const isInside =
         e.clientX >= rect.left &&
         e.clientX <= rect.right &&
@@ -63,16 +99,26 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
         e.clientY <= rect.bottom;
 
       if (isInside) {
-        setIsHovering(true);
-        updateZoomPosition(e.clientX, e.clientY);
-      } else {
+        if (!isHovering) setIsHovering(true);
+        applyZoomTransform(e.clientX, e.clientY);
+      } else if (isHovering) {
         setIsHovering(false);
       }
     };
 
+    const handleScrollOrResize = () => updateRect();
+
     window.addEventListener("mousemove", handleGlobalMouseMove, { passive: true });
-    return () => window.removeEventListener("mousemove", handleGlobalMouseMove);
-  }, []);
+    window.addEventListener("scroll", handleScrollOrResize, { passive: true });
+    window.addEventListener("resize", handleScrollOrResize, { passive: true });
+
+    return () => {
+      window.removeEventListener("mousemove", handleGlobalMouseMove);
+      window.removeEventListener("scroll", handleScrollOrResize);
+      window.removeEventListener("resize", handleScrollOrResize);
+      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+    };
+  }, [isHovering]);
 
   // Deduplicate and resolve primary + gallery images
   const rawPrimary = getMediaUrl(product.image || product.image_file);
@@ -157,8 +203,8 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
       <div className="relative w-full max-w-[560px] aspect-square select-none">
         <div
           ref={imageContainerRef}
-          onMouseEnter={() => setIsHovering(true)}
-          onMouseLeave={() => setIsHovering(false)}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
           onMouseMove={handleMouseMove}
           className="relative w-full h-full rounded-[26px] overflow-hidden flex items-center justify-center shadow-[0_8px_24px_rgba(23,17,54,0.04)] border border-[#EAE3F7] bg-white cursor-crosshair"
         >
@@ -192,7 +238,7 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
           </div>
 
           {/* Active Product Artwork Preview */}
-          <div className="relative w-full h-full p-2 sm:p-4 z-0 flex items-center justify-center">
+          <div className="relative w-full h-full p-2 sm:p-4 z-0 flex items-center justify-center pointer-events-none">
             <Image
               src={currentImageSrc}
               alt={product.name}
@@ -203,36 +249,43 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
             />
           </div>
 
-          {/* Hover Zoom Lens (Rectangle highlight following mouse) */}
-          {isHovering && (
-            <div
-              className="hidden lg:block absolute pointer-events-none border-2 border-[#FF4D6D] bg-[#FF4D6D]/15 rounded-xl z-20 shadow-xs"
-              style={{
-                width: `${LENS_WIDTH}px`,
-                height: `${LENS_HEIGHT}px`,
-                left: `${lensPos.x}px`,
-                top: `${lensPos.y}px`,
-              }}
-            />
-          )}
+          {/* Hover Zoom Lens (Hardware-accelerated transform) */}
+          <div
+            ref={lensRef}
+            className={`hidden lg:block absolute left-0 top-0 pointer-events-none border-2 border-[#FF4D6D] bg-[#FF4D6D]/15 rounded-xl z-20 shadow-xs transition-opacity duration-150 ${
+              isHovering ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
+            style={{
+              width: `${LENS_WIDTH}px`,
+              height: `${LENS_HEIGHT}px`,
+              willChange: "transform",
+            }}
+          />
         </div>
 
-        {/* Zoomed-in High-Res Preview Window on Desktop */}
-        {isHovering && (
-          <div
-            className="hidden lg:block absolute left-[calc(100%+20px)] top-0 w-[480px] h-[480px] xl:w-[560px] xl:h-[560px] z-50 bg-white border border-[#EAE3F7] rounded-[26px] shadow-[0_20px_50px_-10px_rgba(23,17,54,0.18)] overflow-hidden pointer-events-none animate-in fade-in zoom-in-95 duration-100"
+        {/* Zoomed-in High-Res Preview Window on Desktop (Hardware-accelerated GPU translate) */}
+        <div
+          className={`hidden lg:block absolute left-[calc(100%+20px)] top-0 w-[480px] h-[480px] xl:w-[560px] xl:h-[560px] z-50 bg-white border border-[#EAE3F7] rounded-[26px] shadow-[0_20px_50px_-10px_rgba(23,17,54,0.18)] overflow-hidden pointer-events-none transition-opacity duration-150 ${
+            isHovering ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            ref={zoomImgRef}
+            src={currentImageSrc}
+            alt={product.name}
+            className="absolute left-0 top-0 max-w-none pointer-events-none"
             style={{
-              backgroundImage: `url(${currentImageSrc})`,
-              backgroundPosition: `${bgPos.x}% ${bgPos.y}%`,
-              backgroundSize: "280% 280%",
-              backgroundRepeat: "no-repeat",
+              width: "311.11%",
+              height: "311.11%",
+              objectFit: "contain",
+              willChange: "transform",
             }}
-          >
-            <div className="absolute bottom-3 right-4 bg-white/90 backdrop-blur-xs text-[#736E9B] text-[11px] font-bold px-2.5 py-1 rounded-full border border-[#EAE3F7] shadow-xs">
-              High-Res Zoom
-            </div>
+          />
+          <div className="absolute bottom-3 right-4 bg-white/90 backdrop-blur-xs text-[#736E9B] text-[11px] font-bold px-2.5 py-1 rounded-full border border-[#EAE3F7] shadow-xs z-10">
+            High-Res Zoom
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
