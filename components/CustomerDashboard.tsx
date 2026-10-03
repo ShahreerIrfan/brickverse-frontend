@@ -1471,6 +1471,7 @@ export default function CustomerDashboard({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {activeCoupons.map((cpn) => {
                       const isCopied = copiedCoupon === cpn.code;
+                      const numMinOrder = Number(cpn.min_order_amount || 0);
                       const discountLabel =
                         cpn.discount_type === "percentage"
                           ? `${cpn.value}% OFF`
@@ -1493,9 +1494,9 @@ export default function CustomerDashboard({
                             {cpn.description && (
                               <p className="text-xs text-[#736E9B] mt-1">{cpn.description}</p>
                             )}
-                            {cpn.min_order_amount && cpn.min_order_amount > 0 ? (
+                            {numMinOrder > 0 ? (
                               <p className="text-[11px] text-[#736E9B] mt-1 font-medium">
-                                Min. order: ৳{cpn.min_order_amount}
+                                Min. order: ৳{numMinOrder}
                               </p>
                             ) : null}
                           </div>
