@@ -1,39 +1,23 @@
-import Navbar from "@/components/Navbar";
-import NavLinks from "@/components/NavLinks";
-import ShopCatalog from "@/components/ShopCatalog";
-import Footer from "@/components/Footer";
-import BottomNav from "@/components/BottomNav";
-import { getCategories, getServerApiBaseUrl } from "@/lib/api";
-import type { Product } from "@/components/productData";
+import { redirect } from "next/navigation";
 
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
-export default async function ProductsPage() {
-  const apiBase = await getServerApiBaseUrl();
-  const [firstPage, categories] = await Promise.all([
-    fetch(`${apiBase}/products/?page=1&page_size=20`, { next: { revalidate: 30 } })
-      .then((r) => (r.ok ? r.json() : null))
-      .catch(() => null),
-    getCategories(apiBase),
-  ]);
-  const products: Product[] = Array.isArray(firstPage?.results) ? firstPage.results : [];
+interface ProductsPageProps {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}
 
-  return (
-    <div className="flex flex-col min-h-screen bg-[#FFF6EE] pb-16 lg:pb-0">
-      <Navbar />
-      <NavLinks />
+export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  const resolved = searchParams ? await searchParams : {};
+  const params = new URLSearchParams();
 
-      <main className="flex-1">
-        <ShopCatalog
-          initialProducts={products}
-          initialCount={typeof firstPage?.count === "number" ? firstPage.count : products.length}
-          initialHasMore={Boolean(firstPage?.hasMore)}
-          initialCategories={categories}
-        />
-      </main>
+  Object.entries(resolved).forEach(([key, value]) => {
+    if (Array.isArray(value)) {
+      value.forEach((v) => params.append(key, v));
+    } else if (value !== undefined) {
+      params.set(key, value);
+    }
+  });
 
-      <Footer />
-      <BottomNav />
-    </div>
-  );
+  const qs = params.toString();
+  redirect(qs ? `/shop?${qs}` : "/shop");
 }

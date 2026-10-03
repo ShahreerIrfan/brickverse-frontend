@@ -195,7 +195,7 @@ export default function CategoryRail({ initialCategories }: { initialCategories?
                   className="relative"
                 >
                   <a
-                    href={`/products?category=${encodeURIComponent(cat.id)}`}
+                    href={`/shop?category=${encodeURIComponent(cat.id)}`}
                     className={`group flex items-center gap-3 rounded-[14px] px-3 py-2.5 transition-all ${
                       isHovered
                         ? "bg-[#F3EEFF] text-[#171136]"
@@ -235,7 +235,7 @@ export default function CategoryRail({ initialCategories }: { initialCategories?
         {displayCategories.length > 0 && (
           <div className="border-t border-[#EAE3F7] px-6 py-4 shrink-0">
             <a
-              href="/products"
+              href="/shop"
               className="inline-flex items-center gap-2 text-[13px] font-bold text-[#FF4D6D] hover:underline"
             >
               See all categories
@@ -285,7 +285,7 @@ export default function CategoryRail({ initialCategories }: { initialCategories?
             {activeSubcategories.map((sub) => (
               <Link
                 key={sub.id}
-                href={`/products?category=${encodeURIComponent(activeCategory.id)}&subcategory=${encodeURIComponent(sub.id)}`}
+                href={`/shop?category=${encodeURIComponent(activeCategory.id)}&subcategory=${encodeURIComponent(sub.id)}`}
                 className="group/item flex items-center justify-between px-3.5 py-2.5 rounded-[14px] bg-[#FAF7FF] hover:bg-[#F3EEFF] border border-transparent hover:border-[#7B5CFF]/25 transition-all cursor-pointer"
               >
                 <div className="flex items-center gap-2.5">
@@ -305,7 +305,7 @@ export default function CategoryRail({ initialCategories }: { initialCategories?
           {/* Bottom Explore Category Banner */}
           <div className="mt-4 pt-3.5 border-t border-[#F0EBF9]">
             <Link
-              href={`/products?category=${encodeURIComponent(activeCategory.id)}`}
+              href={`/shop?category=${encodeURIComponent(activeCategory.id)}`}
               className="flex items-center justify-between px-4 py-2.5 rounded-[14px] bg-grad-hero text-white text-xs font-bold shadow-sm hover:opacity-95 transition-opacity"
             >
               <span>View all {activeCategory.label} products</span>
