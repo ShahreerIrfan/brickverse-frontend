@@ -561,8 +561,8 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
 
           {/* Grid of Products */}
           {loadingFirst ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4.5">
-              {Array.from({ length: 10 }).map((_, i) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4.5">
+              {Array.from({ length: 8 }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </div>
@@ -586,7 +586,7 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4.5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4.5">
                 {products.map((product) => {
                   const isWishlisted = isInWishlist(product.id);
                   const regularPrice = product.regularPrice || product.originalPrice;
@@ -709,8 +709,8 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
               <div ref={sentinelRef} aria-hidden className="h-px" />
               <div className="mt-6 flex flex-col items-center gap-4 min-h-10 w-full" aria-live="polite">
                 {loadingMore && (
-                  <div className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4.5">
-                    {Array.from({ length: 5 }).map((_, i) => (
+                  <div className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4.5">
+                    {Array.from({ length: 4 }).map((_, i) => (
                       <ProductCardSkeleton key={`more-${i}`} />
                     ))}
                   </div>
