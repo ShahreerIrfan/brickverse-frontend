@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { IconHeart } from "../icons";
 import type { Product } from "../productData";
@@ -25,11 +25,11 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
   const LENS_WIDTH = 180;
   const LENS_HEIGHT = 180;
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const updateZoomPosition = (clientX: number, clientY: number) => {
     if (!imageContainerRef.current) return;
     const rect = imageContainerRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
 
     const halfW = LENS_WIDTH / 2;
     const halfH = LENS_HEIGHT / 2;
@@ -45,6 +45,34 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
     const percentY = maxLensY > 0 ? (clampedY / maxLensY) * 100 : 50;
     setBgPos({ x: percentX, y: percentY });
   };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isHovering) setIsHovering(true);
+    updateZoomPosition(e.clientX, e.clientY);
+  };
+
+  // Detect mouse immediately if user lands on the page with cursor already positioned over the image
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (!imageContainerRef.current) return;
+      const rect = imageContainerRef.current.getBoundingClientRect();
+      const isInside =
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom;
+
+      if (isInside) {
+        setIsHovering(true);
+        updateZoomPosition(e.clientX, e.clientY);
+      } else {
+        setIsHovering(false);
+      }
+    };
+
+    window.addEventListener("mousemove", handleGlobalMouseMove, { passive: true });
+    return () => window.removeEventListener("mousemove", handleGlobalMouseMove);
+  }, []);
 
   // Deduplicate and resolve primary + gallery images
   const rawPrimary = getMediaUrl(product.image || product.image_file);
