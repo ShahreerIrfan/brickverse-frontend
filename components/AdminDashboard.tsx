@@ -383,7 +383,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
 
   // Order List Pagination States
   const [orderPage, setOrderPage] = useState(1);
-  const ORDERS_PER_PAGE = 10;
+  const ORDERS_PER_PAGE = 20;
 
   // Modals & Action Drawers
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
