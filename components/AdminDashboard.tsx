@@ -381,6 +381,10 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const PRODUCTS_PER_PAGE = 20;
 
+  // Order List Pagination States
+  const [orderPage, setOrderPage] = useState(1);
+  const ORDERS_PER_PAGE = 10;
+
   // Modals & Action Drawers
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [copiedTracking, setCopiedTracking] = useState(false);
@@ -880,10 +884,24 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
         !searchGlobal ||
         o.order_number?.toLowerCase().includes(searchGlobal.toLowerCase()) ||
         o.customer_name?.toLowerCase().includes(searchGlobal.toLowerCase()) ||
-        o.customer_email?.toLowerCase().includes(searchGlobal.toLowerCase());
+        o.customer_email?.toLowerCase().includes(searchGlobal.toLowerCase()) ||
+        o.customer_phone?.toLowerCase().includes(searchGlobal.toLowerCase());
       return matchStatus && matchSearch;
     });
   }, [orders, orderStatusFilter, searchGlobal]);
+
+  // Order Pagination calculations (10 per page)
+  const totalOrderPages = Math.max(1, Math.ceil(filteredOrders.length / ORDERS_PER_PAGE));
+  const currentOrderPage = Math.min(Math.max(1, orderPage), totalOrderPages);
+  const paginatedOrders = useMemo(() => {
+    const start = (currentOrderPage - 1) * ORDERS_PER_PAGE;
+    return filteredOrders.slice(start, start + ORDERS_PER_PAGE);
+  }, [filteredOrders, currentOrderPage, ORDERS_PER_PAGE]);
+
+  // Reset order page to 1 when filters or search change
+  useEffect(() => {
+    setOrderPage(1);
+  }, [orderStatusFilter, searchGlobal]);
 
   // Filtered Users
   const filteredUsers = useMemo(() => {
@@ -2568,73 +2586,103 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#F5F1FB]">
-                      {(orders.length > 0 ? orders.slice(0, 6) : [
-                        { id: 10482, order_number: "KS-10482", customer_name: "Priya Menon", status: "delivered", total_amount: "94.98", created_at: "2026-09-08", items_preview: "Neo Samurai + 1 more" },
-                        { id: 10481, order_number: "KS-10481", customer_name: "Daniel Cho", status: "processing", total_amount: "79.99", created_at: "2026-09-08", items_preview: "Galaxy Station" },
-                        { id: 10480, order_number: "KS-10480", customer_name: "Fahim Rahman", status: "shipped", total_amount: "89.00", created_at: "2026-09-07", items_preview: "Robo Coder" },
-                        { id: 10479, order_number: "KS-10479", customer_name: "Ayesha Khan", status: "delivered", total_amount: "146.50", created_at: "2026-09-07", items_preview: "Sky Ninja + 2 more" },
-                        { id: 10478, order_number: "KS-10478", customer_name: "Marcus Webb", status: "cancelled", total_amount: "49.99", created_at: "2026-09-06", items_preview: "Circuit Lab" },
-                        { id: 10477, order_number: "KS-10477", customer_name: "Nadia Islam", status: "delivered", total_amount: "18.00", created_at: "2026-09-06", items_preview: "Ronin Base" },
-                      ]).map((o: any) => {
-                        const statusColorsMap: Record<string, { bg: string; text: string; dot: string; label: string }> = {
-                          delivered: { bg: "#E7F8F0", text: "#2ECC8F", dot: "#2ECC8F", label: "Delivered" },
-                          processing: { bg: "#FFF4D6", text: "#C08A00", dot: "#C08A00", label: "Processing" },
-                          shipped: { bg: "#E7EDFF", text: "#3667D6", dot: "#3667D6", label: "Shipped" },
-                          cancelled: { bg: "#FFE6EA", text: "#D2455C", dot: "#D2455C", label: "Cancelled" },
-                        };
-                        const statusColors = statusColorsMap[String(o.status || "").toLowerCase()] || { bg: "#FFF4D6", text: "#C08A00", dot: "#C08A00", label: o.status || "Processing" };
-
-                        return (
-                          <tr key={o.id} className="hover:bg-[#F9F7FD] transition-colors">
+                      {loading ? (
+                        Array.from({ length: 5 }).map((_, i) => (
+                          <tr key={i} className="animate-pulse">
                             <td className="py-4 pr-4">
-                              <span className="font-[family-name:var(--font-display)] font-extrabold text-[12.5px] text-[#FF4D6D]">
-                                #{o.order_number || `KS-${o.id}`}
-                              </span>
+                              <div className="h-3.5 w-16 bg-[#F0EBF8] rounded-md" />
                             </td>
                             <td className="py-4 px-4">
                               <div className="flex items-center gap-2.5">
-                                <div className="w-7 h-7 rounded-full bg-[#EFE9FF] text-[#7B5CFF] flex items-center justify-center font-extrabold text-[11px] shrink-0">
-                                  {(o.customer_name ? o.customer_name[0] : "C").toUpperCase()}
-                                </div>
-                                <span className="font-semibold text-xs text-[#171136]">
-                                  {o.customer_name || "Valued Customer"}
-                                </span>
+                                <div className="w-7 h-7 rounded-full bg-[#F4F0FA] shrink-0" />
+                                <div className="h-3.5 w-24 bg-[#F0EBF8] rounded-md" />
                               </div>
                             </td>
-                            <td className="py-4 px-4 text-[#3B3468] font-medium text-xs">
-                              {o.items_preview || (o.items && o.items[0]?.name ? `${o.items[0].name}${o.items.length > 1 ? ` + ${o.items.length - 1} more` : ""}` : "Collector Items")}
-                            </td>
-                            <td className="py-4 px-4 text-[#736E9B] text-xs">
-                              {o.created_at ? new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Sep 8, 2026"}
+                            <td className="py-4 px-4">
+                              <div className="h-3.5 w-28 bg-[#F4F0FA] rounded-md" />
                             </td>
                             <td className="py-4 px-4">
-                              <span
-                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold"
-                                style={{ backgroundColor: statusColors.bg, color: statusColors.text }}
-                              >
-                                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: statusColors.dot }} />
-                                {statusColors.label}
-                              </span>
+                              <div className="h-3.5 w-20 bg-[#F4F0FA] rounded-md" />
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="h-6 w-20 bg-[#F4F0FA] rounded-full" />
                             </td>
                             <td className="py-4 px-4 text-right">
-                              <span className="font-[family-name:var(--font-display)] font-extrabold text-[13.5px] text-[#171136] font-mono">
-                                ৳{Number(o.total_amount || 0).toFixed(2)}
-                              </span>
+                              <div className="h-3.5 w-14 bg-[#F0EBF8] rounded-md ml-auto" />
                             </td>
                             <td className="py-4 pl-4 text-right">
-                              <button
-                                onClick={() => {
-                                  setSelectedOrder(o);
-                                  navigateTo("orders-single", `/en/admin/orders/${o.id || o.order_number}`);
-                                }}
-                                className="text-xs font-bold text-[#FF4D6D] hover:underline cursor-pointer"
-                              >
-                                Details ↗
-                              </button>
+                              <div className="h-3.5 w-12 bg-[#F4F0FA] rounded-md ml-auto" />
                             </td>
                           </tr>
-                        );
-                      })}
+                        ))
+                      ) : orders.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="py-8 text-center text-sm text-[#736E9B]">
+                            No orders placed yet.
+                          </td>
+                        </tr>
+                      ) : (
+                        orders.slice(0, 6).map((o: any) => {
+                          const statusColorsMap: Record<string, { bg: string; text: string; dot: string; label: string }> = {
+                            delivered: { bg: "#E7F8F0", text: "#2ECC8F", dot: "#2ECC8F", label: "Delivered" },
+                            processing: { bg: "#FFF4D6", text: "#C08A00", dot: "#C08A00", label: "Processing" },
+                            shipped: { bg: "#E7EDFF", text: "#3667D6", dot: "#3667D6", label: "Shipped" },
+                            cancelled: { bg: "#FFE6EA", text: "#D2455C", dot: "#D2455C", label: "Cancelled" },
+                          };
+                          const statusColors = statusColorsMap[String(o.status || "").toLowerCase()] || { bg: "#FFF4D6", text: "#C08A00", dot: "#C08A00", label: o.status || "Processing" };
+
+                          return (
+                            <tr key={o.id} className="hover:bg-[#F9F7FD] transition-colors">
+                              <td className="py-4 pr-4">
+                                <span className="font-[family-name:var(--font-display)] font-extrabold text-[12.5px] text-[#FF4D6D]">
+                                  #{o.order_number || `KS-${o.id}`}
+                                </span>
+                              </td>
+                              <td className="py-4 px-4">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-7 h-7 rounded-full bg-[#EFE9FF] text-[#7B5CFF] flex items-center justify-center font-extrabold text-[11px] shrink-0">
+                                    {(o.customer_name ? o.customer_name[0] : "C").toUpperCase()}
+                                  </div>
+                                  <span className="font-semibold text-xs text-[#171136]">
+                                    {o.customer_name || "Valued Customer"}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-4 px-4 text-[#3B3468] font-medium text-xs">
+                                {o.items_preview || (o.items && o.items[0]?.product_name ? `${o.items[0].product_name}${o.items.length > 1 ? ` + ${o.items.length - 1} more` : ""}` : o.items && o.items[0]?.name ? `${o.items[0].name}${o.items.length > 1 ? ` + ${o.items.length - 1} more` : ""}` : "Collector Items")}
+                              </td>
+                              <td className="py-4 px-4 text-[#736E9B] text-xs">
+                                {o.created_at ? new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Recently"}
+                              </td>
+                              <td className="py-4 px-4">
+                                <span
+                                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold"
+                                  style={{ backgroundColor: statusColors.bg, color: statusColors.text }}
+                                >
+                                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: statusColors.dot }} />
+                                  {statusColors.label}
+                                </span>
+                              </td>
+                              <td className="py-4 px-4 text-right">
+                                <span className="font-[family-name:var(--font-display)] font-extrabold text-[13.5px] text-[#171136] font-mono">
+                                  ৳{Number(o.total_amount || 0).toFixed(2)}
+                                </span>
+                              </td>
+                              <td className="py-4 pl-4 text-right">
+                                <button
+                                  onClick={() => {
+                                    setSelectedOrder(o);
+                                    navigateTo("orders-single", `/en/admin/orders/${o.id || o.order_number}`);
+                                  }}
+                                  className="text-xs font-bold text-[#FF4D6D] hover:underline cursor-pointer"
+                                >
+                                  Details ↗
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -4053,68 +4101,85 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
 
               {/* KPI Summary Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Total Orders Card */}
-                <div className="bg-white rounded-[18px] border border-[#EAE3F7] p-4 flex items-center gap-3.5 shadow-2xs">
-                  <div className="w-11 h-11 rounded-[13px] bg-[#FFF1F4] flex items-center justify-center shrink-0">
-                    <IconBag className="w-5 h-5 text-[#FF4D6D]" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-[#736E9B]">Total Orders</p>
-                    <p className="font-[family-name:var(--font-display)] font-extrabold text-2xl text-[#171136]">
-                      {orders.length}
-                    </p>
-                  </div>
-                </div>
+                {loading ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="bg-white rounded-[18px] border border-[#EAE3F7] p-4 flex items-center gap-3.5 shadow-2xs animate-pulse"
+                    >
+                      <div className="w-11 h-11 rounded-[13px] bg-[#F4F0FA] shrink-0" />
+                      <div className="space-y-2 flex-1">
+                        <div className="h-3 w-16 bg-[#F0EBF8] rounded-md" />
+                        <div className="h-6 w-12 bg-[#F0EBF8] rounded-md" />
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    {/* Total Orders Card */}
+                    <div className="bg-white rounded-[18px] border border-[#EAE3F7] p-4 flex items-center gap-3.5 shadow-2xs">
+                      <div className="w-11 h-11 rounded-[13px] bg-[#FFF1F4] flex items-center justify-center shrink-0">
+                        <IconBag className="w-5 h-5 text-[#FF4D6D]" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-semibold text-[#736E9B]">Total Orders</p>
+                        <p className="font-[family-name:var(--font-display)] font-extrabold text-2xl text-[#171136]">
+                          {orders.length}
+                        </p>
+                      </div>
+                    </div>
 
-                {/* Processing Card */}
-                <div className="bg-white rounded-[18px] border border-[#EAE3F7] p-4 flex items-center gap-3.5 shadow-2xs">
-                  <div className="w-11 h-11 rounded-[13px] bg-[#FFF4D6] flex items-center justify-center shrink-0">
-                    <IconRefresh className="w-5 h-5 text-[#C08A00]" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-[#736E9B]">Processing</p>
-                    <p className="font-[family-name:var(--font-display)] font-extrabold text-2xl text-[#171136]">
-                      {orders.filter((o) => o.status === "processing").length}
-                    </p>
-                  </div>
-                </div>
+                    {/* Processing Card */}
+                    <div className="bg-white rounded-[18px] border border-[#EAE3F7] p-4 flex items-center gap-3.5 shadow-2xs">
+                      <div className="w-11 h-11 rounded-[13px] bg-[#FFF4D6] flex items-center justify-center shrink-0">
+                        <IconRefresh className="w-5 h-5 text-[#C08A00]" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-semibold text-[#736E9B]">Processing</p>
+                        <p className="font-[family-name:var(--font-display)] font-extrabold text-2xl text-[#171136]">
+                          {orders.filter((o) => o.status === "processing").length}
+                        </p>
+                      </div>
+                    </div>
 
-                {/* Shipped Card */}
-                <div className="bg-white rounded-[18px] border border-[#EAE3F7] p-4 flex items-center gap-3.5 shadow-2xs">
-                  <div className="w-11 h-11 rounded-[13px] bg-[#E3F0FF] flex items-center justify-center shrink-0">
-                    <IconTruck className="w-5 h-5 text-[#3B82F6]" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-[#736E9B]">Shipped</p>
-                    <p className="font-[family-name:var(--font-display)] font-extrabold text-2xl text-[#171136]">
-                      {orders.filter((o) => o.status === "shipped").length}
-                    </p>
-                  </div>
-                </div>
+                    {/* Shipped Card */}
+                    <div className="bg-white rounded-[18px] border border-[#EAE3F7] p-4 flex items-center gap-3.5 shadow-2xs">
+                      <div className="w-11 h-11 rounded-[13px] bg-[#E3F0FF] flex items-center justify-center shrink-0">
+                        <IconTruck className="w-5 h-5 text-[#3B82F6]" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-semibold text-[#736E9B]">Shipped</p>
+                        <p className="font-[family-name:var(--font-display)] font-extrabold text-2xl text-[#171136]">
+                          {orders.filter((o) => o.status === "shipped").length}
+                        </p>
+                      </div>
+                    </div>
 
-                {/* Delivered Card */}
-                <div className="bg-white rounded-[18px] border border-[#EAE3F7] p-4 flex items-center gap-3.5 shadow-2xs">
-                  <div className="w-11 h-11 rounded-[13px] bg-[#E7F8F0] flex items-center justify-center shrink-0">
-                    <IconCheck className="w-5 h-5 text-[#2ECC8F]" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-[#736E9B]">Delivered</p>
-                    <p className="font-[family-name:var(--font-display)] font-extrabold text-2xl text-[#171136]">
-                      {orders.filter((o) => o.status === "delivered").length}
-                    </p>
-                  </div>
-                </div>
+                    {/* Delivered Card */}
+                    <div className="bg-white rounded-[18px] border border-[#EAE3F7] p-4 flex items-center gap-3.5 shadow-2xs">
+                      <div className="w-11 h-11 rounded-[13px] bg-[#E7F8F0] flex items-center justify-center shrink-0">
+                        <IconCheck className="w-5 h-5 text-[#2ECC8F]" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-semibold text-[#736E9B]">Delivered</p>
+                        <p className="font-[family-name:var(--font-display)] font-extrabold text-2xl text-[#171136]">
+                          {orders.filter((o) => o.status === "delivered").length}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Status Filter Tabs */}
               <div className="flex border-b border-[#EAE3F7] gap-2 overflow-x-auto whitespace-nowrap">
                 {[
-                  { id: "all", label: `All Orders (${orders.length})` },
-                  { id: "pending", label: "Pending" },
-                  { id: "processing", label: "Processing" },
-                  { id: "shipped", label: "Shipped" },
-                  { id: "delivered", label: "Delivered" },
-                  { id: "cancelled", label: "Cancelled" },
+                  { id: "all", label: `All Orders (${loading ? "..." : orders.length})` },
+                  { id: "pending", label: `Pending (${loading ? "..." : orders.filter(o => o.status === "pending").length})` },
+                  { id: "processing", label: `Processing (${loading ? "..." : orders.filter(o => o.status === "processing").length})` },
+                  { id: "shipped", label: `Shipped (${loading ? "..." : orders.filter(o => o.status === "shipped").length})` },
+                  { id: "delivered", label: `Delivered (${loading ? "..." : orders.filter(o => o.status === "delivered").length})` },
+                  { id: "cancelled", label: `Cancelled (${loading ? "..." : orders.filter(o => o.status === "cancelled").length})` },
                 ].map((st) => (
                   <button
                     key={st.id}
@@ -4146,14 +4211,64 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#F0EBF8]">
-                      {filteredOrders.length === 0 ? (
+                      {loading ? (
+                        Array.from({ length: 6 }).map((_, i) => (
+                          <tr key={i} className="animate-pulse">
+                            {/* ORDER */}
+                            <td className="py-4 px-5 whitespace-nowrap">
+                              <div className="h-4 w-20 bg-[#F0EBF8] rounded-md mb-1.5" />
+                              <div className="h-2.5 w-14 bg-[#F4F0FA] rounded-md" />
+                            </td>
+
+                            {/* CUSTOMER */}
+                            <td className="py-4 px-5 whitespace-nowrap">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-full bg-[#F4F0FA] shrink-0" />
+                                <div className="space-y-1.5">
+                                  <div className="h-3.5 w-24 bg-[#F0EBF8] rounded-md" />
+                                  <div className="h-2.5 w-32 bg-[#F4F0FA] rounded-md" />
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* ITEMS */}
+                            <td className="py-4 px-5 whitespace-nowrap">
+                              <div className="h-4 w-12 bg-[#F0EBF8] rounded-md" />
+                            </td>
+
+                            {/* DATE */}
+                            <td className="py-4 px-5 whitespace-nowrap">
+                              <div className="h-3.5 w-20 bg-[#F0EBF8] rounded-md mb-1.5" />
+                              <div className="h-2.5 w-12 bg-[#F4F0FA] rounded-md" />
+                            </td>
+
+                            {/* STATUS */}
+                            <td className="py-4 px-5 whitespace-nowrap">
+                              <div className="h-7 w-24 bg-[#F4F0FA] rounded-xl border border-[#EAE3F7]" />
+                            </td>
+
+                            {/* TOTAL */}
+                            <td className="py-4 px-5 whitespace-nowrap">
+                              <div className="h-4 w-16 bg-[#F0EBF8] rounded-md" />
+                            </td>
+
+                            {/* ACTIONS */}
+                            <td className="py-4 px-5 whitespace-nowrap text-right">
+                              <div className="inline-flex items-center gap-2 justify-end">
+                                <div className="h-7 w-14 bg-[#F4F0FA] rounded-xl" />
+                                <div className="h-7 w-7 bg-[#F4F0FA] rounded-xl" />
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : filteredOrders.length === 0 ? (
                         <tr>
                           <td colSpan={7} className="py-12 text-center text-sm text-[#736E9B]">
                             No orders found matching your filter.
                           </td>
                         </tr>
                       ) : (
-                        filteredOrders.map((o) => {
+                        paginatedOrders.map((o) => {
                           const initial = (o.customer_name?.[0] || o.customer_email?.[0] || "O").toUpperCase();
                           const dateInfo = formatOrderDate(o.created_at);
                           const relTime = formatOrderRelativeTime(o.created_at);
@@ -4283,6 +4398,65 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                     </tbody>
                   </table>
                 </div>
+
+                {/* Pagination Footer */}
+                {!loading && filteredOrders.length > 0 && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-[#EAE3F7] bg-[#FDFBFF]">
+                    <p className="text-xs text-[#736E9B]">
+                      Showing <strong className="text-[#171136]">{(currentOrderPage - 1) * ORDERS_PER_PAGE + 1}</strong> - <strong className="text-[#171136]">{Math.min(currentOrderPage * ORDERS_PER_PAGE, filteredOrders.length)}</strong> of <strong className="text-[#171136]">{filteredOrders.length}</strong> orders
+                    </p>
+
+                    {totalOrderPages > 1 && (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setOrderPage((p) => Math.max(1, p - 1))}
+                          disabled={currentOrderPage <= 1}
+                          className="px-3 py-1.5 rounded-xl border border-[#EAE3F7] text-xs font-bold text-[#736E9B] hover:text-[#171136] hover:bg-[#F6F1FF] disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer"
+                        >
+                          ← Prev
+                        </button>
+
+                        {Array.from({ length: totalOrderPages }, (_, i) => i + 1).map((pg) => {
+                          if (
+                            pg === 1 ||
+                            pg === totalOrderPages ||
+                            (pg >= currentOrderPage - 1 && pg <= currentOrderPage + 1)
+                          ) {
+                            return (
+                              <button
+                                key={pg}
+                                onClick={() => setOrderPage(pg)}
+                                className={`w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                  currentOrderPage === pg
+                                    ? "bg-[#FF4D6D] text-white shadow-xs"
+                                    : "border border-[#EAE3F7] text-[#736E9B] hover:text-[#171136] hover:bg-[#F6F1FF]"
+                                }`}
+                              >
+                                {pg}
+                              </button>
+                            );
+                          }
+                          if (pg === currentOrderPage - 2 || pg === currentOrderPage + 2) {
+                            return (
+                              <span key={pg} className="px-1 text-xs text-[#8A84A6]">
+                                ...
+                              </span>
+                            );
+                          }
+                          return null;
+                        })}
+
+                        <button
+                          onClick={() => setOrderPage((p) => Math.min(totalOrderPages, p + 1))}
+                          disabled={currentOrderPage >= totalOrderPages}
+                          className="px-3 py-1.5 rounded-xl border border-[#EAE3F7] text-xs font-bold text-[#736E9B] hover:text-[#171136] hover:bg-[#F6F1FF] disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer"
+                        >
+                          Next →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
