@@ -4822,10 +4822,36 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                 setOrders((prev) => [newOrder, ...prev.filter((o) => o.id !== newOrder.id)]);
                 setSelectedOrder(newOrder);
                 showToast(`✓ Order #${newOrder.order_number || "Custom"} created successfully!`);
-                navigateTo("orders-single", `/en/admin/orders/${newOrder.id || newOrder.order_number}`);
+                
+                // Immediately update local product stock
+                if (newOrder.items && Array.isArray(newOrder.items)) {
+                  setProducts((prevProds) => {
+                    return prevProds.map((p) => {
+                      const matchingItem = newOrder.items.find(
+                        (it: any) =>
+                          String(it.productId || it.product_id || it.product || it.id) === String(p.id) ||
+                          (it.name && it.name.trim().toLowerCase() === p.name.trim().toLowerCase())
+                      );
+                      if (matchingItem && typeof p.stock === "number") {
+                        return {
+                          ...p,
+                          stock: Math.max(0, p.stock - (matchingItem.quantity || 1)),
+                        };
+                      }
+                      return p;
+                    });
+                  });
+                }
+
+                // Sync products and stats in background
+                getAllProducts({ all: true }).then((prods) => {
+                  if (prods && Array.isArray(prods)) setProducts(prods);
+                }).catch(() => {});
                 getAdminStats().then((data) => {
                   if (data) setStatsData(data);
                 }).catch(() => {});
+
+                navigateTo("orders-single", `/en/admin/orders/${newOrder.id || newOrder.order_number}`);
               }}
             />
           )}
