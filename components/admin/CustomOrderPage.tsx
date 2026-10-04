@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Product } from "../productData";
 import { createOrder, getMediaUrl } from "@/lib/api";
 import {
@@ -12,6 +12,8 @@ import {
   IconDollar,
   IconCheck,
   IconPlus,
+  IconSearch,
+  IconChevronDown,
 } from "../icons";
 
 interface OrderLineItem {
@@ -79,8 +81,13 @@ export default function CustomOrderPage({
   // Line Items
   const [items, setItems] = useState<OrderLineItem[]>([]);
 
-  // Product Selection Form State
+  // Product Selection Form State & Searchable Dropdown
   const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
+  const [productSearchQuery, setProductSearchQuery] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   const [itemQuantityToAdd, setItemQuantityToAdd] = useState<number>(1);
   const [itemPriceOverride, setItemPriceOverride] = useState<string>("");
 
@@ -93,6 +100,40 @@ export default function CustomOrderPage({
   // Form submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  // Close product dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsProductDropdownOpen(false);
+      }
+    };
+    if (isProductDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isProductDropdownOpen]);
+
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (isProductDropdownOpen) {
+      setTimeout(() => searchInputRef.current?.focus(), 50);
+    }
+  }, [isProductDropdownOpen]);
+
+  // Filter products by search query
+  const filteredProducts = useMemo(() => {
+    if (!productSearchQuery.trim()) return products;
+    const q = productSearchQuery.toLowerCase().trim();
+    return products.filter((p) => {
+      const nameMatch = p.name.toLowerCase().includes(q);
+      const skuMatch = p.sku && p.sku.toLowerCase().includes(q);
+      const catMatch = typeof p.category === "string" && p.category.toLowerCase().includes(q);
+      return nameMatch || skuMatch || catMatch;
+    });
+  }, [products, productSearchQuery]);
 
   // Update zone & shipping fee
   const handleZoneChange = (zone: "dhaka" | "outside" | "free" | "custom") => {
@@ -622,33 +663,189 @@ export default function CustomOrderPage({
                 </button>
               </div>
 
-              {/* Product Select Field Form */}
+              {/* Product Searchable Select Field Form */}
               <div className="p-4 rounded-2xl bg-[#FAF8FF] border border-[#EAE3F7] space-y-3">
-                <div>
+                {/* Searchable Product Select Field */}
+                <div className="relative" ref={dropdownRef}>
                   <label className="block text-xs font-bold text-[#171136] mb-1.5">
                     Product <span className="text-[#FF4D6D]">*</span>
                   </label>
-                  <select
-                    value={selectedProductId}
-                    onChange={handleProductSelectChange}
-                    className="w-full px-3.5 py-2.5 bg-white border border-[#EAE3F7] rounded-xl text-xs font-bold text-[#171136] outline-none focus:border-[#7B5CFF] cursor-pointer"
-                  >
-                    <option value="">-- Select an existing product ({products.length} available) --</option>
-                    {products.map((p) => {
-                      const rawPrice = parseFloat(
-                        String(p.discountedPrice || p.price || "0").replace(/[^\d.]/g, "")
-                      ) || 0;
-                      const skuText = p.sku ? ` [SKU: ${p.sku}]` : "";
-                      const stockVal = p.stock ?? 0;
-                      const stockText = stockVal > 0 ? `(Stock: ${stockVal})` : "(Pre-order)";
 
-                      return (
-                        <option key={p.id} value={p.id}>
-                          {p.name}{skuText} — ৳{rawPrice.toLocaleString()} {stockText}
-                        </option>
-                      );
-                    })}
-                  </select>
+                  {/* Custom Select Box Trigger */}
+                  <div
+                    onClick={() => setIsProductDropdownOpen((prev) => !prev)}
+                    className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-xs font-semibold text-[#171136] cursor-pointer flex items-center justify-between gap-2 shadow-2xs transition-all ${
+                      isProductDropdownOpen
+                        ? "border-[#7B5CFF] ring-2 ring-[#7B5CFF]/20"
+                        : "border-[#EAE3F7] hover:border-[#7B5CFF]/50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      {currentSelectedProduct ? (
+                        <>
+                          <div className="w-6 h-6 rounded-md bg-[#F8F6FC] border border-[#ECE6F6] overflow-hidden flex items-center justify-center shrink-0">
+                            {currentSelectedProduct.image || currentSelectedProduct.image_file ? (
+                              <img
+                                src={getMediaUrl(currentSelectedProduct.image || currentSelectedProduct.image_file)}
+                                alt={currentSelectedProduct.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="font-extrabold text-[10px] text-[#FF4D6D]">
+                                {currentSelectedProduct.name[0]}
+                              </span>
+                            )}
+                          </div>
+                          <span className="font-bold text-[#171136] truncate">
+                            {currentSelectedProduct.name}
+                          </span>
+                          {currentSelectedProduct.sku && (
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#FAF8FF] border border-[#EAE3F7] text-[#736E9B] shrink-0">
+                              SKU: {currentSelectedProduct.sku}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-[#8A84A6] font-medium truncate">
+                          -- Select an existing product ({products.length} available) --
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {currentSelectedProduct && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedProductId("");
+                            setItemPriceOverride("");
+                          }}
+                          className="p-1 text-[#8A84A6] hover:text-[#FF4D6D] rounded transition-colors cursor-pointer"
+                          title="Clear selected product"
+                        >
+                          ✕
+                        </button>
+                      )}
+                      <IconChevronDown
+                        className={`w-4 h-4 text-[#8A84A6] transition-transform duration-200 ${
+                          isProductDropdownOpen ? "rotate-180 text-[#7B5CFF]" : "rotate-0"
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Dropdown Menu (First item is Search Bar) */}
+                  {isProductDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-[#EAE3F7] rounded-2xl shadow-2xl z-30 overflow-hidden animate-in fade-in duration-150">
+                      {/* FIRST OPTION: Search Input Bar */}
+                      <div className="p-2.5 bg-[#FAF8FF] border-b border-[#F0EBF8] sticky top-0 z-10 space-y-1.5">
+                        <div className="relative flex items-center">
+                          <IconSearch className="absolute left-3 w-3.5 h-3.5 text-[#8A84A6] pointer-events-none" />
+                          <input
+                            ref={searchInputRef}
+                            type="text"
+                            placeholder="🔍 Search product by title, SKU, category..."
+                            value={productSearchQuery}
+                            onChange={(e) => setProductSearchQuery(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-full pl-8 pr-7 py-2 bg-white border border-[#EAE3F7] rounded-xl text-xs font-semibold text-[#171136] focus:outline-none focus:border-[#7B5CFF] placeholder:text-[#8A84A6]"
+                          />
+                          {productSearchQuery && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setProductSearchQuery("");
+                                searchInputRef.current?.focus();
+                              }}
+                              className="absolute right-2.5 text-xs text-[#8A84A6] hover:text-[#171136] p-0.5 cursor-pointer"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between text-[10.5px] text-[#736E9B] px-1 font-medium">
+                          <span>Showing {filteredProducts.length} of {products.length} products</span>
+                          {productSearchQuery && (
+                            <span className="text-[#7B5CFF] font-bold">Filtered</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Scrollable Products List */}
+                      <div className="max-h-64 overflow-y-auto divide-y divide-[#F0EBF8]">
+                        {filteredProducts.length === 0 ? (
+                          <div className="py-8 text-center text-xs text-[#8A84A6]">
+                            No products match &ldquo;{productSearchQuery}&rdquo;
+                          </div>
+                        ) : (
+                          filteredProducts.map((p) => {
+                            const isSelected = String(p.id) === String(selectedProductId);
+                            const rawPrice = parseFloat(
+                              String(p.discountedPrice || p.price || "0").replace(/[^\d.]/g, "")
+                            ) || 0;
+                            const stockVal = p.stock ?? 0;
+                            const isPre = stockVal <= 0 && p.productType !== "grouped";
+
+                            return (
+                              <div
+                                key={p.id}
+                                onClick={() => {
+                                  setSelectedProductId(String(p.id));
+                                  setItemPriceOverride(rawPrice > 0 ? String(rawPrice) : "");
+                                  setIsProductDropdownOpen(false);
+                                  setProductSearchQuery("");
+                                }}
+                                className={`p-2.5 flex items-center justify-between gap-3 hover:bg-[#F6F1FF] transition-colors cursor-pointer group ${
+                                  isSelected ? "bg-[#F6F1FF] border-l-4 border-l-[#7B5CFF]" : ""
+                                }`}
+                              >
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                  <div className="w-10 h-10 rounded-xl bg-[#FAF8FF] border border-[#EAE3F7] overflow-hidden flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                    {p.image || p.image_file ? (
+                                      <img
+                                        src={getMediaUrl(p.image || p.image_file)}
+                                        alt={p.name}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <span className="font-extrabold text-xs text-[#FF4D6D]">
+                                        {p.name[0]}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="font-bold text-xs text-[#171136] group-hover:text-[#7B5CFF] transition-colors truncate">
+                                      {p.name}
+                                    </p>
+                                    <div className="flex items-center gap-2 mt-0.5 text-[10.5px] text-[#736E9B] flex-wrap">
+                                      {p.sku && (
+                                        <span className="font-mono bg-white px-1.5 py-0.2 rounded border border-[#EAE3F7] text-[10px]">
+                                          SKU: {p.sku}
+                                        </span>
+                                      )}
+                                      <span className={isPre ? "text-[#C08A00] font-bold" : "text-emerald-600 font-bold"}>
+                                        {isPre ? "Pre-order" : `Stock: ${stockVal}`}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <span className="font-extrabold text-xs text-[#171136] block">
+                                    ৳{rawPrice.toLocaleString()}
+                                  </span>
+                                  {isSelected && (
+                                    <span className="text-[10px] font-bold text-[#7B5CFF]">Selected ✓</span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Selected Product Quick Info & Inputs */}
