@@ -10,6 +10,8 @@ export interface OrderItem {
   price: number | string;
   quantity: number;
   sku?: string;
+  isPreorder?: boolean;
+  is_preorder?: boolean;
 }
 
 export interface OrderInvoiceData {
@@ -29,6 +31,7 @@ export interface OrderInvoiceData {
   shipping_cost?: number | string;
   shipping_fee?: number | string;
   delivery_charge?: number | string;
+  discount?: number | string;
   discount_code?: string;
   discount_amount?: number | string;
 }
@@ -51,16 +54,20 @@ export function generateInvoiceHtml(order: OrderInvoiceData): string {
     0
   );
   const totalAmount = Number(order.total_amount || subtotal);
-  const discountAmount = Number(order.discount_amount || 0);
-  const computedFee = Math.max(0, totalAmount - subtotal + discountAmount);
-  const fallbackFee = (order.shipping_address || "").toLowerCase().includes("dhaka") ? 60 : 120;
-  const deliveryFee = typeof order.shipping_cost === "number" && order.shipping_cost > 0
+  const rawShip = typeof order.shipping_cost === "number" && order.shipping_cost > 0
     ? Number(order.shipping_cost)
     : (typeof order.shipping_fee === "number" && order.shipping_fee > 0
       ? Number(order.shipping_fee)
       : (typeof order.delivery_charge === "number" && order.delivery_charge > 0
         ? Number(order.delivery_charge)
-        : (computedFee > 0 ? computedFee : fallbackFee)));
+        : ((order.shipping_address || "").toLowerCase().includes("dhaka") ? 60 : 120)));
+  const deliveryFee = rawShip;
+
+  const explicitDiscount = Number(order.discount_amount || 0);
+  const derivedDiscount = typeof order.discount === "number" || typeof order.discount === "string"
+    ? Number(order.discount)
+    : Math.max(0, (subtotal + deliveryFee) - totalAmount);
+  const discountAmount = explicitDiscount > 0 ? explicitDiscount : derivedDiscount;
 
   const formattedDate = order.created_at
     ? new Date(order.created_at).toLocaleDateString("en-US", {
@@ -99,6 +106,7 @@ export function generateInvoiceHtml(order: OrderInvoiceData): string {
       const qty = item.quantity || 1;
       const lineTotal = unitPrice * qty;
       const sku = item.sku || "";
+      const isPre = Boolean(item.isPreorder || item.is_preorder);
 
       return `
         <tr style="border-bottom: 1px solid #E5E7EB;">
@@ -106,6 +114,7 @@ export function generateInvoiceHtml(order: OrderInvoiceData): string {
           <td style="padding: 10px 12px;">
             <div style="font-weight: 700; color: #111827; font-size: 12px; line-height: 1.3;">${itemTitle}</div>
             ${sku ? `<div style="font-size: 10px; color: #6B7280; margin-top: 2px;">SKU: ${sku}</div>` : ""}
+            ${isPre ? `<div style="display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; color: #B76E00; background-color: #FFF1D6; padding: 2px 6px; border-radius: 4px; margin-top: 3px;">Pre-order · No stock deducted</div>` : ""}
           </td>
           <td style="padding: 10px 12px; text-align: right; font-family: monospace; font-size: 12px; color: #374151;">
             ৳${unitPrice.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}

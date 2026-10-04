@@ -4656,7 +4656,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                             SKU: {itemSku}
                                           </p>
                                         ) : null}
-                                        {item.isPreorder && (
+                                        {(item.isPreorder || item.is_preorder) && (
                                           <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-[#FFF1D6] text-[#B76E00] text-[10px] font-extrabold uppercase tracking-wide">
                                             Pre-order · no stock deducted
                                           </span>
@@ -4674,7 +4674,15 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                     ×{item.quantity || 1}
                                   </td>
                                   <td className="py-3.5 px-2 text-right font-medium text-[#736E9B]">
-                                    ৳{Number(item.price || 0).toLocaleString()}
+                                    {(item.originalPrice || item.original_price || item.regularPrice || item.regular_price) &&
+                                      Number(item.originalPrice || item.original_price || item.regularPrice || item.regular_price) > Number(item.price) && (
+                                        <span className="line-through text-[11px] text-[#8A84A6] mr-1.5 block sm:inline">
+                                          ৳{Number(item.originalPrice || item.original_price || item.regularPrice || item.regular_price).toLocaleString()}
+                                        </span>
+                                      )}
+                                    <span className="text-[#171136] font-semibold">
+                                      ৳{Number(item.price || 0).toLocaleString()}
+                                    </span>
                                   </td>
                                   <td className="py-3.5 pl-2 text-right font-extrabold text-[#171136] text-sm">
                                     ৳{itemTotal.toLocaleString()}
@@ -4686,18 +4694,32 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                         </table>
                       </div>
 
-                      <div className="border-t border-[#F0EBF8] pt-4 space-y-2 text-xs text-right">
-                        <div className="flex justify-end gap-8 text-[#736E9B]">
-                          <span>Subtotal</span>
-                          <span className="font-semibold text-[#171136] w-24">৳{subtotal.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-end gap-8 text-[#736E9B]">
-                          <span>Standard Delivery</span>
-                          <span className={`font-semibold w-24 ${deliveryFee > 0 ? "text-[#171136]" : "text-emerald-600"}`}>
-                            {deliveryFee > 0 ? `৳${deliveryFee.toLocaleString()}` : "৳0"}
-                          </span>
-                        </div>
-                      </div>
+                      {(() => {
+                        const discountVal = typeof currentOrder.discount === "number" || typeof currentOrder.discount === "string"
+                          ? Number(currentOrder.discount)
+                          : Math.max(0, (subtotal + deliveryFee) - Number(currentOrder.total_amount || 0));
+
+                        return (
+                          <div className="border-t border-[#F0EBF8] pt-4 space-y-2 text-xs text-right">
+                            <div className="flex justify-end gap-8 text-[#736E9B]">
+                              <span>Subtotal</span>
+                              <span className="font-semibold text-[#171136] w-24">৳{subtotal.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-end gap-8 text-[#736E9B]">
+                              <span>Standard Delivery</span>
+                              <span className={`font-semibold w-24 ${deliveryFee > 0 ? "text-[#171136]" : "text-emerald-600"}`}>
+                                {deliveryFee > 0 ? `৳${deliveryFee.toLocaleString()}` : "৳0"}
+                              </span>
+                            </div>
+                            {discountVal > 0 && (
+                              <div className="flex justify-end gap-8 text-emerald-600 font-bold">
+                                <span>Discount</span>
+                                <span className="w-24">-৳{discountVal.toLocaleString()}</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     {/* Order Total Card */}
