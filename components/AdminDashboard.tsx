@@ -95,7 +95,7 @@ import BlogTaxonomyManager from "./admin/BlogTaxonomyManager";
 import RichTextEditor from "./admin/RichTextEditor";
 import ProductBundleBuilder, { type BundleLine, parsePrice } from "./admin/ProductBundleBuilder";
 import CouponsManager from "./admin/CouponsManager";
-import CreateOrderModal from "./admin/CreateOrderModal";
+import CustomOrderPage from "./admin/CustomOrderPage";
 import { printOrderInvoice } from "@/lib/invoice";
 
 interface AdminDashboardProps {
@@ -117,6 +117,7 @@ type ActiveNav =
   | "marketing-coupons"
   | "orders-all"
   | "orders-single"
+  | "orders-custom"
   | "users-all"
   | "stores-all"
   | "stores-single"
@@ -210,6 +211,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     "marketing-coupons": "/en/admin/marketing/coupons",
     "orders-all": "/en/admin/orders",
     "orders-single": "/en/admin/orders",
+    "orders-custom": "/en/admin/custom-order",
     "users-all": "/en/admin/users",
     "stores-all": "/en/admin/stores",
     "stores-form": "/en/admin/stores/new",
@@ -289,6 +291,9 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       } else if (path.includes("/products")) {
         setActiveNav("products-all");
         setProductsMenuOpen(true);
+      } else if (path.includes("/custom-order") || path.includes("/orders/custom") || path.includes("/orders/new")) {
+        setActiveNav("orders-custom");
+        setOrdersMenuOpen(true);
       } else if (path.includes("/orders/") && path.split("/orders/")[1]) {
         setActiveNav("orders-single");
         setOrdersMenuOpen(true);
@@ -384,7 +389,6 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [submittingProduct, setSubmittingProduct] = useState(false);
   const [deletingProduct, setDeletingProduct] = useState<any | null>(null);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
-  const [isCreateOrderModalOpen, setIsCreateOrderModalOpen] = useState(false);
 
   // Homepage Mega Menu (Appearance) State
   const [megaMenuSelection, setMegaMenuSelection] = useState<string[]>([]);
@@ -1790,7 +1794,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
               {ordersMenuOpen && !sidebarCollapsed && (
                 <div className="pl-8 pr-1 py-1 space-y-1">
                   <button
-                    onClick={() => navigateTo("orders-all")}
+                    onClick={() => navigateTo("orders-all", "/en/admin/orders")}
                     className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
                       activeNav === "orders-all"
                         ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
@@ -1799,6 +1803,17 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-current" />
                     <span>All Orders</span>
+                  </button>
+                  <button
+                    onClick={() => navigateTo("orders-custom", "/en/admin/custom-order")}
+                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                      activeNav === "orders-custom"
+                        ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
+                        : "text-[#A79FD1] hover:text-white hover:bg-[#2A2159]/40"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    <span>Add Custom Order</span>
                   </button>
                 </div>
               )}
@@ -4027,7 +4042,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                 </div>
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => setIsCreateOrderModalOpen(true)}
+                    onClick={() => navigateTo("orders-custom", "/en/admin/custom-order")}
                     className="px-4 py-2.5 bg-[#FF4D6D] hover:bg-[#ff3358] text-white font-bold text-xs sm:text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95"
                   >
                     <IconPlus className="w-4 h-4" />
@@ -4797,6 +4812,25 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
           })()}
 
           {/* ========================================================= */}
+          {/* 4.6) VIEW: ORDERS -> CUSTOM / MANUAL ORDER FULL PAGE */}
+          {/* ========================================================= */}
+          {activeNav === "orders-custom" && (
+            <CustomOrderPage
+              products={products}
+              onCancel={() => navigateTo("orders-all", "/en/admin/orders")}
+              onOrderCreated={(newOrder) => {
+                setOrders((prev) => [newOrder, ...prev.filter((o) => o.id !== newOrder.id)]);
+                setSelectedOrder(newOrder);
+                showToast(`✓ Order #${newOrder.order_number || "Custom"} created successfully!`);
+                navigateTo("orders-single", `/en/admin/orders/${newOrder.id || newOrder.order_number}`);
+                getAdminStats().then((data) => {
+                  if (data) setStatsData(data);
+                }).catch(() => {});
+              }}
+            />
+          )}
+
+          {/* ========================================================= */}
           {/* 5) VIEW: USERS -> ALL USERS */}
           {/* ========================================================= */}
           {activeNav === "users-all" && (
@@ -5420,22 +5454,6 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
           </div>
         </div>
       )}
-
-      {/* Create Custom / Social Order Modal */}
-      <CreateOrderModal
-        isOpen={isCreateOrderModalOpen}
-        onClose={() => setIsCreateOrderModalOpen(false)}
-        products={products}
-        onOrderCreated={(newOrder) => {
-          setOrders((prev) => [newOrder, ...prev.filter((o) => o.id !== newOrder.id)]);
-          setToastMessage(`Order #${newOrder.order_number || "Custom"} created successfully!`);
-          setTimeout(() => setToastMessage(null), 4000);
-          // Refresh admin stats in background
-          getAdminStats().then((data) => {
-            if (data) setStatsData(data);
-          }).catch(() => {});
-        }}
-      />
     </div>
   );
 }
