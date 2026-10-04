@@ -923,21 +923,32 @@ export async function getStoreInfo() {
 }
 
 export async function createOrder(orderData: {
-  first_name: string;
-  last_name: string;
+  first_name?: string;
+  last_name?: string;
   customer_name?: string;
-  customer_phone: string;
+  customer_phone?: string;
   customer_email?: string;
-  city: string;
+  city?: string;
   district?: string;
-  address: string;
+  address?: string;
   shipping_address?: string;
   total_amount: number;
   shipping_cost?: number;
+  status?: string;
+  carrier?: string;
+  tracking_number?: string;
+  order_number?: string;
   items: Array<{
-    name: string;
+    productId?: string | number;
+    id?: string | number;
+    product_id?: string | number;
+    name?: string;
+    product_name?: string;
     price: number;
     quantity: number;
+    isPreorder?: boolean;
+    deduct_stock?: boolean;
+    image?: string;
   }>;
 }) {
   try {
@@ -948,7 +959,7 @@ export async function createOrder(orderData: {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      return { success: false, error: err.error || "Failed to create order" };
+      return { success: false, error: err.error || err.detail || "Failed to create order" };
     }
     const data = await res.json();
     return { success: true, order: data };
@@ -958,9 +969,9 @@ export async function createOrder(orderData: {
       success: true,
       order: {
         id: Date.now(),
-        order_number: `KS-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        order_number: orderData.order_number || `KS-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
         ...orderData,
-        status: "pending",
+        status: orderData.status || "pending",
         created_at: new Date().toISOString(),
       },
     };

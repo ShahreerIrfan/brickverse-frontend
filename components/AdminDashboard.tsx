@@ -95,6 +95,7 @@ import BlogTaxonomyManager from "./admin/BlogTaxonomyManager";
 import RichTextEditor from "./admin/RichTextEditor";
 import ProductBundleBuilder, { type BundleLine, parsePrice } from "./admin/ProductBundleBuilder";
 import CouponsManager from "./admin/CouponsManager";
+import CreateOrderModal from "./admin/CreateOrderModal";
 import { printOrderInvoice } from "@/lib/invoice";
 
 interface AdminDashboardProps {
@@ -383,6 +384,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [submittingProduct, setSubmittingProduct] = useState(false);
   const [deletingProduct, setDeletingProduct] = useState<any | null>(null);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [isCreateOrderModalOpen, setIsCreateOrderModalOpen] = useState(false);
 
   // Homepage Mega Menu (Appearance) State
   const [megaMenuSelection, setMegaMenuSelection] = useState<string[]>([]);
@@ -4023,6 +4025,15 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                     View real-time customer orders, update tracking status, and generate invoices
                   </p>
                 </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setIsCreateOrderModalOpen(true)}
+                    className="px-4 py-2.5 bg-[#FF4D6D] hover:bg-[#ff3358] text-white font-bold text-xs sm:text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+                  >
+                    <IconPlus className="w-4 h-4" />
+                    <span>Add New Order</span>
+                  </button>
+                </div>
               </div>
 
               {/* KPI Summary Cards */}
@@ -5409,6 +5420,22 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
           </div>
         </div>
       )}
+
+      {/* Create Custom / Social Order Modal */}
+      <CreateOrderModal
+        isOpen={isCreateOrderModalOpen}
+        onClose={() => setIsCreateOrderModalOpen(false)}
+        products={products}
+        onOrderCreated={(newOrder) => {
+          setOrders((prev) => [newOrder, ...prev.filter((o) => o.id !== newOrder.id)]);
+          setToastMessage(`Order #${newOrder.order_number || "Custom"} created successfully!`);
+          setTimeout(() => setToastMessage(null), 4000);
+          // Refresh admin stats in background
+          getAdminStats().then((data) => {
+            if (data) setStatsData(data);
+          }).catch(() => {});
+        }}
+      />
     </div>
   );
 }
