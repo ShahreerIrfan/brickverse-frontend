@@ -4561,20 +4561,75 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                             {items.map((item: any, idx: number) => {
                               const itemInitial = (item.product_name?.[0] || "P").toUpperCase();
                               const itemTotal = Number(item.price || 0) * (item.quantity || 1);
+                              const itemImage = item.image || item.product_image || item.product?.image;
+                              const itemSku = item.sku || item.product?.sku || "";
+                              const productTarget = item.slug || item.productId || item.product_id || item.product?.slug || item.product?.id;
+                              const productUrl = productTarget ? `/product/${productTarget}` : null;
+
                               return (
                                 <tr key={idx} className="hover:bg-[#F8F6FD]/60 transition-colors">
                                   <td className="py-3.5 pr-2">
                                     <div className="flex items-center gap-3">
-                                      <div className="w-10 h-10 rounded-xl bg-[#FFF1F4] text-[#FF4D6D] font-extrabold flex items-center justify-center text-xs shrink-0">
-                                        {itemInitial}
-                                      </div>
+                                      {productUrl ? (
+                                        <Link
+                                          href={productUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="w-10 h-10 rounded-xl bg-[#F8F6FC] border border-[#ECE6F6] overflow-hidden flex items-center justify-center shrink-0 hover:ring-2 hover:ring-[#7B5CFF]/30 transition-all"
+                                        >
+                                          {itemImage && itemImage !== "/images/figure-samurai-red.svg" ? (
+                                            <img
+                                              src={getMediaUrl(itemImage)}
+                                              alt={item.product_name || "Product"}
+                                              className="w-full h-full object-cover object-center"
+                                              onError={(e) => {
+                                                (e.currentTarget as HTMLImageElement).style.display = "none";
+                                              }}
+                                            />
+                                          ) : (
+                                            <div className="w-full h-full bg-[#FFF1F4] text-[#FF4D6D] font-extrabold flex items-center justify-center text-xs">
+                                              {itemInitial}
+                                            </div>
+                                          )}
+                                        </Link>
+                                      ) : (
+                                        <div className="w-10 h-10 rounded-xl bg-[#F8F6FC] border border-[#ECE6F6] overflow-hidden flex items-center justify-center shrink-0">
+                                          {itemImage && itemImage !== "/images/figure-samurai-red.svg" ? (
+                                            <img
+                                              src={getMediaUrl(itemImage)}
+                                              alt={item.product_name || "Product"}
+                                              className="w-full h-full object-cover object-center"
+                                              onError={(e) => {
+                                                (e.currentTarget as HTMLImageElement).style.display = "none";
+                                              }}
+                                            />
+                                          ) : (
+                                            <div className="w-full h-full bg-[#FFF1F4] text-[#FF4D6D] font-extrabold flex items-center justify-center text-xs">
+                                              {itemInitial}
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
                                       <div>
-                                        <p className="font-bold text-[#171136] text-xs sm:text-sm leading-tight">
-                                          {item.product_name}
-                                        </p>
-                                        <p className="text-[10.5px] text-[#736E9B] mt-0.5">
-                                          SKU: KS-ITEM-{idx + 101}
-                                        </p>
+                                        {productUrl ? (
+                                          <Link
+                                            href={productUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="font-bold text-[#171136] text-xs sm:text-sm leading-tight hover:text-[#7B5CFF] transition-colors inline-block"
+                                          >
+                                            {item.product_name}
+                                          </Link>
+                                        ) : (
+                                          <p className="font-bold text-[#171136] text-xs sm:text-sm leading-tight">
+                                            {item.product_name}
+                                          </p>
+                                        )}
+                                        {itemSku ? (
+                                          <p className="text-[10.5px] text-[#736E9B] mt-0.5 font-mono">
+                                            SKU: {itemSku}
+                                          </p>
+                                        ) : null}
                                         {item.isPreorder && (
                                           <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-[#FFF1D6] text-[#B76E00] text-[10px] font-extrabold uppercase tracking-wide">
                                             Pre-order · no stock deducted

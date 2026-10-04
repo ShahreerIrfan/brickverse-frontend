@@ -98,14 +98,14 @@ export function generateInvoiceHtml(order: OrderInvoiceData): string {
       const unitPrice = Number(item.price || 0);
       const qty = item.quantity || 1;
       const lineTotal = unitPrice * qty;
-      const sku = item.sku || `KS-ITEM-${idx + 101}`;
+      const sku = item.sku || "";
 
       return `
         <tr style="border-bottom: 1px solid #E5E7EB;">
           <td style="padding: 10px 8px; text-align: center; color: #6B7280; font-size: 11px;">${idx + 1}</td>
           <td style="padding: 10px 12px;">
             <div style="font-weight: 700; color: #111827; font-size: 12px; line-height: 1.3;">${itemTitle}</div>
-            <div style="font-size: 10px; color: #6B7280; margin-top: 2px;">SKU: ${sku}</div>
+            ${sku ? `<div style="font-size: 10px; color: #6B7280; margin-top: 2px;">SKU: ${sku}</div>` : ""}
           </td>
           <td style="padding: 10px 12px; text-align: right; font-family: monospace; font-size: 12px; color: #374151;">
             ৳${unitPrice.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
