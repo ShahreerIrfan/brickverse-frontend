@@ -650,7 +650,7 @@ export default function PromoBannersManager() {
 
               {/* Render Preview Card */}
               <div
-                className={`relative ${currentGradConfig.classBg} rounded-2xl overflow-hidden p-4 sm:p-5 h-[170px] sm:h-[190px] flex flex-col justify-between shadow-md transition-all duration-300`}
+                className={`relative ${currentGradConfig.classBg} rounded-2xl overflow-hidden p-4 sm:p-5 min-h-[180px] sm:min-h-[200px] flex flex-col justify-between shadow-md transition-all duration-300`}
               >
                 <div
                   className={`absolute -right-6 -top-6 w-[130px] h-[130px] rounded-full pointer-events-none ${
@@ -668,7 +668,7 @@ export default function PromoBannersManager() {
                   </span>
 
                   <h3
-                    className={`font-[family-name:var(--font-display)] font-extrabold text-[16px] sm:text-[19px] leading-tight mt-1.5 line-clamp-2 ${
+                    className={`font-[family-name:var(--font-display)] font-extrabold text-[15px] sm:text-[18px] leading-[1.18] mt-1.5 line-clamp-2 tracking-tight ${
                       currentGradConfig.textDark ? "text-[#171136]" : "text-white"
                     }`}
                   >
@@ -877,7 +877,7 @@ export default function PromoBannersManager() {
 
                 {/* Banner Live Card Preview */}
                 <div
-                  className={`relative rounded-2xl overflow-hidden p-4 sm:p-5 h-[160px] sm:h-[180px] flex flex-col justify-between ${gradConfig.classBg}`}
+                  className={`relative rounded-2xl overflow-hidden p-4 sm:p-5 min-h-[170px] sm:min-h-[190px] flex flex-col justify-between ${gradConfig.classBg}`}
                 >
                   <div className="absolute -right-6 -top-6 w-[120px] h-[120px] rounded-full bg-white/10 pointer-events-none" />
 
@@ -890,7 +890,7 @@ export default function PromoBannersManager() {
                       {bText}
                     </span>
                     <h3
-                      className={`font-[family-name:var(--font-display)] font-extrabold text-[15px] sm:text-[18px] leading-tight mt-1.5 line-clamp-2 ${
+                      className={`font-[family-name:var(--font-display)] font-extrabold text-[15px] sm:text-[18px] leading-[1.18] mt-1.5 line-clamp-2 tracking-tight ${
                         isDarkText ? "text-[#171136]" : "text-white"
                       }`}
                     >

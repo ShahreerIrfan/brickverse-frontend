@@ -129,7 +129,7 @@ function PromoCard({ banner, isSecond }: { banner: PromoBanner; isSecond?: boole
 
   return (
     <div
-      className={`relative ${bg} rounded-xl sm:rounded-2xl overflow-hidden p-2.5 sm:p-5 lg:p-7 h-[125px] sm:h-[160px] lg:h-[220px] flex flex-col justify-between`}
+      className={`relative ${bg} rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden p-3 sm:p-5 lg:p-6 min-h-[135px] sm:min-h-[170px] lg:h-[225px] flex flex-col justify-between shadow-xs`}
     >
       <div
         className={`absolute -right-6 -top-6 w-[140px] h-[140px] lg:w-[180px] lg:h-[180px] rounded-full pointer-events-none ${
@@ -137,34 +137,37 @@ function PromoCard({ banner, isSecond }: { banner: PromoBanner; isSecond?: boole
         }`}
       />
 
-      <div className="relative z-10 pr-10 sm:pr-20 lg:pr-24">
+      {/* Text Info Column */}
+      <div className="relative z-10 pr-12 sm:pr-20 md:pr-24 lg:pr-28">
         <span
-          className={`inline-block text-[8px] sm:text-[10.5px] lg:text-[12.5px] font-bold rounded-full px-2 sm:px-3 lg:px-3.5 py-0.5 lg:py-1 ${
+          className={`inline-block text-[8px] sm:text-[10px] lg:text-[11.5px] font-bold rounded-full px-2 sm:px-3 lg:px-3.5 py-0.5 lg:py-1 ${
             textDark ? "bg-[#171136] text-white" : "bg-white/20 text-white"
           }`}
         >
           {badge}
         </span>
 
+        {/* 2-line responsive title */}
         <h3
-          className={`font-[family-name:var(--font-display)] font-extrabold text-[11.5px] sm:text-[18px] lg:text-[25px] leading-tight mt-1 sm:mt-2 lg:mt-3 ${
+          className={`font-[family-name:var(--font-display)] font-extrabold text-[11px] sm:text-[15px] md:text-[18px] lg:text-[21px] xl:text-[23px] leading-[1.18] mt-1 sm:mt-1.5 lg:mt-2 line-clamp-2 tracking-tight ${
             textDark ? "text-[#171136]" : "text-white"
           }`}
         >
           {renderHighlightTitle(banner.title, banner.highlight_word || banner.highlightWord, textDark)}
         </h3>
 
+        {/* Offer timer or Category subtitle */}
         {isOffer ? (
-          <div className="flex items-center gap-1 sm:gap-1.5 lg:gap-2 mt-1 sm:mt-2 lg:mt-3">
+          <div className="flex items-center gap-1 sm:gap-1.5 mt-1 sm:mt-1.5 lg:mt-2.5">
             {timerValues.map((t) => (
               <div
                 key={t.label}
-                className="bg-white/90 rounded sm:rounded-md lg:rounded-lg px-1 py-0.5 sm:px-1.5 sm:py-0.5 lg:px-2 lg:py-1 flex flex-col items-center justify-center min-w-[18px] sm:min-w-[28px] lg:min-w-[38px]"
+                className="bg-white/95 rounded sm:rounded-md lg:rounded-lg px-1 py-0.5 sm:px-1.5 sm:py-0.5 lg:px-2 lg:py-0.5 flex flex-col items-center justify-center min-w-[16px] sm:min-w-[24px] lg:min-w-[34px] shadow-2xs"
               >
-                <span className="font-[family-name:var(--font-display)] font-extrabold text-[8px] sm:text-[11px] lg:text-[14px] text-[#171136] leading-none">
+                <span className="font-[family-name:var(--font-display)] font-extrabold text-[7.5px] sm:text-[10.5px] lg:text-[13px] text-[#171136] leading-none">
                   {t.value}
                 </span>
-                <span className="text-[5px] sm:text-[7.5px] lg:text-[9px] font-semibold text-[#736E9B] leading-none mt-0.5">
+                <span className="text-[4.5px] sm:text-[7px] lg:text-[8.5px] font-semibold text-[#736E9B] leading-none mt-0.5">
                   {t.label}
                 </span>
               </div>
@@ -173,7 +176,7 @@ function PromoCard({ banner, isSecond }: { banner: PromoBanner; isSecond?: boole
         ) : (
           banner.subtitle && (
             <p
-              className={`text-[8px] sm:text-[11.5px] lg:text-[13.5px] mt-0.5 sm:mt-1 lg:mt-1.5 leading-tight line-clamp-1 ${
+              className={`text-[8px] sm:text-[11px] lg:text-[12.5px] mt-0.5 sm:mt-1 lg:mt-1.5 leading-tight line-clamp-1 ${
                 textDark ? "text-[#171136]/80 font-medium" : "text-[#E4DAFF]"
               }`}
             >
@@ -183,37 +186,39 @@ function PromoCard({ banner, isSecond }: { banner: PromoBanner; isSecond?: boole
         )}
       </div>
 
-      <div className="relative z-10 mt-1.5 sm:mt-3 lg:mt-4">
+      {/* Button CTA */}
+      <div className="relative z-10 mt-1.5 sm:mt-2.5 lg:mt-3">
         <Link
           href={btnUrl}
-          className={`inline-flex items-center gap-1 sm:gap-1.5 font-bold text-[8.5px] sm:text-[12px] lg:text-[14px] rounded-full h-5.5 sm:h-7.5 lg:h-9 px-2.5 sm:px-4 lg:px-5 shadow-sm active:scale-95 transition-all ${
+          className={`inline-flex items-center gap-1 sm:gap-1.5 font-bold text-[8.5px] sm:text-[11.5px] lg:text-[13px] rounded-full h-5 sm:h-7 lg:h-8.5 px-2.5 sm:px-3.5 lg:px-4.5 shadow-sm active:scale-95 transition-all ${
             textDark
               ? "bg-[#171136] hover:bg-[#251c4a] text-white"
               : "bg-white hover:bg-white/95 text-[#5B22B8]"
           }`}
         >
-          {btnText} <IconArrowRight className="w-2 h-2 sm:w-3 sm:h-3" />
+          {btnText} <IconArrowRight className="w-2 h-2 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3" />
         </Link>
       </div>
 
+      {/* Illustration Image */}
       <div
         className={`absolute pointer-events-none ${
           isSecond
-            ? "right-0.5 sm:right-3 lg:right-4 bottom-0 w-[40px] sm:w-[65px] lg:w-[96px]"
-            : "right-0.5 sm:right-2 lg:right-3 bottom-0 w-[48px] sm:w-[75px] lg:w-[112px]"
+            ? "right-0.5 sm:right-2 lg:right-3.5 bottom-0 w-[42px] sm:w-[68px] lg:w-[98px]"
+            : "right-0.5 sm:right-1.5 lg:right-2.5 bottom-0 w-[48px] sm:w-[75px] lg:w-[110px]"
         }`}
       >
         {customImg ? (
           <img
             src={customImg}
             alt={banner.title}
-            className="w-full h-auto max-h-[110px] sm:max-h-[150px] lg:max-h-[200px] object-contain drop-shadow-sm"
+            className="w-full h-auto max-h-[110px] sm:max-h-[145px] lg:max-h-[195px] object-contain drop-shadow-sm"
           />
         ) : (
           <Image
             src={defaultImg}
             alt={banner.title}
-            width={isSecond ? 96 : 112}
+            width={isSecond ? 98 : 110}
             height={isSecond ? 118 : 200}
             className="w-full h-auto drop-shadow-sm"
           />
@@ -247,7 +252,7 @@ export default function PromoColumns() {
   const displayBanners = banners.length > 0 ? banners.slice(0, 2) : DEFAULT_BANNERS;
 
   return (
-    <div className="grid grid-cols-2 gap-2.5 sm:gap-4 w-full">
+    <div className="grid grid-cols-2 gap-2.5 sm:gap-4 w-full items-stretch">
       {displayBanners.map((b, idx) => (
         <PromoCard key={b.id || idx} banner={b} isSecond={idx === 1} />
       ))}
