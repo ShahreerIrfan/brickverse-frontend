@@ -8,16 +8,24 @@ import PromoBanner from "@/components/PromoBanner";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
-import { getProductSections, getHomepageSections, getCategories, getHeroSlides } from "@/lib/api";
+import {
+  getProductSections,
+  getHomepageSections,
+  getCategories,
+  getHeroSlides,
+  getNewArrivals,
+} from "@/lib/api";
+import type { ProductSection } from "@/components/productData";
 
 export const revalidate = 60;
 
 export default async function Home() {
-  const [fixedSections, categorySections, categories, heroSlides] = await Promise.all([
+  const [fixedSections, categorySections, categories, heroSlides, newArrivals] = await Promise.all([
     getProductSections(),
     getHomepageSections(),
     getCategories(),
     getHeroSlides(),
+    getNewArrivals(10),
   ]);
   // Admin-chosen category sections win; with none chosen, keep the fixed ones.
   const sections = categorySections.length > 0 ? categorySections : fixedSections;
@@ -25,6 +33,17 @@ export default async function Home() {
   const megaMenuCategories = categories
     .filter((c) => c.show_in_mega_menu !== false)
     .sort((a, b) => (a.mega_menu_order ?? 0) - (b.mega_menu_order ?? 0));
+
+  const newArrivalsSection: ProductSection = {
+    id: "new-arrivals",
+    eyebrow: "JUST LANDED IN STORE",
+    eyebrowColor: "#FF4D6D",
+    title: "New Arrivals",
+    itemCount: `${newArrivals.length} items`,
+    accent: "#FF4D6D",
+    products: newArrivals,
+    href: "/shop?sort=newest",
+  };
 
   return (
     <div className="flex flex-col flex-1 bg-[#FFF6EE] pb-16 lg:pb-0">
@@ -43,6 +62,10 @@ export default async function Home() {
         {sections.map((section) => (
           <ProductGrid key={section.id} section={section} />
         ))}
+
+        {newArrivals.length > 0 && (
+          <ProductGrid section={newArrivalsSection} />
+        )}
 
         <PromoBanner />
         <Newsletter />

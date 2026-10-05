@@ -103,7 +103,7 @@ export async function getProductSections(apiBaseOverride?: string): Promise<Prod
 export async function getHomepageSections(apiBaseOverride?: string): Promise<ProductSection[]> {
   try {
     const base = apiBaseOverride || getApiBaseUrl();
-    const res = await fetch(`${base}/products/homepage-sections/`, { next: { revalidate: 30 } });
+    const res = await fetch(`${base}/products/homepage-sections/?limit=10`, { next: { revalidate: 30 } });
     if (!res.ok) return [];
     const data = await res.json();
     if (!Array.isArray(data)) return [];
@@ -120,6 +120,30 @@ export async function getHomepageSections(apiBaseOverride?: string): Promise<Pro
     }));
   } catch (error) {
     console.warn("[API] Homepage sections API unreachable:", error);
+    return [];
+  }
+}
+
+// Fetch newest products across all categories for the homepage "New Arrivals" section
+export async function getNewArrivals(limit = 10, apiBaseOverride?: string): Promise<Product[]> {
+  try {
+    const base = apiBaseOverride || getApiBaseUrl();
+    const res = await fetch(`${base}/products/?all=1&is_active=true`, {
+      next: { revalidate: 30 },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const items = Array.isArray(data) ? data : Array.isArray(data.results) ? data.results : [];
+    // Sort by newest created_at / id
+    const sorted = [...items].sort((a, b) => {
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      if (dateB !== dateA) return dateB - dateA;
+      return Number(b.id || 0) - Number(a.id || 0);
+    });
+    return sorted.slice(0, limit);
+  } catch (error) {
+    console.warn("[API] Failed to fetch new arrivals:", error);
     return [];
   }
 }
