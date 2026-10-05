@@ -23,6 +23,7 @@ export default function AdminRoutePage({ params }: PageProps) {
   // /en/admin/appearance/mega-menu  -> appearance-mega-menu
   // /en/admin/appearance/hero-slides -> appearance-hero-slides
   // /en/admin/appearance/homepage-sections -> appearance-homepage-sections
+  // /en/admin/appearance/promo-banners     -> appearance-promo-banners
   // /en/admin/orders                -> orders-all
   // /en/admin/users                 -> users-all
   let initialNav:
@@ -33,6 +34,7 @@ export default function AdminRoutePage({ params }: PageProps) {
     | "appearance-mega-menu"
     | "appearance-hero-slides"
     | "appearance-homepage-sections"
+    | "appearance-promo-banners"
     | "marketing-coupons"
     | "orders-all"
     | "orders-single"
@@ -66,6 +68,8 @@ export default function AdminRoutePage({ params }: PageProps) {
     initialNav = "appearance-hero-slides";
   } else if (slug[0] === "appearance" && slug[1] === "homepage-sections") {
     initialNav = "appearance-homepage-sections";
+  } else if (slug[0] === "appearance" && (slug[1] === "promo-banners" || slug[1] === "promo-banner")) {
+    initialNav = "appearance-promo-banners";
   } else if (slug[0] === "marketing" || slug[0] === "coupons") {
     initialNav = "marketing-coupons";
   } else if (slug[0] === "custom-order" || (slug[0] === "orders" && (slug[1] === "custom" || slug[1] === "new"))) {

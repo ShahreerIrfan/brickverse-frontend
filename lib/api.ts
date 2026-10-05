@@ -1,4 +1,4 @@
-import { ProductSection, Category, Product, HeroSlide } from "@/components/productData";
+import { ProductSection, Category, Product, HeroSlide, PromoBanner } from "@/components/productData";
 import type { BlogPost, BlogPostListResponse, BlogPostDraft, BlogCategoryRef, BlogTagRef } from "@/lib/blogTypes";
 
 // Single source of truth for mapping a site hostname to its backend API base.
@@ -199,6 +199,74 @@ export async function updateHeroSlide(id: number, data: FormData) {
 export async function deleteHeroSlide(id: number) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/marketing/hero-slides/${id}/`, {
+      method: "DELETE",
+    });
+    return { success: res.ok };
+  } catch (error) {
+    return { success: false };
+  }
+}
+
+// Public: active promo banners (up to 2) in display order.
+export async function getPromoBanners(apiBaseOverride?: string): Promise<PromoBanner[]> {
+  try {
+    const base = apiBaseOverride || getApiBaseUrl();
+    const res = await fetch(`${base}/marketing/promo-banners/`, {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.warn("[API] Promo banners API unreachable:", error);
+    return [];
+  }
+}
+
+// Admin: all promo banners.
+export async function getPromoBannersAdmin(): Promise<PromoBanner[]> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/marketing/promo-banners/all/`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.warn("[API] Promo banners admin API unreachable:", error);
+    return [];
+  }
+}
+
+export async function createPromoBanner(data: FormData) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/marketing/promo-banners/all/`, {
+      method: "POST",
+      body: data,
+    });
+    const result = await res.json();
+    return { success: res.ok, data: result, error: res.ok ? undefined : (result.error || describeApiError(result) || "Failed to create promo banner") };
+  } catch (error) {
+    return { success: false, error: "Failed to create promo banner" };
+  }
+}
+
+export async function updatePromoBanner(id: number, data: FormData) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/marketing/promo-banners/${id}/`, {
+      method: "PATCH",
+      body: data,
+    });
+    const result = await res.json();
+    return { success: res.ok, data: result, error: res.ok ? undefined : (result.error || describeApiError(result) || "Failed to update promo banner") };
+  } catch (error) {
+    return { success: false, error: "Failed to update promo banner" };
+  }
+}
+
+export async function deletePromoBanner(id: number) {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/marketing/promo-banners/${id}/`, {
       method: "DELETE",
     });
     return { success: res.ok };

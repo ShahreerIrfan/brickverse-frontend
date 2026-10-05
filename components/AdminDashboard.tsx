@@ -87,6 +87,7 @@ import PartnerStoreForm from "./admin/PartnerStoreForm";
 import AdminLogsView from "./admin/AdminLogsView";
 import CategoriesManager from "./admin/CategoriesManager";
 import HeroSlidesManager from "./admin/HeroSlidesManager";
+import PromoBannersManager from "./admin/PromoBannersManager";
 import HomepageSectionsManager from "./admin/HomepageSectionsManager";
 import CategoryTreePicker, { findRootCategoryId } from "./admin/CategoryTreePicker";
 import BlogPostsList from "./admin/BlogPostsList";
@@ -114,6 +115,7 @@ type ActiveNav =
   | "appearance-mega-menu"
   | "appearance-hero-slides"
   | "appearance-homepage-sections"
+  | "appearance-promo-banners"
   | "marketing-coupons"
   | "orders-all"
   | "orders-single"
@@ -208,6 +210,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     "appearance-mega-menu": "/en/admin/appearance/mega-menu",
     "appearance-hero-slides": "/en/admin/appearance/hero-slides",
     "appearance-homepage-sections": "/en/admin/appearance/homepage-sections",
+    "appearance-promo-banners": "/en/admin/appearance/promo-banners",
     "marketing-coupons": "/en/admin/marketing/coupons",
     "orders-all": "/en/admin/orders",
     "orders-single": "/en/admin/orders",
@@ -281,6 +284,9 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
         setAppearanceMenuOpen(true);
       } else if (path.includes("/appearance/homepage-sections")) {
         setActiveNav("appearance-homepage-sections");
+        setAppearanceMenuOpen(true);
+      } else if (path.includes("/appearance/promo-banners") || path.includes("/appearance/promo-banner")) {
+        setActiveNav("appearance-promo-banners");
         setAppearanceMenuOpen(true);
       } else if (path.includes("/appearance/mega-menu")) {
         setActiveNav("appearance-mega-menu");
@@ -1653,6 +1659,17 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-current" />
                     <span>Hero Slide</span>
+                  </button>
+                  <button
+                    onClick={() => navigateTo("appearance-promo-banners")}
+                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                      activeNav === "appearance-promo-banners"
+                        ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
+                        : "text-[#A79FD1] hover:text-white hover:bg-[#2A2159]/40"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    <span>Promo Banners</span>
                   </button>
                 </div>
               )}
@@ -4044,6 +4061,11 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
           {/* 3c-2) VIEW: APPEARANCE -> HOMEPAGE CATEGORY SECTIONS */}
           {/* ========================================================= */}
           {activeNav === "appearance-homepage-sections" && <HomepageSectionsManager />}
+
+          {/* ========================================================= */}
+          {/* 3c-3) VIEW: APPEARANCE -> PROMO BANNERS */}
+          {/* ========================================================= */}
+          {activeNav === "appearance-promo-banners" && <PromoBannersManager />}
 
           {/* ========================================================= */}
           {/* 3d) VIEW: BLOG -> ALL POSTS */}

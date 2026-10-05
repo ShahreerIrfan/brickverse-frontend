@@ -133,4 +133,33 @@ export type HeroSlide = {
   is_active?: boolean;
 };
 
+export type PromoBannerType = "category" | "offer";
+export type PromoBannerGradient = "purple" | "yellow" | "pink" | "blue" | "dark";
+
+export type PromoBanner = {
+  id: number;
+  banner_type: PromoBannerType;
+  bannerType?: PromoBannerType;
+  badge_text: string;
+  badgeText?: string;
+  title: string;
+  highlight_word?: string;
+  highlightWord?: string;
+  subtitle?: string;
+  button_text?: string;
+  buttonText?: string;
+  button_url?: string;
+  buttonUrl?: string;
+  image?: string | null;
+  gradient_type?: PromoBannerGradient;
+  gradientType?: PromoBannerGradient;
+  countdown_end?: string | null;
+  countdownEnd?: string | null;
+  order?: number;
+  is_active?: boolean;
+  isActive?: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export const categories: Category[] = [];
