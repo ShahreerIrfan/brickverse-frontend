@@ -731,9 +731,9 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     }
   }, [initialOrderId, orders]);
 
-  // Compute live KPI metrics
+  // Compute live KPI metrics (exclude cancelled orders from revenue)
   const stats = statsData?.stats || {
-    total_revenue: orders.reduce((acc, o) => acc + Number(o.total_amount || 0), 0) || 5120.0,
+    total_revenue: orders.filter((o) => o.status !== "cancelled").reduce((acc, o) => acc + Number(o.total_amount || 0), 0) || 5120.0,
     total_orders: orders.length || 13,
     total_customers: usersList.filter((u) => u.role === "customer").length || 37,
     total_products: products.length || 12,
@@ -948,7 +948,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       const dYMD = d.toISOString().split("T")[0];
 
       const dayOrders = orders.filter((o) => {
-        if (!o.created_at) return false;
+        if (!o.created_at || o.status === "cancelled") return false;
         try {
           return new Date(o.created_at).toISOString().split("T")[0] === dYMD;
         } catch {
