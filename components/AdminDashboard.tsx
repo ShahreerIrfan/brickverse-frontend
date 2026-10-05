@@ -2735,113 +2735,134 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
               </div>
 
               {/* Warehouse Inventory Stock Summary Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                {/* 1. Total Warehouse Stock Value (TP) */}
-                <div className="bg-white rounded-[22px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.04)] flex flex-col justify-between">
-                  <div className="flex items-start justify-between">
-                    <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#059669] to-[#10B981] flex items-center justify-center text-white shadow-md shadow-[#059669]/20">
-                      <IconWallet className="w-5 h-5" />
+              {loading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="bg-white rounded-[22px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.04)] flex flex-col justify-between animate-pulse"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="w-11 h-11 rounded-[14px] bg-[#F0EBF8]" />
+                        <div className="w-20 h-5 rounded-full bg-[#F4F0FA]" />
+                      </div>
+                      <div className="mt-4 space-y-2">
+                        <div className="w-36 h-3 bg-[#F0EBF8] rounded-md" />
+                        <div className="w-28 h-7 bg-[#EAE3F7] rounded-lg" />
+                        <div className="w-44 h-3 bg-[#F4F0FA] rounded-md mt-1" />
+                      </div>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-[#059669] text-[10.5px] font-extrabold border border-emerald-200/60">
-                      Trade Price (TP)
-                    </span>
-                  </div>
-                  <div className="mt-4">
-                    <p className="text-[11.5px] font-semibold text-[#736E9B]">
-                      Warehouse Stock Value (TP)
-                    </p>
-                    <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block mt-0.5">
-                      ৳{inventoryStockMetrics.totalWarehouseTradeValue.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                    </span>
-                    <p className="text-[10.5px] text-[#736E9B] mt-1.5 flex items-center gap-1">
-                      <span>Total cost for <strong>{inventoryStockMetrics.totalStockUnits.toLocaleString()}</strong> units in warehouse</span>
-                    </p>
-                  </div>
+                  ))}
                 </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                  {/* 1. Total Warehouse Stock Value (TP) */}
+                  <div className="bg-white rounded-[22px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.04)] flex flex-col justify-between">
+                    <div className="flex items-start justify-between">
+                      <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#059669] to-[#10B981] flex items-center justify-center text-white shadow-md shadow-[#059669]/20">
+                        <IconWallet className="w-5 h-5" />
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-[#059669] text-[10.5px] font-extrabold border border-emerald-200/60">
+                        Trade Price (TP)
+                      </span>
+                    </div>
+                    <div className="mt-4">
+                      <p className="text-[11.5px] font-semibold text-[#736E9B]">
+                        Warehouse Stock Value (TP)
+                      </p>
+                      <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block mt-0.5">
+                        ৳{inventoryStockMetrics.totalWarehouseTradeValue.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                      </span>
+                      <p className="text-[10.5px] text-[#736E9B] mt-1.5 flex items-center gap-1">
+                        <span>Total cost for <strong>{inventoryStockMetrics.totalStockUnits.toLocaleString()}</strong> units in warehouse</span>
+                      </p>
+                    </div>
+                  </div>
 
-                {/* 2. Total Warehouse Units */}
-                <div className="bg-white rounded-[22px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.04)] flex flex-col justify-between">
-                  <div className="flex items-start justify-between">
-                    <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#6B3BF7] to-[#B14BE8] flex items-center justify-center text-white shadow-md shadow-[#6B3BF7]/20">
-                      <IconBox className="w-5 h-5" />
+                  {/* 2. Total Warehouse Units */}
+                  <div className="bg-white rounded-[22px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.04)] flex flex-col justify-between">
+                    <div className="flex items-start justify-between">
+                      <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#6B3BF7] to-[#B14BE8] flex items-center justify-center text-white shadow-md shadow-[#6B3BF7]/20">
+                        <IconBox className="w-5 h-5" />
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full bg-[#F4F1FD] text-[#7B5CFF] text-[10.5px] font-extrabold border border-[#EAE3F7]">
+                        {products.length} Products
+                      </span>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full bg-[#F4F1FD] text-[#7B5CFF] text-[10.5px] font-extrabold border border-[#EAE3F7]">
-                      {products.length} Products
-                    </span>
+                    <div className="mt-4">
+                      <p className="text-[11.5px] font-semibold text-[#736E9B]">
+                        Total Inventory Units
+                      </p>
+                      <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block mt-0.5">
+                        {inventoryStockMetrics.totalStockUnits.toLocaleString("en-US")} <span className="text-sm font-bold text-[#736E9B]">units</span>
+                      </span>
+                      <p className="text-[10.5px] text-[#736E9B] mt-1.5 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#0FA968]" />
+                        <span>{inventoryStockMetrics.activeCount} active catalog listings</span>
+                      </p>
+                    </div>
                   </div>
-                  <div className="mt-4">
-                    <p className="text-[11.5px] font-semibold text-[#736E9B]">
-                      Total Inventory Units
-                    </p>
-                    <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block mt-0.5">
-                      {inventoryStockMetrics.totalStockUnits.toLocaleString("en-US")} <span className="text-sm font-bold text-[#736E9B]">units</span>
-                    </span>
-                    <p className="text-[10.5px] text-[#736E9B] mt-1.5 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#0FA968]" />
-                      <span>{inventoryStockMetrics.activeCount} active catalog listings</span>
-                    </p>
-                  </div>
-                </div>
 
-                {/* 3. Total Selling / Retail Value */}
-                <div className="bg-white rounded-[22px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.04)] flex flex-col justify-between">
-                  <div className="flex items-start justify-between">
-                    <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#FF4D6D] to-[#FF758F] flex items-center justify-center text-white shadow-md shadow-[#FF4D6D]/20">
-                      <IconDollar className="w-5 h-5" />
+                  {/* 3. Total Selling / Retail Value */}
+                  <div className="bg-white rounded-[22px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.04)] flex flex-col justify-between">
+                    <div className="flex items-start justify-between">
+                      <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#FF4D6D] to-[#FF758F] flex items-center justify-center text-white shadow-md shadow-[#FF4D6D]/20">
+                        <IconDollar className="w-5 h-5" />
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full bg-[#FFEAF0] text-[#FF4D6D] text-[10.5px] font-extrabold border border-[#FFD5DF]">
+                        Retail
+                      </span>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full bg-[#FFEAF0] text-[#FF4D6D] text-[10.5px] font-extrabold border border-[#FFD5DF]">
-                      Retail
-                    </span>
+                    <div className="mt-4">
+                      <p className="text-[11.5px] font-semibold text-[#736E9B]">
+                        Est. Retail Stock Value
+                      </p>
+                      <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block mt-0.5">
+                        ৳{inventoryStockMetrics.totalWarehouseRetailValue.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                      </span>
+                      <p className="text-[10.5px] text-[#059669] font-bold mt-1.5 flex items-center gap-1">
+                        <span>+৳{inventoryStockMetrics.estimatedProfitMargin.toLocaleString("en-US", { maximumFractionDigits: 0 })} gross margin</span>
+                      </p>
+                    </div>
                   </div>
-                  <div className="mt-4">
-                    <p className="text-[11.5px] font-semibold text-[#736E9B]">
-                      Est. Retail Stock Value
-                    </p>
-                    <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block mt-0.5">
-                      ৳{inventoryStockMetrics.totalWarehouseRetailValue.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                    </span>
-                    <p className="text-[10.5px] text-[#059669] font-bold mt-1.5 flex items-center gap-1">
-                      <span>+৳{inventoryStockMetrics.estimatedProfitMargin.toLocaleString("en-US", { maximumFractionDigits: 0 })} gross margin</span>
-                    </p>
-                  </div>
-                </div>
 
-                {/* 4. Stock Availability Health */}
-                <div className="bg-white rounded-[22px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.04)] flex flex-col justify-between">
-                  <div className="flex items-start justify-between">
-                    <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#FF9F43] to-[#FFC93C] flex items-center justify-center text-white shadow-md shadow-[#FF9F43]/20">
-                      <IconTarget className="w-5 h-5" />
+                  {/* 4. Stock Availability Health */}
+                  <div className="bg-white rounded-[22px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.04)] flex flex-col justify-between">
+                    <div className="flex items-start justify-between">
+                      <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#FF9F43] to-[#FFC93C] flex items-center justify-center text-white shadow-md shadow-[#FF9F43]/20">
+                        <IconTarget className="w-5 h-5" />
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10.5px] font-extrabold border border-amber-200">
+                        Stock Health
+                      </span>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10.5px] font-extrabold border border-amber-200">
-                      Stock Health
-                    </span>
-                  </div>
-                  <div className="mt-4">
-                    <p className="text-[11.5px] font-semibold text-[#736E9B]">
-                      Inventory Status
-                    </p>
-                    <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block mt-0.5">
-                      {inventoryStockMetrics.inStockCount} <span className="text-sm font-bold text-[#736E9B]">In Stock</span>
-                    </span>
-                    <p className="text-[10.5px] text-[#736E9B] mt-1.5 flex items-center gap-1.5">
-                      {inventoryStockMetrics.outOfStockCount > 0 ? (
-                        <span className="text-[#FF4D6D] font-bold">
-                          ● {inventoryStockMetrics.outOfStockCount} out of stock
-                        </span>
-                      ) : (
-                        <span className="text-[#059669] font-bold">
-                          ✓ All items have stock
-                        </span>
-                      )}
-                      {inventoryStockMetrics.lowStockCount > 0 && (
-                        <span className="text-amber-600 font-semibold">
-                          · {inventoryStockMetrics.lowStockCount} low
-                        </span>
-                      )}
-                    </p>
+                    <div className="mt-4">
+                      <p className="text-[11.5px] font-semibold text-[#736E9B]">
+                        Inventory Status
+                      </p>
+                      <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block mt-0.5">
+                        {inventoryStockMetrics.inStockCount} <span className="text-sm font-bold text-[#736E9B]">In Stock</span>
+                      </span>
+                      <p className="text-[10.5px] text-[#736E9B] mt-1.5 flex items-center gap-1.5">
+                        {inventoryStockMetrics.outOfStockCount > 0 ? (
+                          <span className="text-[#FF4D6D] font-bold">
+                            ● {inventoryStockMetrics.outOfStockCount} out of stock
+                          </span>
+                        ) : (
+                          <span className="text-[#059669] font-bold">
+                            ✓ All items have stock
+                          </span>
+                        )}
+                        {inventoryStockMetrics.lowStockCount > 0 && (
+                          <span className="text-amber-600 font-semibold">
+                            · {inventoryStockMetrics.lowStockCount} low
+                          </span>
+                        )}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Bulk Action Toolbar */}
               {selectedProductIds.length > 0 && (
@@ -2875,40 +2896,52 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
               )}
 
               {/* Filter Bar */}
-              <div className="bg-white p-4 rounded-2xl border border-[#EAE3F7] flex flex-wrap items-center justify-between gap-3 shadow-xs">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-bold text-[#736E9B]">Category:</span>
-                  <select
-                    value={productCategoryFilter}
-                    onChange={(e) => setProductCategoryFilter(e.target.value)}
-                    className="bg-[#F8F6FD] border border-[#EAE3F7] text-xs font-semibold rounded-xl px-3 py-1.5 text-[#171136] focus:outline-none focus:border-[#FF4D6D]"
-                  >
-                    <option value="all">All Categories ({products.length})</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.label}
-                      </option>
-                    ))}
-                  </select>
-
-                  <span className="text-xs font-bold text-[#736E9B] ml-2">Status:</span>
-                  <select
-                    value={productStatusFilter}
-                    onChange={(e) => setProductStatusFilter(e.target.value)}
-                    className="bg-[#F8F6FD] border border-[#EAE3F7] text-xs font-semibold rounded-xl px-3 py-1.5 text-[#171136] focus:outline-none focus:border-[#FF4D6D]"
-                  >
-                    <option value="all">All Statuses ({products.length})</option>
-                    <option value="active">Active ({products.filter((p) => p.is_active !== false).length})</option>
-                    <option value="inactive">Inactive / Hidden ({products.filter((p) => p.is_active === false).length})</option>
-                  </select>
+              {loading ? (
+                <div className="bg-white p-4 rounded-2xl border border-[#EAE3F7] flex flex-wrap items-center justify-between gap-3 shadow-xs animate-pulse">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="w-14 h-3.5 bg-[#F0EBF8] rounded-md" />
+                    <div className="w-36 h-8 bg-[#F4F0FA] rounded-xl" />
+                    <div className="w-12 h-3.5 bg-[#F0EBF8] rounded-md ml-2" />
+                    <div className="w-32 h-8 bg-[#F4F0FA] rounded-xl" />
+                  </div>
+                  <div className="w-48 h-3.5 bg-[#F0EBF8] rounded-md" />
                 </div>
+              ) : (
+                <div className="bg-white p-4 rounded-2xl border border-[#EAE3F7] flex flex-wrap items-center justify-between gap-3 shadow-xs">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-bold text-[#736E9B]">Category:</span>
+                    <select
+                      value={productCategoryFilter}
+                      onChange={(e) => setProductCategoryFilter(e.target.value)}
+                      className="bg-[#F8F6FD] border border-[#EAE3F7] text-xs font-semibold rounded-xl px-3 py-1.5 text-[#171136] focus:outline-none focus:border-[#FF4D6D]"
+                    >
+                      <option value="all">All Categories ({products.length})</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.label}
+                        </option>
+                      ))}
+                    </select>
 
-                <div className="flex items-center gap-3 text-xs text-[#736E9B] font-semibold">
-                  <span>
-                    Showing <strong className="text-[#171136]">{filteredProducts.length > 0 ? (currentProductPage - 1) * PRODUCTS_PER_PAGE + 1 : 0}</strong> - <strong className="text-[#171136]">{Math.min(currentProductPage * PRODUCTS_PER_PAGE, filteredProducts.length)}</strong> of <strong className="text-[#171136]">{filteredProducts.length}</strong> products
-                  </span>
+                    <span className="text-xs font-bold text-[#736E9B] ml-2">Status:</span>
+                    <select
+                      value={productStatusFilter}
+                      onChange={(e) => setProductStatusFilter(e.target.value)}
+                      className="bg-[#F8F6FD] border border-[#EAE3F7] text-xs font-semibold rounded-xl px-3 py-1.5 text-[#171136] focus:outline-none focus:border-[#FF4D6D]"
+                    >
+                      <option value="all">All Statuses ({products.length})</option>
+                      <option value="active">Active ({products.filter((p) => p.is_active !== false).length})</option>
+                      <option value="inactive">Inactive / Hidden ({products.filter((p) => p.is_active === false).length})</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-3 text-xs text-[#736E9B] font-semibold">
+                    <span>
+                      Showing <strong className="text-[#171136]">{filteredProducts.length > 0 ? (currentProductPage - 1) * PRODUCTS_PER_PAGE + 1 : 0}</strong> - <strong className="text-[#171136]">{Math.min(currentProductPage * PRODUCTS_PER_PAGE, filteredProducts.length)}</strong> of <strong className="text-[#171136]">{filteredProducts.length}</strong> products
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Products Table */}
               <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 shadow-xs overflow-hidden">
@@ -2941,7 +2974,55 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#F0EBF8]">
-                      {paginatedProducts.length === 0 ? (
+                      {loading ? (
+                        Array.from({ length: 8 }).map((_, i) => (
+                          <tr key={i} className="animate-pulse">
+                            <td className="py-3.5 pl-3 pr-2 w-10 text-center">
+                              <div className="w-4 h-4 bg-[#F0EBF8] rounded-md mx-auto" />
+                            </td>
+                            <td className="py-3.5 px-3 text-left">
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-xl bg-[#F0EBF8] shrink-0" />
+                                <div className="space-y-1.5 min-w-0 flex-1">
+                                  <div className="h-3.5 bg-[#EAE3F7] rounded-md w-40 sm:w-52" />
+                                  <div className="h-2.5 bg-[#F4F0FA] rounded-md w-24" />
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3.5 px-3">
+                              <div className="h-5 w-20 bg-[#F4F0FA] rounded-full" />
+                            </td>
+                            <td className="py-3.5 px-3">
+                              <div className="h-3.5 w-16 bg-[#F0EBF8] rounded-md" />
+                            </td>
+                            <td className="py-3.5 px-3">
+                              <div className="h-3.5 w-16 bg-[#F0EBF8] rounded-md" />
+                            </td>
+                            <td className="py-3.5 px-3">
+                              <div className="h-3.5 w-16 bg-[#F0EBF8] rounded-md" />
+                            </td>
+                            <td className="py-3.5 px-3">
+                              <div className="h-5 w-14 bg-[#F4F0FA] rounded-full" />
+                            </td>
+                            <td className="py-3.5 px-3">
+                              <div className="h-5 w-20 bg-[#F4F0FA] rounded-md" />
+                            </td>
+                            <td className="py-3.5 px-3 text-center">
+                              <div className="h-5 w-12 bg-[#F4F0FA] rounded-full mx-auto" />
+                            </td>
+                            <td className="py-3.5 px-3 text-center">
+                              <div className="h-5 w-16 bg-[#F4F0FA] rounded-full mx-auto" />
+                            </td>
+                            <td className="py-3.5 pl-3 pr-4 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <div className="w-7 h-7 bg-[#F4F0FA] rounded-lg" />
+                                <div className="w-7 h-7 bg-[#F4F0FA] rounded-lg" />
+                                <div className="w-7 h-7 bg-[#F4F0FA] rounded-lg" />
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : paginatedProducts.length === 0 ? (
                         <tr>
                           <td colSpan={11} className="py-12 text-center text-[#736E9B]">
                             <div className="flex flex-col items-center justify-center gap-2">
@@ -3123,7 +3204,16 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                 </div>
 
                 {/* Pagination Controls (20 Products per page) */}
-                {totalProductPages > 1 && (
+                {loading ? (
+                  <div className="pt-6 border-t border-[#F0EBF8] flex flex-col sm:flex-row items-center justify-between gap-4 animate-pulse">
+                    <div className="w-36 h-3.5 bg-[#F0EBF8] rounded-md" />
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-8 h-8 rounded-xl bg-[#F4F0FA]" />
+                      <div className="w-8 h-8 rounded-xl bg-[#F0EBF8]" />
+                      <div className="w-8 h-8 rounded-xl bg-[#F4F0FA]" />
+                    </div>
+                  </div>
+                ) : totalProductPages > 1 ? (
                   <div className="pt-6 border-t border-[#F0EBF8] flex flex-col sm:flex-row items-center justify-between gap-4">
                     <span className="text-xs text-[#736E9B] font-semibold order-2 sm:order-1">
                       Page <strong className="text-[#171136]">{currentProductPage}</strong> of <strong className="text-[#171136]">{totalProductPages}</strong>
@@ -3183,7 +3273,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                       </button>
                     </div>
                   </div>
-                )}
+                ) : null}
               </div>
             </div>
           )}
