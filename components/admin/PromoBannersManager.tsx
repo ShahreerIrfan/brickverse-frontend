@@ -271,9 +271,8 @@ export default function PromoBannersManager() {
                   {formMode === "edit" ? "Edit Promo Banner" : "Add New Promo Banner"}
                 </h1>
                 <span
-                  className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                    bannerType === "offer" ? "bg-amber-100 text-amber-900" : "bg-purple-100 text-purple-900"
-                  }`}
+                  className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${bannerType === "offer" ? "bg-amber-100 text-amber-900" : "bg-purple-100 text-purple-900"
+                    }`}
                 >
                   {bannerType === "offer" ? "Deal / Offer" : "Category"}
                 </span>
@@ -345,11 +344,10 @@ export default function PromoBannersManager() {
                 <button
                   type="button"
                   onClick={() => handleTypeChange("category")}
-                  className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                    bannerType === "category"
+                  className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${bannerType === "category"
                       ? "border-[#7B5CFF] bg-[#F6F1FF] ring-2 ring-[#7B5CFF]/30 shadow-xs"
                       : "border-[#EAE3F7] bg-white hover:bg-gray-50"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
@@ -372,11 +370,10 @@ export default function PromoBannersManager() {
                 <button
                   type="button"
                   onClick={() => handleTypeChange("offer")}
-                  className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                    bannerType === "offer"
+                  className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${bannerType === "offer"
                       ? "border-[#FFB703] bg-amber-50/70 ring-2 ring-[#FFB703]/40 shadow-xs"
                       : "border-[#EAE3F7] bg-white hover:bg-gray-50"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center">
@@ -529,11 +526,10 @@ export default function PromoBannersManager() {
                       key={g.id}
                       type="button"
                       onClick={() => setGradientType(g.id)}
-                      className={`p-3 rounded-2xl border flex items-center gap-2.5 text-left cursor-pointer transition-all ${
-                        gradientType === g.id
+                      className={`p-3 rounded-2xl border flex items-center gap-2.5 text-left cursor-pointer transition-all ${gradientType === g.id
                           ? "border-[#7B5CFF] ring-2 ring-[#7B5CFF]/30 bg-[#FAF8FE] shadow-xs"
                           : "border-[#EAE3F7] bg-white hover:bg-gray-50"
-                      }`}
+                        }`}
                     >
                       <span className={`w-7 h-7 rounded-xl shrink-0 shadow-xs ${g.classBg}`} />
                       <div className="min-w-0">
@@ -650,27 +646,24 @@ export default function PromoBannersManager() {
 
               {/* Render Preview Card */}
               <div
-                className={`relative ${currentGradConfig.classBg} rounded-2xl overflow-hidden p-4 sm:p-5 min-h-[180px] sm:min-h-[200px] flex flex-col justify-between shadow-md transition-all duration-300`}
+                className={`relative ${currentGradConfig.classBg} rounded-2xl overflow-hidden p-4 sm:p-5 h-[170px] sm:h-[190px] flex flex-col justify-between shadow-md transition-all duration-300`}
               >
                 <div
-                  className={`absolute -right-6 -top-6 w-[130px] h-[130px] rounded-full pointer-events-none ${
-                    currentGradConfig.textDark ? "bg-white/25 -bottom-10 -top-auto -right-4" : "bg-white/[0.08]"
-                  }`}
+                  className={`absolute -right-6 -top-6 w-[130px] h-[130px] rounded-full pointer-events-none ${currentGradConfig.textDark ? "bg-white/25 -bottom-10 -top-auto -right-4" : "bg-white/[0.08]"
+                    }`}
                 />
 
                 <div className="relative z-10 pr-20">
                   <span
-                    className={`inline-block text-[10px] font-bold rounded-full px-2.5 py-0.5 ${
-                      currentGradConfig.textDark ? "bg-[#171136] text-white" : "bg-white/20 text-white"
-                    }`}
+                    className={`inline-block text-[10px] font-bold rounded-full px-2.5 py-0.5 ${currentGradConfig.textDark ? "bg-[#171136] text-white" : "bg-white/20 text-white"
+                      }`}
                   >
                     {badgeText || (bannerType === "offer" ? "Deal of the week" : "Category")}
                   </span>
 
                   <h3
-                    className={`font-[family-name:var(--font-display)] font-extrabold text-[15px] sm:text-[18px] leading-[1.18] mt-1.5 line-clamp-2 tracking-tight ${
-                      currentGradConfig.textDark ? "text-[#171136]" : "text-white"
-                    }`}
+                    className={`font-[family-name:var(--font-display)] font-extrabold text-[16px] sm:text-[19px] leading-tight mt-1.5 line-clamp-2 ${currentGradConfig.textDark ? "text-[#171136]" : "text-white"
+                      }`}
                   >
                     {renderHighlightTitle(title, highlightWord, currentGradConfig.textDark)}
                   </h3>
@@ -680,9 +673,8 @@ export default function PromoBannersManager() {
                       {["02d", "14h", "36m", "09s"].map((unit, i) => (
                         <div
                           key={i}
-                          className={`rounded px-1.5 py-0.5 text-[9.5px] font-extrabold ${
-                            currentGradConfig.textDark ? "bg-white/90 text-[#171136]" : "bg-[#171136]/60 text-white"
-                          }`}
+                          className={`rounded px-1.5 py-0.5 text-[9.5px] font-extrabold ${currentGradConfig.textDark ? "bg-white/90 text-[#171136]" : "bg-[#171136]/60 text-white"
+                            }`}
                         >
                           {unit}
                         </div>
@@ -691,9 +683,8 @@ export default function PromoBannersManager() {
                   ) : (
                     subtitle && (
                       <p
-                        className={`text-[11px] mt-0.5 line-clamp-1 ${
-                          currentGradConfig.textDark ? "text-[#171136]/80 font-medium" : "text-[#E4DAFF]"
-                        }`}
+                        className={`text-[11px] mt-0.5 line-clamp-1 ${currentGradConfig.textDark ? "text-[#171136]/80 font-medium" : "text-[#E4DAFF]"
+                          }`}
                       >
                         {subtitle}
                       </p>
@@ -703,11 +694,10 @@ export default function PromoBannersManager() {
 
                 <div className="relative z-10 mt-2">
                   <span
-                    className={`inline-flex items-center gap-1 text-[11px] font-bold rounded-full h-7 px-3 shadow-xs ${
-                      currentGradConfig.textDark
+                    className={`inline-flex items-center gap-1 text-[11px] font-bold rounded-full h-7 px-3 shadow-xs ${currentGradConfig.textDark
                         ? "bg-[#171136] text-white"
                         : "bg-white text-[#5B22B8]"
-                    }`}
+                      }`}
                   >
                     {buttonText || "Shop now"} <IconArrowRight className="w-2.5 h-2.5" />
                   </span>
@@ -842,9 +832,8 @@ export default function PromoBannersManager() {
                       #{index + 1}
                     </span>
                     <span
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1 ${
-                        isOffer ? "bg-amber-100 text-amber-900 border border-amber-200" : "bg-purple-100 text-purple-900 border border-purple-200"
-                      }`}
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1 ${isOffer ? "bg-amber-100 text-amber-900 border border-amber-200" : "bg-purple-100 text-purple-900 border border-purple-200"
+                        }`}
                     >
                       {isOffer ? <IconClock className="w-3 h-3 text-amber-700" /> : <IconTag className="w-3 h-3 text-purple-700" />}
                       {isOffer ? "Offer / Deal Banner" : "Category Banner"}
@@ -853,23 +842,20 @@ export default function PromoBannersManager() {
 
                   <div className="flex items-center gap-2">
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        active ? "bg-[#0FA968]/15 text-[#0FA968]" : "bg-gray-100 text-gray-500"
-                      }`}
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${active ? "bg-[#0FA968]/15 text-[#0FA968]" : "bg-gray-100 text-gray-500"
+                        }`}
                     >
                       {active ? "Active" : "Disabled"}
                     </span>
                     <button
                       onClick={() => toggleActive(banner)}
                       title={active ? "Deactivate" : "Activate"}
-                      className={`relative w-8 h-4.5 rounded-full transition-colors cursor-pointer ${
-                        active ? "bg-[#0FA968]" : "bg-[#E3DEF2]"
-                      }`}
+                      className={`relative w-8 h-4.5 rounded-full transition-colors cursor-pointer ${active ? "bg-[#0FA968]" : "bg-[#E3DEF2]"
+                        }`}
                     >
                       <span
-                        className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow transition-transform ${
-                          active ? "translate-x-4" : "translate-x-0.5"
-                        }`}
+                        className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow transition-transform ${active ? "translate-x-4" : "translate-x-0.5"
+                          }`}
                       />
                     </button>
                   </div>
@@ -877,30 +863,27 @@ export default function PromoBannersManager() {
 
                 {/* Banner Live Card Preview */}
                 <div
-                  className={`relative rounded-2xl overflow-hidden p-4 sm:p-5 min-h-[170px] sm:min-h-[190px] flex flex-col justify-between ${gradConfig.classBg}`}
+                  className={`relative rounded-2xl overflow-hidden p-4 sm:p-5 h-[160px] sm:h-[180px] flex flex-col justify-between ${gradConfig.classBg}`}
                 >
                   <div className="absolute -right-6 -top-6 w-[120px] h-[120px] rounded-full bg-white/10 pointer-events-none" />
 
                   <div className="relative z-10 pr-20">
                     <span
-                      className={`inline-block text-[10px] font-bold rounded-full px-2.5 py-0.5 ${
-                        isDarkText ? "bg-[#171136] text-white" : "bg-white/20 text-white"
-                      }`}
+                      className={`inline-block text-[10px] font-bold rounded-full px-2.5 py-0.5 ${isDarkText ? "bg-[#171136] text-white" : "bg-white/20 text-white"
+                        }`}
                     >
                       {bText}
                     </span>
                     <h3
-                      className={`font-[family-name:var(--font-display)] font-extrabold text-[15px] sm:text-[18px] leading-[1.18] mt-1.5 line-clamp-2 tracking-tight ${
-                        isDarkText ? "text-[#171136]" : "text-white"
-                      }`}
+                      className={`font-[family-name:var(--font-display)] font-extrabold text-[15px] sm:text-[18px] leading-tight mt-1.5 line-clamp-2 ${isDarkText ? "text-[#171136]" : "text-white"
+                        }`}
                     >
                       {renderHighlightTitle(banner.title, banner.highlight_word || banner.highlightWord, isDarkText)}
                     </h3>
                     {banner.subtitle && (
                       <p
-                        className={`text-[11px] mt-0.5 line-clamp-1 ${
-                          isDarkText ? "text-[#171136]/75 font-medium" : "text-[#E4DAFF]"
-                        }`}
+                        className={`text-[11px] mt-0.5 line-clamp-1 ${isDarkText ? "text-[#171136]/75 font-medium" : "text-[#E4DAFF]"
+                          }`}
                       >
                         {banner.subtitle}
                       </p>
@@ -912,9 +895,8 @@ export default function PromoBannersManager() {
                         {["02d", "14h", "36m", "09s"].map((unit, i) => (
                           <div
                             key={i}
-                            className={`rounded px-1.5 py-0.5 text-[9.5px] font-extrabold ${
-                              isDarkText ? "bg-white/90 text-[#171136]" : "bg-[#171136]/60 text-white"
-                            }`}
+                            className={`rounded px-1.5 py-0.5 text-[9.5px] font-extrabold ${isDarkText ? "bg-white/90 text-[#171136]" : "bg-[#171136]/60 text-white"
+                              }`}
                           >
                             {unit}
                           </div>
@@ -925,11 +907,10 @@ export default function PromoBannersManager() {
 
                   <div className="relative z-10 mt-2">
                     <span
-                      className={`inline-flex items-center gap-1 text-[11px] font-bold rounded-full h-7 px-3 shadow-xs ${
-                        isDarkText
+                      className={`inline-flex items-center gap-1 text-[11px] font-bold rounded-full h-7 px-3 shadow-xs ${isDarkText
                           ? "bg-[#171136] text-white"
                           : "bg-white text-[#5B22B8]"
-                      }`}
+                        }`}
                     >
                       {banner.button_text || banner.buttonText || "Shop now"}
                       <IconArrowRight className="w-2.5 h-2.5" />
