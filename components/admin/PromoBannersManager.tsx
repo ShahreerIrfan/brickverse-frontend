@@ -13,12 +13,13 @@ import {
   IconPlus,
   IconEdit,
   IconTrash,
-  IconClose,
   IconPhoto,
   IconArrowRight,
   IconClock,
   IconTag,
   IconSparkles,
+  IconChevronLeft,
+  IconCheck,
 } from "../icons";
 
 const GRADIENT_OPTIONS: { id: PromoBannerGradient; label: string; classBg: string; textDark: boolean }[] = [
@@ -35,7 +36,10 @@ export default function PromoBannersManager() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
-  const [modal, setModal] = useState<{ mode: "create" | "edit"; banner?: PromoBanner } | null>(null);
+  // View state: "list" for banner overview, "form" for full-page add/edit
+  const [viewMode, setViewMode] = useState<"list" | "form">("list");
+  const [formMode, setFormMode] = useState<"create" | "edit">("create");
+  const [editingBanner, setEditingBanner] = useState<PromoBanner | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PromoBanner | null>(null);
 
   // Form states
@@ -74,6 +78,8 @@ export default function PromoBannersManager() {
       setToast("Maximum 2 promo banners allowed. Please edit or delete an existing banner.");
       return;
     }
+    setFormMode("create");
+    setEditingBanner(null);
     setBannerType("category");
     setBadgeText("New arrivals");
     setTitle("");
@@ -87,11 +93,13 @@ export default function PromoBannersManager() {
     setIsActive(true);
     setImageFile(null);
     setImagePreview(null);
-    setModal({ mode: "create" });
+    setViewMode("form");
   };
 
   const openEdit = (banner: PromoBanner) => {
     const type = (banner.banner_type || banner.bannerType || "category") as PromoBannerType;
+    setFormMode("edit");
+    setEditingBanner(banner);
     setBannerType(type);
     setBadgeText(banner.badge_text || banner.badgeText || (type === "offer" ? "Deal of the week" : "New arrivals"));
     setTitle(banner.title || "");
@@ -100,8 +108,7 @@ export default function PromoBannersManager() {
     setButtonText(banner.button_text || banner.buttonText || (type === "offer" ? "Grab deal" : "Shop now"));
     setButtonUrl(banner.button_url || banner.buttonUrl || (type === "offer" ? "/shop?deals=true" : "/shop"));
     setGradientType((banner.gradient_type || banner.gradientType || (type === "offer" ? "yellow" : "purple")) as PromoBannerGradient);
-    
-    // Format date for datetime-local input
+
     const cd = banner.countdown_end || banner.countdownEnd;
     if (cd) {
       const d = new Date(cd);
@@ -115,10 +122,13 @@ export default function PromoBannersManager() {
     setIsActive(banner.is_active !== false && banner.isActive !== false);
     setImageFile(null);
     setImagePreview(banner.image ? getMediaUrl(banner.image) : null);
-    setModal({ mode: "edit", banner });
+    setViewMode("form");
   };
 
-  const closeModal = () => setModal(null);
+  const handleBackToList = () => {
+    setViewMode("list");
+    setEditingBanner(null);
+  };
 
   const handleTypeChange = (type: PromoBannerType) => {
     setBannerType(type);
@@ -133,7 +143,6 @@ export default function PromoBannersManager() {
       if (gradientType === "purple") setGradientType("yellow");
       if (buttonUrl === "/shop") setButtonUrl("/shop?deals=true");
       if (!countdownEnd) {
-        // default 3 days from now
         const d = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
         const iso = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
         setCountdownEnd(iso);
@@ -180,16 +189,16 @@ export default function PromoBannersManager() {
     }
 
     let res;
-    if (modal?.mode === "edit" && modal.banner) {
-      res = await updatePromoBanner(modal.banner.id, data);
+    if (formMode === "edit" && editingBanner) {
+      res = await updatePromoBanner(editingBanner.id, data);
     } else {
       res = await createPromoBanner(data);
     }
 
     setSaving(false);
     if (res.success) {
-      setToast(modal?.mode === "edit" ? `"${title}" updated successfully.` : `"${title}" added successfully.`);
-      closeModal();
+      setToast(formMode === "edit" ? `"${title}" updated successfully.` : `"${title}" added successfully.`);
+      setViewMode("list");
       await load();
     } else {
       setToast(res.error || "Failed to save promo banner.");
@@ -222,7 +231,7 @@ export default function PromoBannersManager() {
 
   const renderHighlightTitle = (fullTitle: string, highlight?: string, isDarkText?: boolean) => {
     if (!highlight || !fullTitle.toLowerCase().includes(highlight.toLowerCase())) {
-      return <span>{fullTitle}</span>;
+      return <span>{fullTitle || "Banner Title Here"}</span>;
     }
     const idx = fullTitle.toLowerCase().indexOf(highlight.toLowerCase());
     const before = fullTitle.slice(0, idx);
@@ -237,6 +246,518 @@ export default function PromoBannersManager() {
     );
   };
 
+  const currentGradConfig = GRADIENT_OPTIONS.find((g) => g.id === gradientType) || GRADIENT_OPTIONS[0];
+
+  // =========================================================================
+  // VIEW 2: PLAIN PAGE FORM (NO POPUP / NO MODAL)
+  // =========================================================================
+  if (viewMode === "form") {
+    return (
+      <div className="space-y-6 max-w-6xl mx-auto pb-12">
+        {/* Top Navigation & Title Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-[#EAE3F7] shadow-xs">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleBackToList}
+              className="p-2.5 rounded-2xl bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] transition-all cursor-pointer flex items-center justify-center shrink-0"
+              title="Back to Promo Banners List"
+            >
+              <IconChevronLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-3xl text-[#171136] tracking-tight">
+                  {formMode === "edit" ? "Edit Promo Banner" : "Add New Promo Banner"}
+                </h1>
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                    bannerType === "offer" ? "bg-amber-100 text-amber-900" : "bg-purple-100 text-purple-900"
+                  }`}
+                >
+                  {bannerType === "offer" ? "Deal / Offer" : "Category"}
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-[#736E9B] mt-0.5">
+                Configure banner attributes, countdown ticker, action button, and illustration.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-end sm:self-center">
+            <button
+              type="button"
+              onClick={handleBackToList}
+              className="px-4 py-2.5 rounded-2xl bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#5C5478] text-xs font-bold transition-all cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                const form = document.getElementById("promo-banner-plain-form") as HTMLFormElement;
+                if (form) form.requestSubmit();
+              }}
+              disabled={saving}
+              className="px-5 py-2.5 rounded-2xl bg-[#171136] hover:bg-[#251c4a] text-white text-xs font-bold transition-all shadow-md cursor-pointer flex items-center gap-2 disabled:opacity-60"
+            >
+              {saving ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <IconCheck className="w-4 h-4" />
+                  <span>{formMode === "edit" ? "Save Changes" : "Create Banner"}</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* 2-Column Grid: Form on Left (65%), Sticky Live Preview on Right (35%) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Main Form Fields Column */}
+          <form
+            id="promo-banner-plain-form"
+            onSubmit={handleSubmit}
+            className="lg:col-span-7 space-y-6"
+          >
+            {/* Step 1: Banner Type Selector */}
+            <div className="bg-white p-6 rounded-3xl border border-[#EAE3F7] shadow-xs space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-sm text-[#171136] flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-[#7B5CFF] text-white text-xs flex items-center justify-center font-extrabold">
+                      1
+                    </span>
+                    <span>Banner Type</span>
+                    <span className="text-[#FF4D6D]">*</span>
+                  </h3>
+                  <p className="text-xs text-[#736E9B] mt-0.5">
+                    Select whether this is a category spotlight banner or a timed promotional deal.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => handleTypeChange("category")}
+                  className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                    bannerType === "category"
+                      ? "border-[#7B5CFF] bg-[#F6F1FF] ring-2 ring-[#7B5CFF]/30 shadow-xs"
+                      : "border-[#EAE3F7] bg-white hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
+                      <IconTag className="w-4 h-4" />
+                    </div>
+                    {bannerType === "category" && (
+                      <span className="w-5 h-5 rounded-full bg-[#7B5CFF] text-white flex items-center justify-center text-xs">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-3">
+                    <p className="font-extrabold text-sm text-[#171136]">Normal Category Banner</p>
+                    <p className="text-[11px] text-[#736E9B] mt-0.5">
+                      Highlights a specific collection or product category. No countdown timer.
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleTypeChange("offer")}
+                  className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                    bannerType === "offer"
+                      ? "border-[#FFB703] bg-amber-50/70 ring-2 ring-[#FFB703]/40 shadow-xs"
+                      : "border-[#EAE3F7] bg-white hover:bg-gray-50"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center">
+                      <IconClock className="w-4 h-4" />
+                    </div>
+                    {bannerType === "offer" && (
+                      <span className="w-5 h-5 rounded-full bg-[#FFB703] text-[#171136] flex items-center justify-center text-xs font-bold">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-3">
+                    <p className="font-extrabold text-sm text-[#171136]">Deal of the Week / Offer</p>
+                    <p className="text-[11px] text-[#736E9B] mt-0.5">
+                      Includes live countdown clock (Days, Hours, Minutes, Seconds) and special offer tags.
+                    </p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Step 2: Content & Copywriting */}
+            <div className="bg-white p-6 rounded-3xl border border-[#EAE3F7] shadow-xs space-y-4">
+              <h3 className="font-bold text-sm text-[#171136] flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-[#7B5CFF] text-white text-xs flex items-center justify-center font-extrabold">
+                  2
+                </span>
+                <span>Banner Content</span>
+              </h3>
+
+              {/* Badge Text */}
+              <div>
+                <label className="font-bold text-xs text-[#171136] block mb-1.5">
+                  {bannerType === "category" ? "Category Name / Badge Text" : "Deal Type / Badge Text"}
+                </label>
+                <input
+                  value={badgeText}
+                  onChange={(e) => setBadgeText(e.target.value)}
+                  placeholder={bannerType === "category" ? "e.g. New arrivals, Anime Figures" : "e.g. Deal of the week, Flash Deal"}
+                  className="w-full p-3 rounded-2xl border border-[#EAE3F7] text-xs focus:outline-none focus:border-[#7B5CFF] bg-[#FAFAFD] focus:bg-white transition-all font-semibold"
+                />
+              </div>
+
+              {/* Title & Highlight Word */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="font-bold text-xs text-[#171136] block mb-1.5">
+                    Banner Title <span className="text-[#FF4D6D]">*</span>
+                  </label>
+                  <input
+                    required
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder={bannerType === "category" ? "e.g. Anime figure collection" : "e.g. Up to 40% off brick sets"}
+                    className="w-full p-3 rounded-2xl border border-[#EAE3F7] text-xs focus:outline-none focus:border-[#7B5CFF] bg-[#FAFAFD] focus:bg-white transition-all font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-xs text-[#171136] block mb-1.5">
+                    Highlight Word
+                  </label>
+                  <input
+                    value={highlightWord}
+                    onChange={(e) => setHighlightWord(e.target.value)}
+                    placeholder={bannerType === "category" ? "e.g. collection" : "e.g. 40% off"}
+                    className="w-full p-3 rounded-2xl border border-[#EAE3F7] text-xs focus:outline-none focus:border-[#7B5CFF] bg-[#FAFAFD] focus:bg-white transition-all font-semibold"
+                  />
+                </div>
+              </div>
+
+              {/* Subtitle */}
+              <div>
+                <label className="font-bold text-xs text-[#171136] block mb-1.5">
+                  Subtitle / Extra Note
+                </label>
+                <input
+                  value={subtitle}
+                  onChange={(e) => setSubtitle(e.target.value)}
+                  placeholder={bannerType === "category" ? "e.g. Limited runs · From ৳2,499" : "e.g. Special weekly limited discount"}
+                  className="w-full p-3 rounded-2xl border border-[#EAE3F7] text-xs focus:outline-none focus:border-[#7B5CFF] bg-[#FAFAFD] focus:bg-white transition-all font-semibold"
+                />
+              </div>
+
+              {/* Countdown end date & time: ONLY FOR OFFER BANNER */}
+              {bannerType === "offer" && (
+                <div className="p-4 bg-amber-50/80 border border-amber-200/80 rounded-2xl space-y-2">
+                  <label className="font-bold text-xs text-amber-950 flex items-center gap-1.5">
+                    <IconClock className="w-4 h-4 text-amber-700" />
+                    <span>Countdown End Date & Time (Live Ticker)</span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={countdownEnd}
+                    onChange={(e) => setCountdownEnd(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-amber-300 bg-white focus:outline-none focus:border-amber-600 font-mono text-xs"
+                  />
+                  <p className="text-[11px] text-amber-800">
+                    The live homepage card will dynamically display a real-time countdown (days, hrs, min, sec) ticking down to this moment.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Step 3: Button & Link */}
+            <div className="bg-white p-6 rounded-3xl border border-[#EAE3F7] shadow-xs space-y-4">
+              <h3 className="font-bold text-sm text-[#171136] flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-[#7B5CFF] text-white text-xs flex items-center justify-center font-extrabold">
+                  3
+                </span>
+                <span>Call to Action Button</span>
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-xs text-[#171136] block mb-1.5">Button Text</label>
+                  <input
+                    value={buttonText}
+                    onChange={(e) => setButtonText(e.target.value)}
+                    placeholder={bannerType === "offer" ? "Grab deal" : "Shop now"}
+                    className="w-full p-3 rounded-2xl border border-[#EAE3F7] text-xs focus:outline-none focus:border-[#7B5CFF] bg-[#FAFAFD] focus:bg-white transition-all font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-xs text-[#171136] block mb-1.5">Button Target URL</label>
+                  <input
+                    value={buttonUrl}
+                    onChange={(e) => setButtonUrl(e.target.value)}
+                    placeholder="/shop"
+                    className="w-full p-3 rounded-2xl border border-[#EAE3F7] font-mono text-xs focus:outline-none focus:border-[#7B5CFF] bg-[#FAFAFD] focus:bg-white transition-all font-semibold"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Step 4: Styling & Illustration Image */}
+            <div className="bg-white p-6 rounded-3xl border border-[#EAE3F7] shadow-xs space-y-4">
+              <h3 className="font-bold text-sm text-[#171136] flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-[#7B5CFF] text-white text-xs flex items-center justify-center font-extrabold">
+                  4
+                </span>
+                <span>Theme & Illustration Image</span>
+              </h3>
+
+              {/* Gradient Options */}
+              <div>
+                <label className="font-bold text-xs text-[#171136] block mb-2">Background Gradient Theme</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                  {GRADIENT_OPTIONS.map((g) => (
+                    <button
+                      key={g.id}
+                      type="button"
+                      onClick={() => setGradientType(g.id)}
+                      className={`p-3 rounded-2xl border flex items-center gap-2.5 text-left cursor-pointer transition-all ${
+                        gradientType === g.id
+                          ? "border-[#7B5CFF] ring-2 ring-[#7B5CFF]/30 bg-[#FAF8FE] shadow-xs"
+                          : "border-[#EAE3F7] bg-white hover:bg-gray-50"
+                      }`}
+                    >
+                      <span className={`w-7 h-7 rounded-xl shrink-0 shadow-xs ${g.classBg}`} />
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-[#171136] truncate">{g.label.split("(")[0].trim()}</p>
+                        <p className="text-[10px] text-[#736E9B] truncate">{g.label.split("(")[1]?.replace(")", "") || ""}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Image Upload */}
+              <div className="pt-2">
+                <label className="font-bold text-xs text-[#171136] block mb-2">Banner Illustration / Character Image</label>
+                {imagePreview ? (
+                  <div className="relative w-full h-[150px] rounded-2xl overflow-hidden border border-[#EAE3F7] bg-[#FAF8FE] flex items-center justify-center p-3">
+                    <img src={imagePreview} alt="" className="h-full w-auto object-contain" />
+                    <label className="absolute bottom-3 right-3 px-3 py-1.5 rounded-xl bg-white/95 border border-[#EAE3F7] text-xs font-bold text-[#7B5CFF] hover:bg-white cursor-pointer shadow-xs">
+                      Change Image
+                      <input type="file" accept="image/*,.svg" onChange={handleImageFile} className="hidden" />
+                    </label>
+                  </div>
+                ) : (
+                  <label className="flex items-center gap-3 p-4 rounded-2xl border-2 border-dashed border-[#D9CEEE] hover:border-[#7B5CFF] bg-[#FAF8FE] hover:bg-[#F6F1FF] transition-all cursor-pointer">
+                    <input type="file" accept="image/*,.svg" onChange={handleImageFile} className="hidden" />
+                    <div className="w-10 h-10 rounded-xl bg-purple-100 text-[#7B5CFF] flex items-center justify-center shrink-0">
+                      <IconPhoto className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-xs text-[#171136]">Upload character / product illustration</p>
+                      <p className="text-[10.5px] text-[#736E9B]">PNG, SVG, or JPG with transparent or clean background</p>
+                    </div>
+                  </label>
+                )}
+              </div>
+            </div>
+
+            {/* Step 5: Display Order & Status */}
+            <div className="bg-white p-6 rounded-3xl border border-[#EAE3F7] shadow-xs space-y-4">
+              <h3 className="font-bold text-sm text-[#171136] flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-[#7B5CFF] text-white text-xs flex items-center justify-center font-extrabold">
+                  5
+                </span>
+                <span>Display & Storefront Visibility</span>
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                <div>
+                  <label className="font-bold text-xs text-[#171136] block mb-1.5">Display Order</label>
+                  <input
+                    type="number"
+                    value={order}
+                    onChange={(e) => setOrder(Number(e.target.value))}
+                    className="w-full p-3 rounded-2xl border border-[#EAE3F7] text-xs focus:outline-none focus:border-[#7B5CFF] bg-[#FAFAFD] focus:bg-white transition-all font-semibold"
+                  />
+                  <p className="text-[10.5px] text-[#736E9B] mt-1">Order 0 shows first (left card), Order 1 shows second (right card).</p>
+                </div>
+
+                <div className="p-3 bg-[#FAF8FE] rounded-2xl border border-[#EAE3F7]">
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isActive}
+                      onChange={(e) => setIsActive(e.target.checked)}
+                      className="w-4 h-4 accent-[#7B5CFF]"
+                    />
+                    <div>
+                      <p className="font-bold text-xs text-[#171136]">Active on Storefront</p>
+                      <p className="text-[10.5px] text-[#736E9B]">Show this banner on the homepage</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Actions Bar */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleBackToList}
+                className="px-5 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold transition-all cursor-pointer"
+              >
+                Cancel & Return
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="px-6 py-3 rounded-2xl bg-[#171136] hover:bg-[#251c4a] text-white text-xs font-bold transition-all shadow-md cursor-pointer flex items-center gap-2 disabled:opacity-60"
+              >
+                {saving ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <IconCheck className="w-4 h-4" />
+                    <span>{formMode === "edit" ? "Save Changes" : "Create Promo Banner"}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+
+          {/* Right Column: Sticky Live Storefront Preview */}
+          <div className="lg:col-span-5 sticky top-6 space-y-4">
+            <div className="bg-white p-5 rounded-3xl border border-[#EAE3F7] shadow-xs">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-extrabold text-[#171136] flex items-center gap-1.5">
+                  <IconSparkles className="w-4 h-4 text-[#7B5CFF]" /> Live Storefront Preview
+                </span>
+                <span className="text-[10.5px] font-bold text-[#736E9B]">Homepage Card</span>
+              </div>
+
+              {/* Render Preview Card */}
+              <div
+                className={`relative ${currentGradConfig.classBg} rounded-2xl overflow-hidden p-4 sm:p-5 h-[170px] sm:h-[190px] flex flex-col justify-between shadow-md transition-all duration-300`}
+              >
+                <div
+                  className={`absolute -right-6 -top-6 w-[130px] h-[130px] rounded-full pointer-events-none ${
+                    currentGradConfig.textDark ? "bg-white/25 -bottom-10 -top-auto -right-4" : "bg-white/[0.08]"
+                  }`}
+                />
+
+                <div className="relative z-10 pr-20">
+                  <span
+                    className={`inline-block text-[10px] font-bold rounded-full px-2.5 py-0.5 ${
+                      currentGradConfig.textDark ? "bg-[#171136] text-white" : "bg-white/20 text-white"
+                    }`}
+                  >
+                    {badgeText || (bannerType === "offer" ? "Deal of the week" : "Category")}
+                  </span>
+
+                  <h3
+                    className={`font-[family-name:var(--font-display)] font-extrabold text-[16px] sm:text-[19px] leading-tight mt-1.5 line-clamp-2 ${
+                      currentGradConfig.textDark ? "text-[#171136]" : "text-white"
+                    }`}
+                  >
+                    {renderHighlightTitle(title, highlightWord, currentGradConfig.textDark)}
+                  </h3>
+
+                  {bannerType === "offer" ? (
+                    <div className="flex items-center gap-1.5 mt-2">
+                      {["02d", "14h", "36m", "09s"].map((unit, i) => (
+                        <div
+                          key={i}
+                          className={`rounded px-1.5 py-0.5 text-[9.5px] font-extrabold ${
+                            currentGradConfig.textDark ? "bg-white/90 text-[#171136]" : "bg-[#171136]/60 text-white"
+                          }`}
+                        >
+                          {unit}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    subtitle && (
+                      <p
+                        className={`text-[11px] mt-0.5 line-clamp-1 ${
+                          currentGradConfig.textDark ? "text-[#171136]/80 font-medium" : "text-[#E4DAFF]"
+                        }`}
+                      >
+                        {subtitle}
+                      </p>
+                    )
+                  )}
+                </div>
+
+                <div className="relative z-10 mt-2">
+                  <span
+                    className={`inline-flex items-center gap-1 text-[11px] font-bold rounded-full h-7 px-3 shadow-xs ${
+                      currentGradConfig.textDark
+                        ? "bg-[#171136] text-white"
+                        : "bg-white text-[#5B22B8]"
+                    }`}
+                  >
+                    {buttonText || "Shop now"} <IconArrowRight className="w-2.5 h-2.5" />
+                  </span>
+                </div>
+
+                {/* Illustration Image */}
+                <div className="absolute right-2 bottom-0 w-[75px] sm:w-[90px] pointer-events-none">
+                  {imagePreview ? (
+                    <img
+                      src={imagePreview}
+                      alt=""
+                      className="w-full h-auto max-h-[140px] object-contain drop-shadow-sm"
+                    />
+                  ) : (
+                    <div className="w-full h-[100px] flex items-center justify-center text-white/30">
+                      <IconPhoto className="w-8 h-8" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-3 pt-3 border-t border-[#F0EBF8] text-[11px] text-[#736E9B] space-y-1">
+                <div className="flex justify-between">
+                  <span>Target Link:</span>
+                  <span className="font-mono font-semibold text-[#171136]">{buttonUrl || "/shop"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Status:</span>
+                  <span className={isActive ? "text-[#0FA968] font-bold" : "text-gray-400 font-bold"}>
+                    {isActive ? "Active on storefront" : "Disabled (Hidden)"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Toast */}
+        {toast && (
+          <div className="fixed bottom-6 right-6 z-[60] bg-[#171136] text-white text-xs font-semibold px-4 py-3 rounded-2xl shadow-2xl max-w-xs">
+            {toast}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // VIEW 1: PROMO BANNERS LIST OVERVIEW
+  // =========================================================================
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -273,7 +794,7 @@ export default function PromoBannersManager() {
           ) : (
             <button
               onClick={openCreate}
-              className="bg-[#FF4D6D] hover:bg-[#ff3358] text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+              className="bg-[#FF4D6D] hover:bg-[#ff3358] text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
             >
               <IconPlus className="w-4 h-4" />
               <span>Add Promo Banner</span>
@@ -456,240 +977,6 @@ export default function PromoBannersManager() {
               </div>
             );
           })}
-        </div>
-      )}
-
-      {/* Add / Edit Modal */}
-      {modal && (
-        <div className="fixed inset-0 z-50 bg-[#171136]/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl max-h-[92vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h3 className="font-[family-name:var(--font-display)] font-extrabold text-xl text-[#171136]">
-                  {modal.mode === "edit" ? "Edit Promo Banner" : "Add Promo Banner"}
-                </h3>
-                <p className="text-xs text-[#736E9B] mt-0.5">
-                  Configure banner type, style, title, countdown, and button action.
-                </p>
-              </div>
-              <button
-                onClick={closeModal}
-                className="w-8 h-8 rounded-full bg-[#F6F1FF] flex items-center justify-center text-[#171136] hover:bg-[#ece6f9] cursor-pointer"
-              >
-                <IconClose className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-              {/* Field 1: Banner Type Switcher */}
-              <div className="p-3 bg-[#FAF8FE] rounded-2xl border border-[#EAE3F7]">
-                <label className="font-bold text-[#171136] block mb-2 text-xs">
-                  1. Select Banner Type <span className="text-[#FF4D6D]">*</span>
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleTypeChange("category")}
-                    className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold transition-all cursor-pointer text-xs ${
-                      bannerType === "category"
-                        ? "bg-[#7B5CFF] text-white shadow-sm"
-                        : "bg-white text-[#736E9B] border border-[#EAE3F7] hover:bg-[#F6F1FF]"
-                    }`}
-                  >
-                    <IconTag className="w-3.5 h-3.5" />
-                    <span>Normal Category Banner</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleTypeChange("offer")}
-                    className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold transition-all cursor-pointer text-xs ${
-                      bannerType === "offer"
-                        ? "bg-[#FFB703] text-[#171136] shadow-sm font-extrabold"
-                        : "bg-white text-[#736E9B] border border-[#EAE3F7] hover:bg-[#FFFBEB]"
-                    }`}
-                  >
-                    <IconClock className="w-3.5 h-3.5" />
-                    <span>Deal / Offer Banner</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Dynamic Badge / Category Label */}
-              <div>
-                <label className="font-bold text-[#171136] block mb-1">
-                  {bannerType === "category" ? "Category / Badge Name" : "Deal Type / Badge Text"}
-                </label>
-                <input
-                  value={badgeText}
-                  onChange={(e) => setBadgeText(e.target.value)}
-                  placeholder={bannerType === "category" ? "e.g. New arrivals, Action Figures" : "e.g. Deal of the week, Flash Sale"}
-                  className="w-full p-2.5 rounded-xl border border-[#EAE3F7] focus:outline-none focus:border-[#7B5CFF]"
-                />
-              </div>
-
-              {/* Title & Highlight Word */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="sm:col-span-2">
-                  <label className="font-bold text-[#171136] block mb-1">
-                    Title <span className="text-[#FF4D6D]">*</span>
-                  </label>
-                  <input
-                    required
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder={bannerType === "category" ? "e.g. Anime figure collection" : "e.g. Up to 40% off brick sets"}
-                    className="w-full p-2.5 rounded-xl border border-[#EAE3F7] focus:outline-none focus:border-[#7B5CFF]"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-[#171136] block mb-1">Highlight Word</label>
-                  <input
-                    value={highlightWord}
-                    onChange={(e) => setHighlightWord(e.target.value)}
-                    placeholder={bannerType === "category" ? "e.g. collection" : "e.g. 40% off"}
-                    className="w-full p-2.5 rounded-xl border border-[#EAE3F7] focus:outline-none focus:border-[#7B5CFF]"
-                  />
-                </div>
-              </div>
-
-              {/* Subtitle */}
-              <div>
-                <label className="font-bold text-[#171136] block mb-1">Subtitle / Note</label>
-                <input
-                  value={subtitle}
-                  onChange={(e) => setSubtitle(e.target.value)}
-                  placeholder={bannerType === "category" ? "e.g. Limited runs · From ৳2,499" : "e.g. Special weekly limited discount"}
-                  className="w-full p-2.5 rounded-xl border border-[#EAE3F7] focus:outline-none focus:border-[#7B5CFF]"
-                />
-              </div>
-
-              {/* Countdown Field - ONLY FOR OFFER BANNER */}
-              {bannerType === "offer" && (
-                <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-2xl">
-                  <label className="font-bold text-[#171136] flex items-center gap-1.5 mb-1 text-xs">
-                    <IconClock className="w-3.5 h-3.5 text-amber-700" />
-                    <span>Countdown End Date & Time (Live Ticker)</span>
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={countdownEnd}
-                    onChange={(e) => setCountdownEnd(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-amber-300 bg-white focus:outline-none focus:border-amber-600 font-mono"
-                  />
-                  <p className="text-[10.5px] text-amber-800 mt-1">
-                    The homepage card will automatically count down (days, hours, minutes, seconds) until this time.
-                  </p>
-                </div>
-              )}
-
-              {/* Button Text & Button URL */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="font-bold text-[#171136] block mb-1">Button Text</label>
-                  <input
-                    value={buttonText}
-                    onChange={(e) => setButtonText(e.target.value)}
-                    placeholder={bannerType === "offer" ? "Grab deal" : "Shop now"}
-                    className="w-full p-2.5 rounded-xl border border-[#EAE3F7] focus:outline-none focus:border-[#7B5CFF]"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-[#171136] block mb-1">Button URL</label>
-                  <input
-                    value={buttonUrl}
-                    onChange={(e) => setButtonUrl(e.target.value)}
-                    placeholder="/shop"
-                    className="w-full p-2.5 rounded-xl border border-[#EAE3F7] font-mono focus:outline-none focus:border-[#7B5CFF]"
-                  />
-                </div>
-              </div>
-
-              {/* Gradient Style */}
-              <div>
-                <label className="font-bold text-[#171136] block mb-1.5">Background Gradient Theme</label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {GRADIENT_OPTIONS.map((g) => (
-                    <button
-                      key={g.id}
-                      type="button"
-                      onClick={() => setGradientType(g.id)}
-                      className={`p-2 rounded-xl border flex items-center gap-2 text-left cursor-pointer transition-all ${
-                        gradientType === g.id
-                          ? "border-[#7B5CFF] ring-2 ring-[#7B5CFF]/30 bg-[#FAF8FE]"
-                          : "border-[#EAE3F7] bg-white hover:bg-gray-50"
-                      }`}
-                    >
-                      <span className={`w-5 h-5 rounded-lg shrink-0 ${g.classBg}`} />
-                      <span className="text-[11px] font-bold text-[#171136] truncate">{g.label.split(" ")[0]}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Image Upload */}
-              <div>
-                <label className="font-bold text-[#171136] block mb-1.5">Banner Illustration / Background Image</label>
-                {imagePreview ? (
-                  <div className="relative w-full h-[120px] rounded-2xl overflow-hidden border border-[#EAE3F7] bg-[#FAF8FE] flex items-center justify-center p-2">
-                    <img src={imagePreview} alt="" className="h-full w-auto object-contain" />
-                    <label className="absolute bottom-2 right-2 px-2.5 py-1.5 rounded-xl bg-white/95 border border-[#EAE3F7] text-[11px] font-bold text-[#7B5CFF] hover:bg-white cursor-pointer shadow-xs">
-                      Change Image
-                      <input type="file" accept="image/*,.svg" onChange={handleImageFile} className="hidden" />
-                    </label>
-                  </div>
-                ) : (
-                  <label className="flex items-center gap-2.5 p-3 rounded-2xl border-2 border-dashed border-[#D9CEEE] hover:border-[#7B5CFF] bg-[#FAF8FE] hover:bg-[#F6F1FF] transition-all cursor-pointer">
-                    <input type="file" accept="image/*,.svg" onChange={handleImageFile} className="hidden" />
-                    <IconPhoto className="w-4 h-4 text-[#7B5CFF]" />
-                    <span className="font-semibold text-[#171136]">Upload character / product illustration (PNG, SVG, JPG)</span>
-                  </label>
-                )}
-              </div>
-
-              {/* Order & Active */}
-              <div className="grid grid-cols-2 gap-3 pt-1">
-                <div>
-                  <label className="font-bold text-[#171136] block mb-1">Display Order</label>
-                  <input
-                    type="number"
-                    value={order}
-                    onChange={(e) => setOrder(Number(e.target.value))}
-                    className="w-full p-2.5 rounded-xl border border-[#EAE3F7] focus:outline-none focus:border-[#7B5CFF]"
-                  />
-                </div>
-                <div className="flex items-end pb-2.5">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isActive}
-                      onChange={(e) => setIsActive(e.target.checked)}
-                      className="w-4 h-4 accent-[#7B5CFF]"
-                    />
-                    <span className="font-bold text-[#171136]">Active on Storefront</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Modal Actions */}
-              <div className="flex justify-end gap-2 pt-3 border-t border-[#F0EBF8]">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="px-5 py-2 rounded-xl bg-[#171136] text-white font-bold hover:bg-[#251c4a] shadow-md cursor-pointer disabled:opacity-60"
-                >
-                  {saving ? "Saving..." : modal.mode === "edit" ? "Save Changes" : "Create Promo Banner"}
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
       )}
 
