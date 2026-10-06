@@ -1,48 +1,14 @@
 import { ProductSection, Category, Product, HeroSlide, PromoBanner } from "@/components/productData";
 import type { BlogPost, BlogPostListResponse, BlogPostDraft, BlogCategoryRef, BlogTagRef } from "@/lib/blogTypes";
 
-// Single source of truth for mapping a site hostname to its backend API base.
-// Used by both the browser (client components) and the server (via
-// getServerApiBaseUrl, which reads the real request Host header) so a
-// visitor always hits the same backend no matter where the fetch runs -
-// avoids SSR and client code silently talking to two different backends
-// (and therefore two different databases) when NEXT_PUBLIC_API_URL doesn't
-// match the domain actually being served.
-function resolveApiBaseFromHost(host: string): string {
-  if (host.includes("kawaiisubete.com")) {
-    return "https://api.kawaiisubete.com/api";
-  }
-  if (host.includes("brickverse.eezzymart.tech") || host.includes("eezzymart.tech")) {
-    return "https://brickbackend.eezzymart.tech/api";
-  }
-  if (host === "localhost" || host === "127.0.0.1" || host.startsWith("localhost:") || host.startsWith("127.0.0.1:")) {
-    return process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
-  }
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "");
-  }
-  return "https://api.kawaiisubete.com/api";
-}
-
+// API Base URL - Single source of truth from environment variable (NEXT_PUBLIC_API_URL)
 export function getApiBaseUrl(): string {
-  // 1. Client-side browser runtime dynamic detection
-  if (typeof window !== "undefined") {
-    return resolveApiBaseFromHost(window.location.hostname);
-  }
-
-  // 2. Explicit NEXT_PUBLIC_API_URL environment variable
   const envUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (envUrl && !envUrl.includes("127.0.0.1") && !envUrl.includes("localhost")) {
+  if (envUrl) {
     return envUrl.replace(/\/+$/, "");
   }
-
-  // 3. Server-side production fallback
-  if (process.env.NODE_ENV === "production") {
-    return "https://api.kawaiisubete.com/api";
-  }
-
-  // 4. Default for local development
-  return envUrl || "http://127.0.0.1:8000/api";
+  // Fallback for local development when env variable is not set
+  return "http://127.0.0.1:8000/api";
 }
 
 export async function getServerApiBaseUrl(): Promise<string> {
@@ -1789,5 +1755,158 @@ export async function validateCoupon(code: string, subtotal: number): Promise<{
     return { valid: false, error: "Network error validating coupon." };
   }
 }
+
+// ----------------------------------------------------------------------
+// EXPENSES API
+// ----------------------------------------------------------------------
+
+export type ExpenseCategoryType =
+  | "SOCIAL_MEDIA_AD_COST"
+  | "PACKAGING_MATERIAL"
+  | "PR_AND_ADVERTISEMENT"
+  | "TRANSPORT"
+  | "OTHER_EXPENSE";
+
+export interface Expense {
+  id: number;
+  expense_title: ExpenseCategoryType | string;
+  expense_title_display?: string;
+  amount: number | string;
+  date: string;
+  description?: string;
+  created_by?: number | null;
+  created_by_name?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ExpenseSummary {
+  total_expense: number;
+  this_month_expense: number;
+  total_count: number;
+  category_breakdown: {
+    category: string;
+    label: string;
+    total_amount: number;
+    count: number;
+  }[];
+}
+
+export async function getExpenses(params?: {
+  category?: string;
+  search?: string;
+  start_date?: string;
+  end_date?: string;
+}): Promise<Expense[]> {
+  try {
+    const query = new URLSearchParams();
+    if (params?.category && params.category !== "all") query.set("category", params.category);
+    if (params?.search) query.set("search", params.search);
+    if (params?.start_date) query.set("start_date", params.start_date);
+    if (params?.end_date) query.set("end_date", params.end_date);
+
+    const queryString = query.toString() ? `?${query.toString()}` : "";
+    const res = await fetch(`${getApiBaseUrl()}/expenses/${queryString}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error("Failed to fetch expenses");
+    return await res.json();
+  } catch (error) {
+    console.error("getExpenses error:", error);
+    return [];
+  }
+}
+
+export async function getExpenseSummary(): Promise<ExpenseSummary | null> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/expenses/summary/`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.error("getExpenseSummary error:", error);
+    return null;
+  }
+}
+
+export async function getExpenseCategories(): Promise<{ value: string; label: string }[]> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/expenses/categories/`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (error) {
+    console.error("getExpenseCategories error:", error);
+    return [
+      { value: "SOCIAL_MEDIA_AD_COST", label: "social media ad cost" },
+      { value: "PACKAGING_MATERIAL", label: "packaging material" },
+      { value: "PR_AND_ADVERTISEMENT", label: "pr and advertisement" },
+      { value: "TRANSPORT", label: "transport" },
+      { value: "OTHER_EXPENSE", label: "other expense" },
+    ];
+  }
+}
+
+export async function createExpense(
+  data: Partial<Expense>
+): Promise<{ success: boolean; data?: Expense; error?: string }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/expenses/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      return { success: false, error: json.error || (typeof json === 'object' ? Object.entries(json).map(([k, v]) => `${k}: ${v}`).join(', ') : JSON.stringify(json)) };
+    }
+    return { success: true, data: json };
+  } catch (error: any) {
+    return { success: false, error: error?.message || "Failed to create expense" };
+  }
+}
+
+export async function updateExpense(
+  id: number | string,
+  data: Partial<Expense>
+): Promise<{ success: boolean; data?: Expense; error?: string }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/expenses/${id}/`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      return { success: false, error: json.error || (typeof json === 'object' ? Object.entries(json).map(([k, v]) => `${k}: ${v}`).join(', ') : JSON.stringify(json)) };
+    }
+    return { success: true, data: json };
+  } catch (error: any) {
+    return { success: false, error: error?.message || "Failed to update expense" };
+  }
+}
+
+export async function deleteExpense(
+  id: number | string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/expenses/${id}/`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      return { success: false, error: "Failed to delete expense" };
+    }
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error?.message || "Failed to delete expense" };
+  }
+}
+
 
 

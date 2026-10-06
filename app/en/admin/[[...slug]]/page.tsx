@@ -46,6 +46,7 @@ export default function AdminRoutePage({ params }: PageProps) {
     | "blog-all"
     | "blog-form"
     | "blog-taxonomy"
+    | "expenses-all"
     | "settings-password"
     | "logs" = "dashboard";
   let initialOrderId: string | undefined = undefined;
@@ -72,6 +73,8 @@ export default function AdminRoutePage({ params }: PageProps) {
     initialNav = "appearance-promo-banners";
   } else if (slug[0] === "marketing" || slug[0] === "coupons") {
     initialNav = "marketing-coupons";
+  } else if (slug[0] === "expenses" || slug[0] === "expense") {
+    initialNav = "expenses-all";
   } else if (slug[0] === "custom-order" || (slug[0] === "orders" && (slug[1] === "custom" || slug[1] === "new"))) {
     initialNav = "orders-custom";
   } else if (slug[0] === "orders") {

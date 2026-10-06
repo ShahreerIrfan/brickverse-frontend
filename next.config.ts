@@ -23,12 +23,12 @@ const nextConfig: NextConfig = {
         hostname: "www.kawaiisubete.com",
       },
       {
-        protocol: "https",
-        hostname: "brickbackend.eezzymart.tech",
+        protocol: "http",
+        hostname: "127.0.0.1",
       },
       {
-        protocol: "https",
-        hostname: "brickverse.eezzymart.tech",
+        protocol: "http",
+        hostname: "localhost",
       },
     ],
   },

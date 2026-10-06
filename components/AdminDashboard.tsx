@@ -97,6 +97,7 @@ import RichTextEditor from "./admin/RichTextEditor";
 import ProductBundleBuilder, { type BundleLine, parsePrice } from "./admin/ProductBundleBuilder";
 import CouponsManager from "./admin/CouponsManager";
 import CustomOrderPage from "./admin/CustomOrderPage";
+import ExpensesManager from "./admin/ExpensesManager";
 import { printOrderInvoice } from "@/lib/invoice";
 
 interface AdminDashboardProps {
@@ -127,6 +128,7 @@ type ActiveNav =
   | "blog-all"
   | "blog-form"
   | "blog-taxonomy"
+  | "expenses-all"
   | "settings-password"
   | "logs";
 
@@ -222,6 +224,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     "blog-all": "/en/admin/blog",
     "blog-form": "/en/admin/blog/new",
     "blog-taxonomy": "/en/admin/blog/taxonomy",
+    "expenses-all": "/en/admin/expenses",
     "settings-password": "/en/admin/settings/password",
     "logs": "/en/admin/logs",
   };
@@ -319,6 +322,8 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       } else if (path.includes("/stores")) {
         setActiveNav("stores-all");
         setStoresMenuOpen(true);
+      } else if (path.includes("/expenses")) {
+        setActiveNav("expenses-all");
       } else if (path.includes("/logs")) {
         setActiveNav("logs");
       } else if (path.includes("/blog/new") || path.includes("/blog/edit")) {
@@ -1939,6 +1944,24 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
               )}
             </div>
 
+            {/* 6) Expenses Parent Menu */}
+            <div className="space-y-1">
+              <button
+                onClick={() => navigateTo("expenses-all")}
+                title="Expenses"
+                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-bold text-xs sm:text-[13.5px] transition-all cursor-pointer relative ${
+                  activeNav.startsWith("expenses")
+                    ? "bg-[#2A2159] text-white before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-sm before:bg-[#FF4D6D]"
+                    : "text-[#C7C0E8] hover:bg-[#2A2159]/60 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <IconWallet className={`w-4 h-4 shrink-0 ${activeNav.startsWith("expenses") ? "text-[#FF4D6D]" : "text-[#A79FD1]"}`} />
+                  {!sidebarCollapsed && <span>Expenses</span>}
+                </div>
+              </button>
+            </div>
+
             {/* 6) Settings Accordion (Parent Menu with Change Password Submenu) */}
             <div className="space-y-1">
               <button
@@ -2280,29 +2303,8 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                   </div>
                 </div>
 
-                {/* 4. Conversion rate */}
-                <div className="bg-white rounded-[20px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.04)] flex flex-col justify-between">
-                  <div className="flex items-start justify-between">
-                    <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#FF9F43] to-[#FFC93C] flex items-center justify-center text-white shadow-md shadow-[#FF9F43]/20">
-                      <IconTarget className="w-5 h-5" />
-                    </div>
-                    <span className="text-[11.5px] font-semibold text-[#736E9B]">
-                      Conversion rate
-                    </span>
-                  </div>
-                  <div className="mt-4">
-                    <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block">
-                      3.8%
-                    </span>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="px-2 py-0.5 rounded-full bg-[#FFE6EA] text-[#D2455C] text-[11px] font-extrabold flex items-center gap-1">
-                        <IconTrendingDown className="w-3 h-3" />
-                        0.6%
-                      </span>
-                      <span className="text-[10.5px] text-[#736E9B]">vs last week</span>
-                    </div>
-                  </div>
-                </div>
+                {/* 4. Kept empty */}
+                <div className="hidden lg:block" />
               </div>
 
               {/* Middle Row Grid: Sales Overview (Left) + Top Selling Products (Right) */}
@@ -5599,6 +5601,11 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
           {/* VIEW: MARKETING -> COUPONS & DISCOUNTS */}
           {/* ============================================================= */}
           {activeNav === "marketing-coupons" && <CouponsManager />}
+
+          {/* ============================================================= */}
+          {/* VIEW: EXPENSES & OPERATING COSTS */}
+          {/* ============================================================= */}
+          {activeNav.startsWith("expenses") && <ExpensesManager />}
         </main>
       </div>
 
