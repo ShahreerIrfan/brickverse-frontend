@@ -53,7 +53,7 @@ export default function CustomerDashboardSlugPage({ params }: PageProps) {
     if (!isLoading && !isAuthenticated) {
       router.replace("/login");
     } else if (!isLoading && isAuthenticated && user?.role === "admin") {
-      router.replace("/en/admin");
+      router.replace("/admin");
     }
   }, [isLoading, isAuthenticated, user, router]);
 

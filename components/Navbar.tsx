@@ -66,7 +66,7 @@ export default function Navbar() {
 
             {isAuthenticated && user ? (
               <Link
-                href={user.role === "admin" ? "/en/admin" : "/dashboard"}
+                href={user.role === "admin" ? "/admin" : "/dashboard"}
                 title={`Go to ${user.role === "admin" ? "Admin Dashboard" : "Dashboard"}`}
                 className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-[#F6F1FF] hover:bg-[#EFE9FF] border border-[#EAE3F7] flex items-center justify-center cursor-pointer transition-transform active:scale-95"
               >
@@ -129,7 +129,7 @@ export default function Navbar() {
           {/* User Sign In / Direct Dashboard Redirect */}
           {isAuthenticated && user ? (
             <Link
-              href={user.role === "admin" ? "/en/admin" : "/dashboard"}
+              href={user.role === "admin" ? "/admin" : "/dashboard"}
               title={`Go to ${user.role === "admin" ? "Admin Dashboard" : "Dashboard"}`}
               className="flex items-center gap-2 bg-[#F6F1FF] hover:bg-[#EFE9FF] hover:border-[#FF4D6D]/40 border border-[#EAE3F7] rounded-full h-11 px-3.5 sm:px-4 transition-all shadow-xs cursor-pointer active:scale-95"
             >

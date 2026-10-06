@@ -205,28 +205,28 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
 
   // URL Slug mapping for Admin routing
   const navToUrlMap: Record<ActiveNav, string> = {
-    "dashboard": "/en/admin",
-    "products-all": "/en/admin/products",
-    "products-form": "/en/admin/products/new",
-    "products-taxonomy": "/en/admin/products/taxonomy",
-    "appearance-mega-menu": "/en/admin/appearance/mega-menu",
-    "appearance-hero-slides": "/en/admin/appearance/hero-slides",
-    "appearance-homepage-sections": "/en/admin/appearance/homepage-sections",
-    "appearance-promo-banners": "/en/admin/appearance/promo-banners",
-    "marketing-coupons": "/en/admin/marketing/coupons",
-    "orders-all": "/en/admin/orders",
-    "orders-single": "/en/admin/orders",
-    "orders-custom": "/en/admin/custom-order",
-    "users-all": "/en/admin/users",
-    "stores-all": "/en/admin/stores",
-    "stores-form": "/en/admin/stores/new",
-    "stores-single": "/en/admin/stores",
-    "blog-all": "/en/admin/blog",
-    "blog-form": "/en/admin/blog/new",
-    "blog-taxonomy": "/en/admin/blog/taxonomy",
-    "expenses-all": "/en/admin/expenses",
-    "settings-password": "/en/admin/settings/password",
-    "logs": "/en/admin/logs",
+    "dashboard": "/admin",
+    "products-all": "/admin/products",
+    "products-form": "/admin/products/new",
+    "products-taxonomy": "/admin/products/taxonomy",
+    "appearance-mega-menu": "/admin/appearance/mega-menu",
+    "appearance-hero-slides": "/admin/appearance/hero-slides",
+    "appearance-homepage-sections": "/admin/appearance/homepage-sections",
+    "appearance-promo-banners": "/admin/appearance/promo-banners",
+    "marketing-coupons": "/admin/marketing/coupons",
+    "orders-all": "/admin/orders",
+    "orders-single": "/admin/orders",
+    "orders-custom": "/admin/custom-order",
+    "users-all": "/admin/users",
+    "stores-all": "/admin/stores",
+    "stores-form": "/admin/stores/new",
+    "stores-single": "/admin/stores",
+    "blog-all": "/admin/blog",
+    "blog-form": "/admin/blog/new",
+    "blog-taxonomy": "/admin/blog/taxonomy",
+    "expenses-all": "/admin/expenses",
+    "settings-password": "/admin/settings/password",
+    "logs": "/admin/logs",
   };
 
   const navigateTo = (nav: ActiveNav, customUrl?: string) => {
@@ -240,7 +240,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     if (nav.startsWith("blog")) setBlogMenuOpen(true);
     if (nav.startsWith("settings")) setSettingsMenuOpen(true);
     if (nav !== "blog-form") setEditingBlogPostId(undefined);
-    const targetUrl = customUrl || navToUrlMap[nav] || "/en/admin";
+    const targetUrl = customUrl || navToUrlMap[nav] || "/admin";
     if (typeof window !== "undefined" && window.location.pathname !== targetUrl) {
       window.history.pushState(null, "", targetUrl);
     }
@@ -338,7 +338,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       } else if (path.includes("/settings/password") || path.includes("/settings")) {
         setActiveNav("settings-password");
         setSettingsMenuOpen(true);
-      } else if (path.includes("/en/admin") || path.includes("/admin")) {
+      } else if (path.includes("/admin") || path.includes("/admin")) {
         setActiveNav("dashboard");
       }
     };
@@ -1834,7 +1834,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
               {ordersMenuOpen && !sidebarCollapsed && (
                 <div className="pl-8 pr-1 py-1 space-y-1">
                   <button
-                    onClick={() => navigateTo("orders-all", "/en/admin/orders")}
+                    onClick={() => navigateTo("orders-all", "/admin/orders")}
                     className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
                       activeNav === "orders-all"
                         ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
@@ -1845,7 +1845,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                     <span>All Orders</span>
                   </button>
                   <button
-                    onClick={() => navigateTo("orders-custom", "/en/admin/custom-order")}
+                    onClick={() => navigateTo("orders-custom", "/admin/custom-order")}
                     className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
                       activeNav === "orders-custom"
                         ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
@@ -2691,7 +2691,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                 <button
                                   onClick={() => {
                                     setSelectedOrder(o);
-                                    navigateTo("orders-single", `/en/admin/orders/${o.id || o.order_number}`);
+                                    navigateTo("orders-single", `/admin/orders/${o.id || o.order_number}`);
                                   }}
                                   className="text-xs font-bold text-[#FF4D6D] hover:underline cursor-pointer"
                                 >
@@ -4170,7 +4170,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
               }}
               onEdit={(id) => {
                 setEditingBlogPostId(id);
-                navigateTo("blog-form", `/en/admin/blog/edit/${id}`);
+                navigateTo("blog-form", `/admin/blog/edit/${id}`);
               }}
             />
           )}
@@ -4204,7 +4204,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                 </div>
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => navigateTo("orders-custom", "/en/admin/custom-order")}
+                    onClick={() => navigateTo("orders-custom", "/admin/custom-order")}
                     className="px-4 py-2.5 bg-[#FF4D6D] hover:bg-[#ff3358] text-white font-bold text-xs sm:text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95"
                   >
                     <IconPlus className="w-4 h-4" />
@@ -4487,7 +4487,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                   <button
                                     onClick={() => {
                                       setSelectedOrder(o);
-                                      navigateTo("orders-single", `/en/admin/orders/${o.id || o.order_number}`);
+                                      navigateTo("orders-single", `/admin/orders/${o.id || o.order_number}`);
                                     }}
                                     className="px-3.5 py-1.5 bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] font-bold text-xs rounded-xl border border-[#EAE3F7] transition-all cursor-pointer shadow-2xs"
                                   >
@@ -4496,7 +4496,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                   <button
                                     onClick={() => {
                                       setSelectedOrder(o);
-                                      navigateTo("orders-single", `/en/admin/orders/${o.id || o.order_number}`);
+                                      navigateTo("orders-single", `/admin/orders/${o.id || o.order_number}`);
                                     }}
                                     className="p-1.5 bg-[#FFF1F4] hover:bg-[#FFE4EA] text-[#FF4D6D] rounded-xl transition-all cursor-pointer"
                                     title="Order Details"
@@ -4589,7 +4589,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                 <div className="bg-white rounded-3xl border border-[#EAE3F7] p-12 text-center shadow-xs space-y-4">
                   <p className="font-extrabold text-lg text-[#171136]">Order not found or loading...</p>
                   <button
-                    onClick={() => navigateTo("orders-all", "/en/admin/orders")}
+                    onClick={() => navigateTo("orders-all", "/admin/orders")}
                     className="px-5 py-2.5 bg-[#FF4D6D] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer hover:bg-[#ff3358] transition-all"
                   >
                     ← Return to All Orders
@@ -4631,14 +4631,14 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                 {/* Breadcrumb & Navigation */}
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => navigateTo("orders-all", "/en/admin/orders")}
+                    onClick={() => navigateTo("orders-all", "/admin/orders")}
                     className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-[#F6F1FF] text-[#7B5CFF] font-bold text-xs rounded-xl border border-[#EAE3F7] transition-all cursor-pointer shadow-2xs"
                   >
                     ← Back
                   </button>
                   <div className="flex items-center gap-2 text-xs">
                     <button
-                      onClick={() => navigateTo("orders-all", "/en/admin/orders")}
+                      onClick={() => navigateTo("orders-all", "/admin/orders")}
                       className="text-[#736E9B] hover:text-[#171136] font-medium cursor-pointer"
                     >
                       Orders
@@ -5127,7 +5127,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
           {activeNav === "orders-custom" && (
             <CustomOrderPage
               products={products}
-              onCancel={() => navigateTo("orders-all", "/en/admin/orders")}
+              onCancel={() => navigateTo("orders-all", "/admin/orders")}
               onOrderCreated={(newOrder) => {
                 setOrders((prev) => [newOrder, ...prev.filter((o) => o.id !== newOrder.id)]);
                 setSelectedOrder(newOrder);
@@ -5161,7 +5161,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                   if (data) setStatsData(data);
                 }).catch(() => {});
 
-                navigateTo("orders-single", `/en/admin/orders/${newOrder.id || newOrder.order_number}`);
+                navigateTo("orders-single", `/admin/orders/${newOrder.id || newOrder.order_number}`);
               }}
             />
           )}
@@ -5295,7 +5295,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
               onRefresh={fetchStoresData}
               onOpenStore={(id) => {
                 setCurrentStoreId(String(id));
-                navigateTo("stores-single", `/en/admin/stores/${id}`);
+                navigateTo("stores-single", `/admin/stores/${id}`);
               }}
               onCreateStore={() => navigateTo("stores-form")}
             />
@@ -5324,7 +5324,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                 fetchStoresData();
                 if (newStore?.id) {
                   setCurrentStoreId(String(newStore.id));
-                  navigateTo("stores-single", `/en/admin/stores/${newStore.id}`);
+                  navigateTo("stores-single", `/admin/stores/${newStore.id}`);
                 } else {
                   navigateTo("stores-all");
                 }
