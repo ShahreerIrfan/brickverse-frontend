@@ -60,7 +60,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#FFF6EE] pb-16 lg:pb-0">
-      <Navbar />
+      <Navbar categories={categories} />
       <NavLinks />
 
       <main className="flex-1">

@@ -13,9 +13,9 @@ import {
   IconArrowRight,
 } from "./icons";
 import { CategoryGlyph } from "./CategoryRail";
-import { categories } from "./productData";
+import type { Category } from "./productData";
 import { useAuth } from "@/context/AuthContext";
-import { getApiBaseUrl } from "@/lib/api";
+import { getApiBaseUrl, getCategories } from "@/lib/api";
 
 const navLinks = [
   { label: "Home", href: "/", active: true },
@@ -25,9 +25,61 @@ const navLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
-export default function MobileMenu() {
+// Module-level in-memory cache to ensure instant drawer opening across route transitions
+let cachedCategories: Category[] | null = null;
+
+interface MobileMenuProps {
+  initialCategories?: Category[];
+}
+
+export default function MobileMenu({ initialCategories }: MobileMenuProps = {}) {
   const [open, setOpen] = useState(false);
   const { user, isAuthenticated, openLoginModal, logout } = useAuth();
+
+  const [categories, setCategories] = useState<Category[]>(() => {
+    if (initialCategories && initialCategories.length > 0) return initialCategories;
+    if (cachedCategories && cachedCategories.length > 0) return cachedCategories;
+    return [];
+  });
+  const [loading, setLoading] = useState<boolean>(
+    !initialCategories?.length && !cachedCategories?.length
+  );
+  const [expandedCatIds, setExpandedCatIds] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (initialCategories && initialCategories.length > 0) {
+      setCategories(initialCategories);
+      cachedCategories = initialCategories;
+      setLoading(false);
+      return;
+    }
+
+    if (cachedCategories && cachedCategories.length > 0) {
+      setCategories(cachedCategories);
+      setLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+    getCategories()
+      .then((data) => {
+        if (!isMounted) return;
+        if (Array.isArray(data) && data.length > 0) {
+          setCategories(data);
+          cachedCategories = data;
+        }
+      })
+      .catch((err) => {
+        console.warn("[MobileMenu] Failed to load categories:", err);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [initialCategories]);
 
   useEffect(() => {
     if (!open) return;
@@ -40,12 +92,19 @@ export default function MobileMenu() {
     };
   }, [open]);
 
+  const activeCategories = categories.filter((c) => c.is_active !== false);
+
+  const totalCategoriesCount = activeCategories.reduce(
+    (sum, c) => sum + 1 + (c.subcategories?.length || 0),
+    0
+  );
+
   return (
     <>
       <button
         aria-label="Open menu"
         onClick={() => setOpen(true)}
-        className="lg:hidden flex items-center justify-center w-10 h-10 rounded-full text-[#171136] shrink-0 -ml-1"
+        className="lg:hidden flex items-center justify-center w-10 h-10 rounded-full text-[#171136] shrink-0 -ml-1 cursor-pointer active:scale-95 transition-transform"
       >
         <IconMenu className="w-6 h-6" />
       </button>
@@ -66,6 +125,7 @@ export default function MobileMenu() {
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
+        {/* Top Header */}
         <div className="flex items-center justify-between gap-3 bg-white px-5 py-4 border-b border-[#EAE3F7] shrink-0">
           <Link href="/" prefetch={true} className="flex items-center" onClick={() => setOpen(false)}>
             <Image src="/logo.png" alt="Kawaii Subete" width={120} height={38} className="h-8 w-auto object-contain" />
@@ -73,12 +133,13 @@ export default function MobileMenu() {
           <button
             aria-label="Close menu"
             onClick={() => setOpen(false)}
-            className="w-9 h-9 rounded-full bg-[#F6F1FF] flex items-center justify-center text-[#171136] shrink-0"
+            className="w-9 h-9 rounded-full bg-[#F6F1FF] hover:bg-[#EFE9FF] flex items-center justify-center text-[#171136] shrink-0 cursor-pointer active:scale-95 transition-all"
           >
             <IconClose className="w-4 h-4" />
           </button>
         </div>
 
+        {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
           {/* User Auth Card */}
           {isAuthenticated && user ? (
@@ -136,7 +197,7 @@ export default function MobileMenu() {
                       logout();
                       setOpen(false);
                     }}
-                    className="text-red-500 font-bold hover:underline"
+                    className="text-red-500 font-bold hover:underline cursor-pointer"
                   >
                     Sign out
                   </button>
@@ -162,42 +223,136 @@ export default function MobileMenu() {
             </button>
           )}
 
-          <p className="px-5 mt-6 mb-2 text-[11px] font-bold tracking-wider text-[#736E9B]">
-            CATEGORIES
-          </p>
-          <ul className="px-2.5">
-            {categories.map((cat) => (
-              <li key={cat.id}>
-                <a
-                  href="#"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-[14px] px-3 py-2.5 hover:bg-[#FAF7FF] transition-colors"
-                >
-                  <span
-                    className="w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: `${cat.color}24` }}
-                  >
-                    <CategoryGlyph id={cat.id} color={cat.color} icon={cat.category_icon || cat.categoryIcon || cat.icon_type} />
-                  </span>
-                  <span className="text-[13.5px] font-medium text-[#3B3468] flex-1">
-                    {cat.label}
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
+          {/* Categories Section */}
+          <div className="mt-5">
+            <div className="flex items-center justify-between px-5 mb-2">
+              <p className="text-[11px] font-bold tracking-wider text-[#736E9B] uppercase">
+                Categories
+              </p>
+              {totalCategoriesCount > 0 && (
+                <span className="text-[10px] font-bold text-[#FF4D6D] bg-[#FFF0F3] px-2 py-0.5 rounded-full">
+                  {totalCategoriesCount} items
+                </span>
+              )}
+            </div>
 
-          <a
-            href="#"
-            className="flex items-center gap-2 mx-5 mt-2 mb-6 text-[13px] font-bold text-[#FF4D6D]"
-          >
-            See all 48 categories
-            <IconArrowRight className="w-4 h-4" />
-          </a>
+            {loading && activeCategories.length === 0 ? (
+              <div className="px-4 py-2 flex flex-col gap-2">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="flex items-center gap-3 py-2 px-3 rounded-xl bg-white/50 animate-pulse">
+                    <div className="w-8 h-8 rounded-[10px] bg-[#EAE3F7]/80 shrink-0" />
+                    <div className="h-4 bg-[#EAE3F7]/80 rounded-md w-3/5" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <ul className="px-3 flex flex-col gap-0.5">
+                {activeCategories.map((cat) => {
+                  const hasSubcategories = Boolean(cat.subcategories && cat.subcategories.length > 0);
+                  const isExpanded = Boolean(expandedCatIds[cat.id]);
+                  const catHref = `/shop?category=${encodeURIComponent(cat.slug || cat.id)}`;
+
+                  return (
+                    <li key={cat.id} className="flex flex-col">
+                      <div className="flex items-center justify-between rounded-xl hover:bg-white/80 active:bg-white transition-all group">
+                        <Link
+                          href={catHref}
+                          prefetch={true}
+                          onClick={() => setOpen(false)}
+                          className="flex items-center gap-3 px-3 py-2 flex-1 min-w-0"
+                        >
+                          <span
+                            className="w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
+                            style={{
+                              backgroundColor: `${cat.color || "#FF4D6D"}1A`,
+                            }}
+                          >
+                            <CategoryGlyph
+                              id={cat.id}
+                              color={cat.color || "#FF4D6D"}
+                              icon={cat.category_icon || cat.categoryIcon || cat.icon_type}
+                            />
+                          </span>
+                          <span className="text-[13.5px] font-medium text-[#2E2856] group-hover:text-[#FF4D6D] transition-colors truncate">
+                            {cat.label}
+                          </span>
+                        </Link>
+
+                        {hasSubcategories && (
+                          <button
+                            type="button"
+                            aria-label={`Toggle ${cat.label} subcategories`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setExpandedCatIds((prev) => ({ ...prev, [cat.id]: !prev[cat.id] }));
+                            }}
+                            className="w-9 h-9 mr-1 rounded-lg flex items-center justify-center text-[#736E9B] hover:text-[#FF4D6D] hover:bg-white/90 active:scale-95 transition-all shrink-0 cursor-pointer"
+                          >
+                            <span className="text-[10px] font-bold text-[#736E9B] bg-white/80 px-1.5 py-0.5 rounded-full mr-1.5 border border-[#EAE3F7]">
+                              {cat.subcategories!.length}
+                            </span>
+                            <IconChevronRight
+                              className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                                isExpanded ? "rotate-90 text-[#FF4D6D]" : "text-[#736E9B]"
+                              }`}
+                            />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Expandable Subcategories Accordion */}
+                      {hasSubcategories && isExpanded && (
+                        <ul className="pl-11 pr-2 py-1.5 flex flex-col gap-1 my-1 bg-white/70 rounded-xl border border-[#EAE3F7]/70">
+                          <li>
+                            <Link
+                              href={catHref}
+                              prefetch={true}
+                              onClick={() => setOpen(false)}
+                              className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[12px] font-bold text-[#FF4D6D] hover:bg-white transition-colors"
+                            >
+                              <span>All {cat.label}</span>
+                              <IconArrowRight className="w-3 h-3" />
+                            </Link>
+                          </li>
+                          {cat.subcategories!.map((sub) => (
+                            <li key={sub.id}>
+                              <Link
+                                href={`/shop?category=${encodeURIComponent(cat.slug || cat.id)}&subcategory=${encodeURIComponent(sub.slug || sub.id)}`}
+                                prefetch={true}
+                                onClick={() => setOpen(false)}
+                                className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[12.5px] font-medium text-[#4A4270] hover:text-[#FF4D6D] hover:bg-white transition-colors"
+                              >
+                                <span className="truncate">{sub.label}</span>
+                                <IconChevronRight className="w-2.5 h-2.5 text-[#B0A9CC] shrink-0" />
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            <Link
+              href="/shop"
+              prefetch={true}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 mx-5 mt-3 mb-5 text-[13px] font-bold text-[#FF4D6D] hover:text-[#e03859] transition-colors"
+            >
+              <span>
+                See all {totalCategoriesCount > 0 ? `${totalCategoriesCount} ` : ""}categories
+              </span>
+              <IconArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
 
           <div className="border-t border-[#EAE3F7] mx-5" />
 
-          <nav className="flex flex-col px-5 py-5 gap-4">
+          {/* Navigation Links */}
+          <nav className="flex flex-col px-5 py-5 gap-3.5">
             {navLinks.map((link) => (
               <Link
                 key={link.label}
@@ -219,6 +374,7 @@ export default function MobileMenu() {
           </nav>
         </div>
 
+        {/* Bottom Phone Footer */}
         <div className="shrink-0 border-t border-[#EAE3F7] bg-white px-5 py-4 flex flex-col gap-3">
           <div className="flex items-center gap-2">
             <IconPhone className="w-4 h-4 text-[#FF4D6D]" />

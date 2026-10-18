@@ -47,7 +47,7 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col flex-1 bg-[#FFF6EE] pb-16 lg:pb-0">
-      <Navbar />
+      <Navbar categories={categories} />
       <NavLinks />
 
       <main className="max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex flex-col gap-5 sm:gap-10">

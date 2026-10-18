@@ -8,8 +8,9 @@ import SearchBox from "./SearchBox";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
+import type { Category } from "./productData";
 
-export default function Navbar() {
+export default function Navbar({ categories }: { categories?: Category[] } = {}) {
   const { user, isAuthenticated, openLoginModal } = useAuth();
   const { totalItems, subtotalFormatted, openCart } = useCart();
   const { wishlistCount } = useWishlist();
@@ -22,7 +23,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between w-full lg:w-auto shrink-0 gap-2">
           {/* Brand Logo & Mobile Menu */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-            <MobileMenu />
+            <MobileMenu initialCategories={categories} />
             <Link href="/" prefetch={true} className="flex items-center shrink-0">
               <Image
                 src="/logo.png"
