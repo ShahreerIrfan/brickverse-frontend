@@ -55,6 +55,12 @@ export function getAuthHeaders(isFormData = false): Record<string, string> {
           headers["Authorization"] = `Bearer ${u.token}`;
           headers["X-Session-Token"] = u.token;
         }
+        if (u?.email) {
+          headers["X-User-Email"] = u.email;
+        }
+        if (u?.id) {
+          headers["X-User-Id"] = String(u.id);
+        }
       }
     } catch {
       // ignore
@@ -636,10 +642,27 @@ export async function getNavLinks() {
 
 export async function getCustomerOrders(email?: string) {
   try {
-    const url = email
-      ? `${getApiBaseUrl()}/orders/list/?email=${encodeURIComponent(email)}`
+    const headers = getAuthHeaders();
+    let queryEmail = email;
+    if (!queryEmail && typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("brickverse_auth_user");
+        if (stored) {
+          const u = JSON.parse(stored);
+          if (u?.email && u?.role !== "admin") {
+            queryEmail = u.email;
+          }
+        }
+      } catch {}
+    }
+    const url = queryEmail
+      ? `${getApiBaseUrl()}/orders/list/?email=${encodeURIComponent(queryEmail)}`
       : `${getApiBaseUrl()}/orders/list/`;
-    const res = await fetch(url, { cache: "no-store" });
+    const res = await fetch(url, {
+      headers,
+      credentials: "include",
+      cache: "no-store",
+    });
     if (!res.ok) return [];
     return await res.json();
   } catch (error) {
@@ -649,7 +672,19 @@ export async function getCustomerOrders(email?: string) {
 }
 
 export async function getAllOrders() {
-  return getCustomerOrders();
+  try {
+    const headers = getAuthHeaders();
+    const res = await fetch(`${getApiBaseUrl()}/orders/list/`, {
+      headers,
+      credentials: "include",
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (error) {
+    console.warn("[API] Failed to fetch all orders:", error);
+    return [];
+  }
 }
 
 export async function updateOrderStatus(orderId: number | string, status: string, trackingNumber?: string) {
@@ -933,7 +968,11 @@ export async function getAllUsers(role?: string, search?: string) {
     if (search) params.push(`search=${encodeURIComponent(search)}`);
     if (params.length > 0) url += `?${params.join("&")}`;
 
-    const res = await fetch(url, { cache: "no-store" });
+    const res = await fetch(url, {
+      headers: getAuthHeaders(),
+      credentials: "include",
+      cache: "no-store",
+    });
     if (!res.ok) return [];
     return await res.json();
   } catch (error) {
@@ -946,7 +985,8 @@ export async function updateUserRole(userId: number | string, role: string) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/auth/${userId}/`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify({ role }),
     });
     return { success: res.ok, data: await res.json() };
@@ -959,7 +999,8 @@ export async function createUser(userData: any) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/auth/all/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify(userData),
     });
     return { success: res.ok, data: await res.json() };
@@ -972,6 +1013,8 @@ export async function deleteUser(userId: number | string) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/auth/${userId}/`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
+      credentials: "include",
     });
     return { success: res.ok };
   } catch (error) {
@@ -981,7 +1024,11 @@ export async function deleteUser(userId: number | string) {
 
 export async function getAdminStats() {
   try {
-    const res = await fetch(`${getApiBaseUrl()}/orders/admin-stats/`, { cache: "no-store" });
+    const res = await fetch(`${getApiBaseUrl()}/orders/admin-stats/`, {
+      headers: getAuthHeaders(),
+      credentials: "include",
+      cache: "no-store",
+    });
     if (!res.ok) return null;
     return await res.json();
   } catch (error) {
@@ -992,7 +1039,11 @@ export async function getAdminStats() {
 
 export async function getAllCustomers() {
   try {
-    const res = await fetch(`${getApiBaseUrl()}/auth/customers/`, { cache: "no-store" });
+    const res = await fetch(`${getApiBaseUrl()}/auth/customers/`, {
+      headers: getAuthHeaders(),
+      credentials: "include",
+      cache: "no-store",
+    });
     if (!res.ok) return [];
     return await res.json();
   } catch (error) {
@@ -1045,7 +1096,8 @@ export async function createOrder(orderData: {
   try {
     const res = await fetch(`${getApiBaseUrl()}/orders/list/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify(orderData),
     });
     if (!res.ok) {
