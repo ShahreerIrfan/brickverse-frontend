@@ -99,6 +99,15 @@ export default function MobileMenu({ initialCategories }: MobileMenuProps = {}) 
     0
   );
 
+  const displayName = user
+    ? user.first_name
+      ? `${user.first_name} ${user.last_name || ""}`.trim()
+      : user.role === "admin"
+      ? "Kawaii Subete"
+      : user.email.split("@")[0]
+    : "";
+  const dashboardHref = user?.role === "admin" ? "/admin" : "/dashboard";
+
   return (
     <>
       <button
@@ -141,86 +150,61 @@ export default function MobileMenu({ initialCategories }: MobileMenuProps = {}) 
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
-          {/* User Auth Card */}
+          {/* User Profile / View Dashboard (matching Image 2) */}
           {isAuthenticated && user ? (
-            <div className="mx-4 mt-4 rounded-2xl bg-white border border-[#EAE3F7] p-3.5 shadow-sm">
-              <div className="flex items-center gap-3">
-                <span
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
-                  style={{ backgroundColor: user.role === "admin" ? "#7B5CFF" : "#FF4D6D" }}
-                >
-                  {user.first_name ? user.first_name[0].toUpperCase() : user.email[0].toUpperCase()}
+            <div className="flex items-center justify-between px-5 py-3 border-b border-[#EAE3F7]/80">
+              <Link
+                href={dashboardHref}
+                prefetch={true}
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3.5 flex-1 min-w-0 group"
+              >
+                <span className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border border-[#FFD9E2] bg-[#FFF0F3] text-[#FF4D6D] transition-transform group-hover:scale-105">
+                  <IconUser className="w-5 h-5" />
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-bold text-[#171136] truncate">
-                    {user.first_name ? `${user.first_name} ${user.last_name || ""}` : user.email}
+                  <p className="text-[14px] font-bold text-[#171136] group-hover:text-[#FF4D6D] transition-colors truncate">
+                    {displayName}
                   </p>
-                  <p className="text-[11px] text-[#736E9B] truncate">{user.email}</p>
+                  <p className="text-[12px] text-[#736E9B] group-hover:text-[#FF4D6D] transition-colors font-medium">
+                    View Dashboard
+                  </p>
                 </div>
-                <span
-                  className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full"
-                  style={{
-                    backgroundColor: user.role === "admin" ? "#EFE9FF" : "#FFF1F4",
-                    color: user.role === "admin" ? "#7B5CFF" : "#FF4D6D",
-                  }}
-                >
-                  {user.role}
-                </span>
-              </div>
+              </Link>
 
-              <div className="mt-3 pt-2.5 border-t border-[#EAE3F7] flex flex-col gap-2 text-xs">
-                <Link
-                  href="/dashboard"
-                  prefetch={true}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center justify-between font-bold text-[#171136] hover:text-[#FF4D6D]"
-                >
-                  <span>📊 {user.role === "admin" ? "Admin Dashboard" : "Customer Dashboard"}</span>
-                  <IconChevronRight className="w-3.5 h-3.5 text-[#736E9B]" />
-                </Link>
-
-                <div className="flex items-center justify-between pt-1">
-                  {user.role === "admin" ? (
-                    <a
-                      href={getApiBaseUrl().replace(/\/api\/?$/, "") + "/admin/"}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-bold text-[#7B5CFF] hover:underline flex items-center gap-1"
-                    >
-                      <IconShield className="w-3.5 h-3.5" /> Django Admin
-                    </a>
-                  ) : (
-                    <span className="text-[11.5px] text-[#736E9B]">VIP Member</span>
-                  )}
-                  <button
-                    onClick={() => {
-                      logout();
-                      setOpen(false);
-                    }}
-                    className="text-red-500 font-bold hover:underline cursor-pointer"
-                  >
-                    Sign out
-                  </button>
-                </div>
-              </div>
+              <button
+                onClick={() => {
+                  logout();
+                  setOpen(false);
+                }}
+                className="text-[11.5px] font-bold text-red-500 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50/80 transition-colors shrink-0 cursor-pointer"
+              >
+                Sign out
+              </button>
             </div>
           ) : (
-            <button
-              onClick={() => {
-                setOpen(false);
-                openLoginModal();
-              }}
-              className="flex items-center gap-3 mx-4 mt-4 w-[calc(100%-32px)] text-left rounded-2xl bg-white border border-[#EAE3F7] px-4 py-3 shadow-sm active:scale-98 transition-all cursor-pointer"
-            >
-              <span className="w-10 h-10 rounded-full bg-[#FFF1F4] flex items-center justify-center shrink-0">
-                <IconUser className="w-4 h-4 text-[#FF4D6D]" />
-              </span>
-              <span className="flex-1">
-                <span className="block text-[13.5px] font-bold text-[#171136]">Sign in / Sign up</span>
-                <span className="block text-[11.5px] text-[#736E9B]">Join Kawaii Subete rewards</span>
-              </span>
-              <IconChevronRight className="w-4 h-4 text-[#736E9B]" />
-            </button>
+            <div className="px-5 py-3 border-b border-[#EAE3F7]/80">
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  openLoginModal();
+                }}
+                className="flex items-center gap-3.5 text-left w-full cursor-pointer group"
+              >
+                <span className="w-10 h-10 rounded-full bg-[#FFF0F3] border border-[#FFD9E2] flex items-center justify-center shrink-0 text-[#FF4D6D] group-hover:scale-105 transition-transform">
+                  <IconUser className="w-5 h-5" />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-bold text-[#171136] group-hover:text-[#FF4D6D] transition-colors">
+                    Sign in / Sign up
+                  </p>
+                  <p className="text-[12px] text-[#736E9B] font-medium">
+                    Join Kawaii Subete rewards
+                  </p>
+                </div>
+                <IconChevronRight className="w-4 h-4 text-[#736E9B] group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
           )}
 
           {/* Categories Section */}
