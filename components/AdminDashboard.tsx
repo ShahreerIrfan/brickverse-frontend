@@ -5237,8 +5237,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                         <th className="pb-3 font-semibold">Email</th>
                         <th className="pb-3 font-semibold">Phone</th>
                         <th className="pb-3 font-semibold">Role</th>
-                        <th className="pb-3 font-semibold">Joined Date</th>
-                        <th className="pb-3 font-semibold text-right">Toggle Role</th>
+                        <th className="pb-3 font-semibold text-right">Joined Date</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#F0EBF8]">
@@ -5265,16 +5264,8 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                               {u.role}
                             </span>
                           </td>
-                          <td className="py-3.5 text-[11px] text-[#736E9B]">
+                          <td className="py-3.5 text-[11px] text-[#736E9B] text-right">
                             {new Date(u.created_at).toLocaleDateString()}
-                          </td>
-                          <td className="py-3.5 text-right">
-                            <button
-                              onClick={() => handleToggleUserRole(u.id, u.role)}
-                              className="text-xs font-bold text-[#7B5CFF] hover:underline cursor-pointer"
-                            >
-                              Make {u.role === "admin" ? "Customer" : "Admin"}
-                            </button>
                           </td>
                         </tr>
                       ))}
