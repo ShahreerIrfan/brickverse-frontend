@@ -99,16 +99,29 @@ function PlainTextDescription({ text }: { text: string }) {
 
 const HTML_TAG_PATTERN = /<[a-z][\s\S]*>/i;
 
+function sanitizeHtml(dirty: string): string {
+  if (!dirty) return "";
+  // Strip dangerous elements
+  let clean = dirty.replace(/<\s*(script|style|iframe|object|embed|form|input|textarea|button|base|meta|link)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, "");
+  clean = clean.replace(/<\s*(script|style|iframe|object|embed|form|input|textarea|button|base|meta|link)[^>]*\/?\s*>/gi, "");
+  // Strip javascript:, vbscript:, and data: URLs
+  clean = clean.replace(/\b(href|src)\s*=\s*["']?\s*(javascript|vbscript|data):[^"'>\s]*/gi, '$1="#"');
+  // Strip inline on* event handlers (e.g. onerror, onload, onclick, onmouseover)
+  clean = clean.replace(/\s+on[a-z]+\s*=\s*(("[^"]*")|('[^']*')|[^\s>]+)/gi, "");
+  return clean;
+}
+
 // Descriptions saved from the WYSIWYG admin editor are HTML; older
 // descriptions saved before that editor existed are plain text using an
 // ALL-CAPS-heading + "•" bullet convention. Render each the way it was
 // authored rather than forcing one format on the other.
 function FormattedDescription({ text }: { text: string }) {
   if (HTML_TAG_PATTERN.test(text)) {
+    const sanitizedHtml = sanitizeHtml(text);
     return (
       <div
         className="text-xs sm:text-sm text-[#3B3468] leading-relaxed [&_h2]:font-[family-name:var(--font-display)] [&_h2]:font-extrabold [&_h2]:text-base [&_h2]:sm:text-lg [&_h2]:text-[#171136] [&_h2]:mt-4 [&_h2]:mb-1.5 [&_h3]:font-[family-name:var(--font-display)] [&_h3]:font-bold [&_h3]:text-sm [&_h3]:sm:text-base [&_h3]:text-[#171136] [&_h3]:mt-3.5 [&_h3]:mb-1 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-3 [&_ul]:space-y-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-3 [&_ol]:space-y-1 [&_strong]:font-bold [&_strong]:text-[#171136] [&_blockquote]:border-l-2 [&_blockquote]:border-[#FF4D6D] [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-[#736E9B]"
-        dangerouslySetInnerHTML={{ __html: text }}
+        dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
       />
     );
   }
