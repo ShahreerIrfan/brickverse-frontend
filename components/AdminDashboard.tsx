@@ -398,6 +398,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
 
   // Modals & Action Drawers
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [updatingOrderIds, setUpdatingOrderIds] = useState<Record<string | number, boolean>>({});
   const [copiedTracking, setCopiedTracking] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [formCategory, setFormCategory] = useState<string>("figures");
@@ -1442,16 +1443,98 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   };
 
   // -------------------------------------------------------------
-  // Order Status Update Handler
+  // Order Status Update Handler (Instant Optimistic DOM + Micro Loading Spinner)
   // -------------------------------------------------------------
   const handleUpdateStatus = async (orderId: number | string, newStatus: string) => {
-    const res = await updateOrderStatus(orderId, newStatus);
-    if (res.success) {
-      showToast(`✓ Order #${orderId} status updated to ${newStatus.toUpperCase()}`);
-      fetchData();
-    } else {
-      const errDetail = (res as any)?.data?.detail || (res as any)?.error || "Failed updating order status.";
-      alert(typeof errDetail === "string" ? errDetail : "Failed updating order status.");
+    // Locate previous order status for rollback if request fails
+    const previousOrder = orders.find(
+      (o) => String(o.id) === String(orderId) || String(o.order_number) === String(orderId)
+    );
+    const previousStatus = previousOrder?.status || selectedOrder?.status;
+
+    // 1. Instant DOM update (0ms latency!)
+    setOrders((prev) =>
+      prev.map((o) =>
+        String(o.id) === String(orderId) || String(o.order_number) === String(orderId)
+          ? { ...o, status: newStatus }
+          : o
+      )
+    );
+    setSelectedOrder((prev: any) =>
+      prev && (String(prev.id) === String(orderId) || String(prev.order_number) === String(orderId))
+        ? { ...prev, status: newStatus }
+        : prev
+    );
+
+    // 2. Mark this order as updating (shows micro loading spinner beside dropdown)
+    setUpdatingOrderIds((prev) => ({
+      ...prev,
+      [orderId]: true,
+      ...(previousOrder?.id ? { [previousOrder.id]: true } : {}),
+      ...(previousOrder?.order_number ? { [previousOrder.order_number]: true } : {}),
+    }));
+
+    try {
+      const res = await updateOrderStatus(orderId, newStatus);
+      if (res.success) {
+        showToast(`✓ Order #${previousOrder?.order_number || orderId} status changed to ${newStatus.toUpperCase()}`);
+        if (res.data) {
+          setOrders((prev) =>
+            prev.map((o) =>
+              String(o.id) === String(orderId) || String(o.order_number) === String(orderId)
+                ? { ...o, ...res.data, status: newStatus }
+                : o
+            )
+          );
+          setSelectedOrder((prev: any) =>
+            prev && (String(prev.id) === String(orderId) || String(prev.order_number) === String(orderId))
+              ? { ...prev, ...res.data, status: newStatus }
+              : prev
+          );
+        }
+      } else {
+        // Rollback on server failure
+        if (previousStatus) {
+          setOrders((prev) =>
+            prev.map((o) =>
+              String(o.id) === String(orderId) || String(o.order_number) === String(orderId)
+                ? { ...o, status: previousStatus }
+                : o
+            )
+          );
+          setSelectedOrder((prev: any) =>
+            prev && (String(prev.id) === String(orderId) || String(prev.order_number) === String(orderId))
+              ? { ...prev, status: previousStatus }
+              : prev
+          );
+        }
+        const errDetail = (res as any)?.data?.detail || (res as any)?.error || "Failed updating order status.";
+        alert(typeof errDetail === "string" ? errDetail : "Failed updating order status.");
+      }
+    } catch (err: any) {
+      if (previousStatus) {
+        setOrders((prev) =>
+          prev.map((o) =>
+            String(o.id) === String(orderId) || String(o.order_number) === String(orderId)
+              ? { ...o, status: previousStatus }
+              : o
+          )
+        );
+        setSelectedOrder((prev: any) =>
+          prev && (String(prev.id) === String(orderId) || String(prev.order_number) === String(orderId))
+            ? { ...prev, status: previousStatus }
+            : prev
+        );
+      }
+      alert("Failed updating order status.");
+    } finally {
+      setUpdatingOrderIds((prev) => {
+        const next = { ...prev };
+        delete next[orderId];
+        if (previousOrder?.id) delete next[previousOrder.id];
+        if (previousOrder?.order_number) delete next[previousOrder.order_number];
+        return next;
+      });
     }
   };
 
@@ -4436,38 +4519,50 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
 
                               {/* STATUS */}
                               <td className="py-4 px-5 whitespace-nowrap">
-                                <div className="relative inline-flex items-center">
-                                  <select
-                                    value={o.status}
-                                    onChange={(e) => handleUpdateStatus(o.id, e.target.value)}
-                                    className={`appearance-none pl-6 pr-6 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all border outline-none ${
-                                      o.status === "delivered"
-                                        ? "bg-[#E7F8F0] text-[#2ECC8F] border-[#2ECC8F]/30"
-                                        : o.status === "shipped"
-                                        ? "bg-[#E3F0FF] text-[#3B82F6] border-[#3B82F6]/30"
-                                        : o.status === "cancelled"
-                                        ? "bg-[#FFF1F4] text-[#FF4D6D] border-[#FF4D6D]/30"
-                                        : "bg-[#FFF4D6] text-[#C08A00] border-[#C08A00]/30"
-                                    }`}
-                                  >
-                                    <option value="pending" className="bg-white text-[#171136]">Pending</option>
-                                    <option value="processing" className="bg-white text-[#171136]">Processing</option>
-                                    <option value="shipped" className="bg-white text-[#171136]">Shipped</option>
-                                    <option value="delivered" className="bg-white text-[#171136]">Delivered</option>
-                                    <option value="cancelled" className="bg-white text-[#171136]">Cancelled</option>
-                                  </select>
-                                  <span
-                                    className={`absolute left-2.5 w-2 h-2 rounded-full pointer-events-none ${
-                                      o.status === "delivered"
-                                        ? "bg-[#2ECC8F]"
-                                        : o.status === "shipped"
-                                        ? "bg-[#3B82F6]"
-                                        : o.status === "cancelled"
-                                        ? "bg-[#FF4D6D]"
-                                        : "bg-[#C08A00]"
-                                    }`}
-                                  />
-                                  <span className="absolute right-2 pointer-events-none text-[8px] opacity-60">▼</span>
+                                <div className="inline-flex items-center gap-2">
+                                  <div className="relative inline-flex items-center">
+                                    <select
+                                      value={o.status}
+                                      onChange={(e) => handleUpdateStatus(o.id, e.target.value)}
+                                      disabled={Boolean(updatingOrderIds[o.id] || updatingOrderIds[o.order_number])}
+                                      className={`appearance-none pl-6 pr-6 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all border outline-none disabled:cursor-wait ${
+                                        o.status === "delivered"
+                                          ? "bg-[#E7F8F0] text-[#2ECC8F] border-[#2ECC8F]/30"
+                                          : o.status === "shipped"
+                                          ? "bg-[#E3F0FF] text-[#3B82F6] border-[#3B82F6]/30"
+                                          : o.status === "cancelled"
+                                          ? "bg-[#FFF1F4] text-[#FF4D6D] border-[#FF4D6D]/30"
+                                          : "bg-[#FFF4D6] text-[#C08A00] border-[#C08A00]/30"
+                                      }`}
+                                    >
+                                      <option value="pending" className="bg-white text-[#171136]">Pending</option>
+                                      <option value="processing" className="bg-white text-[#171136]">Processing</option>
+                                      <option value="shipped" className="bg-white text-[#171136]">Shipped</option>
+                                      <option value="delivered" className="bg-white text-[#171136]">Delivered</option>
+                                      <option value="cancelled" className="bg-white text-[#171136]">Cancelled</option>
+                                    </select>
+                                    <span
+                                      className={`absolute left-2.5 w-2 h-2 rounded-full pointer-events-none ${
+                                        o.status === "delivered"
+                                          ? "bg-[#2ECC8F]"
+                                          : o.status === "shipped"
+                                          ? "bg-[#3B82F6]"
+                                          : o.status === "cancelled"
+                                          ? "bg-[#FF4D6D]"
+                                          : "bg-[#C08A00]"
+                                      }`}
+                                    />
+                                    <span className="absolute right-2 pointer-events-none text-[8px] opacity-60">▼</span>
+                                  </div>
+
+                                  {Boolean(updatingOrderIds[o.id] || updatingOrderIds[o.order_number]) && (
+                                    <div
+                                      className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-[#FAF8FF] border border-[#EAE3F7] shadow-2xs animate-in fade-in"
+                                      title="Syncing status with server..."
+                                    >
+                                      <div className="w-3.5 h-3.5 border-2 border-[#7B5CFF] border-t-transparent rounded-full animate-spin shrink-0" />
+                                    </div>
+                                  )}
                                 </div>
                               </td>
 
@@ -4698,21 +4793,33 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                     </button>
 
                     {/* Update Status Dropdown */}
-                    <select
-                      value={currentOrder.status}
-                      onChange={(e) => {
-                        const newSt = e.target.value;
-                        handleUpdateStatus(currentOrder.id, newSt);
-                        setSelectedOrder((prev: any) => ({ ...(prev || currentOrder), status: newSt }));
-                      }}
-                      className="px-4 py-2 bg-[#FF4D6D] hover:bg-[#ff3358] text-white font-bold text-xs rounded-xl transition-all cursor-pointer outline-none shadow-2xs"
-                    >
-                      <option value="pending" className="bg-white text-[#171136]">Status: Pending</option>
-                      <option value="processing" className="bg-white text-[#171136]">Status: Processing</option>
-                      <option value="shipped" className="bg-white text-[#171136]">Status: Shipped</option>
-                      <option value="delivered" className="bg-white text-[#171136]">Status: Delivered</option>
-                      <option value="cancelled" className="bg-white text-[#171136]">Status: Cancelled</option>
-                    </select>
+                    <div className="relative inline-flex items-center gap-2">
+                      <select
+                        value={currentOrder.status}
+                        onChange={(e) => {
+                          const newSt = e.target.value;
+                          handleUpdateStatus(currentOrder.id, newSt);
+                        }}
+                        disabled={Boolean(updatingOrderIds[currentOrder.id] || updatingOrderIds[currentOrder.order_number])}
+                        className="px-4 py-2 bg-[#FF4D6D] hover:bg-[#ff3358] text-white font-bold text-xs rounded-xl transition-all cursor-pointer outline-none shadow-2xs disabled:opacity-85 disabled:cursor-wait"
+                      >
+                        <option value="pending" className="bg-white text-[#171136]">Status: Pending</option>
+                        <option value="processing" className="bg-white text-[#171136]">Status: Processing</option>
+                        <option value="shipped" className="bg-white text-[#171136]">Status: Shipped</option>
+                        <option value="delivered" className="bg-white text-[#171136]">Status: Delivered</option>
+                        <option value="cancelled" className="bg-white text-[#171136]">Status: Cancelled</option>
+                      </select>
+
+                      {Boolean(updatingOrderIds[currentOrder.id] || updatingOrderIds[currentOrder.order_number]) && (
+                        <div
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white border border-[#EAE3F7] shadow-xs text-xs font-bold text-[#FF4D6D] animate-in fade-in"
+                          title="Syncing status with server..."
+                        >
+                          <div className="w-3.5 h-3.5 border-2 border-[#FF4D6D] border-t-transparent rounded-full animate-spin shrink-0" />
+                          <span className="text-[11px]">Saving...</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
