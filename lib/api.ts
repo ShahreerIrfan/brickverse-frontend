@@ -1304,7 +1304,11 @@ export async function getSystemLogs(params?: {
     if (params?.limit) searchParams.set("limit", String(params.limit));
 
     const qs = searchParams.toString() ? `?${searchParams.toString()}` : "";
-    const res = await fetch(`${getApiBaseUrl()}/logs/${qs}`, { cache: "no-store" });
+    const res = await fetch(`${getApiBaseUrl()}/logs/${qs}`, {
+      headers: getAuthHeaders(),
+      credentials: "include",
+      cache: "no-store",
+    });
     if (!res.ok) {
       return {
         logs: [],
@@ -1344,7 +1348,8 @@ export async function clearSystemLogs(): Promise<{ success: boolean; message?: s
   try {
     const res = await fetch(`${getApiBaseUrl()}/logs/clear/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
     });
     const data = await res.json().catch(() => null);
     return { success: res.ok, message: data?.message };
@@ -1357,7 +1362,8 @@ export async function generateTestLog(level: "INFO" | "WARNING" | "ERROR" = "INF
   try {
     const res = await fetch(`${getApiBaseUrl()}/logs/test/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify({ level, message }),
     });
     return { success: res.ok };
@@ -1373,6 +1379,8 @@ export async function getLogRetention(): Promise<{
 }> {
   try {
     const res = await fetch(`${getApiBaseUrl()}/logs/retention/?_t=${Date.now()}`, {
+      headers: getAuthHeaders(),
+      credentials: "include",
       cache: "no-store",
     });
     if (!res.ok) return { retention_days: 1, is_auto_delete_enabled: true };
@@ -1389,7 +1397,8 @@ export async function updateLogRetention(
   try {
     const res = await fetch(`${getApiBaseUrl()}/logs/retention/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify({ retention_days, is_auto_delete_enabled }),
     });
     const data = await res.json().catch(() => null);
@@ -1403,7 +1412,8 @@ export async function pruneLogs(days?: number): Promise<{ success: boolean; dele
   try {
     const res = await fetch(`${getApiBaseUrl()}/logs/prune/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify(days !== undefined ? { days } : {}),
     });
     const data = await res.json().catch(() => null);
