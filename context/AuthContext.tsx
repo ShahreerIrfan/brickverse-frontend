@@ -74,8 +74,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     getCurrentUser()
       .then((res) => {
         if (res && res.authenticated && res.user) {
-          setUser(res.user);
-          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(res.user));
+          const userObj = { ...res.user, token: res.token || res.user.token };
+          setUser(userObj);
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userObj));
         } else if (!stored) {
           setUser(null);
         }
@@ -109,8 +110,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     const res = await loginUser(email, password);
     if (res.success && res.user) {
-      setUser(res.user);
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(res.user));
+      const userObj = { ...res.user, token: res.token || res.user.token };
+      setUser(userObj);
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userObj));
       closeAuthModal();
       return { success: true, message: res.message };
     }
@@ -132,8 +134,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }) => {
     const res = await verifyOtpAndRegister(data);
     if (res.success && res.user) {
-      setUser(res.user);
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(res.user));
+      const userObj = { ...res.user, token: res.token || res.user.token };
+      setUser(userObj);
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userObj));
       closeAuthModal();
       return { success: true, message: res.message };
     }
@@ -153,8 +156,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }) => {
     const res = await registerCustomer(data);
     if (res.success && res.user) {
-      setUser(res.user);
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(res.user));
+      const userObj = { ...res.user, token: res.token || res.user.token };
+      setUser(userObj);
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userObj));
       closeAuthModal();
       return { success: true, message: res.message };
     }

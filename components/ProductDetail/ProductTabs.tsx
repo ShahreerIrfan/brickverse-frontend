@@ -101,13 +101,19 @@ const HTML_TAG_PATTERN = /<[a-z][\s\S]*>/i;
 
 function sanitizeHtml(dirty: string): string {
   if (!dirty) return "";
-  // Strip dangerous elements
-  let clean = dirty.replace(/<\s*(script|style|iframe|object|embed|form|input|textarea|button|base|meta|link)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, "");
-  clean = clean.replace(/<\s*(script|style|iframe|object|embed|form|input|textarea|button|base|meta|link)[^>]*\/?\s*>/gi, "");
-  // Strip javascript:, vbscript:, and data: URLs
-  clean = clean.replace(/\b(href|src)\s*=\s*["']?\s*(javascript|vbscript|data):[^"'>\s]*/gi, '$1="#"');
-  // Strip inline on* event handlers (e.g. onerror, onload, onclick, onmouseover)
-  clean = clean.replace(/\s+on[a-z]+\s*=\s*(("[^"]*")|('[^']*')|[^\s>]+)/gi, "");
+  // Strip dangerous elements entirely (script, svg, iframe, object, embed, math, style, form, etc.)
+  let clean = dirty.replace(
+    /<\s*(script|style|iframe|object|embed|form|input|textarea|button|base|meta|link|svg|math|applet)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi,
+    ""
+  );
+  clean = clean.replace(
+    /<\s*(script|style|iframe|object|embed|form|input|textarea|button|base|meta|link|svg|math|applet)[^>]*\/?\s*>/gi,
+    ""
+  );
+  // Strip javascript:, vbscript:, data:, and encoded protocol URLs in href/src/action
+  clean = clean.replace(/\b(href|src|action|formaction)\s*=\s*["']?\s*(javascript|vbscript|data):[^"'>\s]*/gi, '$1="#"');
+  // Strip all inline on* event handlers (e.g. onerror, onload, onclick, onmouseover, onfocus, etc.)
+  clean = clean.replace(/\s+on[a-zA-Z]+\s*=\s*(("[^"]*")|('[^']*')|[^\s>]+)/gi, "");
   return clean;
 }
 

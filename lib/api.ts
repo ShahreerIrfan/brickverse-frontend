@@ -44,6 +44,25 @@ export function getMediaUrl(path?: string | null): string {
 
 const getApi = () => getApiBaseUrl();
 
+export function getAuthHeaders(isFormData = false): Record<string, string> {
+  const headers: Record<string, string> = isFormData ? {} : { "Content-Type": "application/json" };
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("brickverse_auth_user");
+      if (stored) {
+        const u = JSON.parse(stored);
+        if (u?.token) {
+          headers["Authorization"] = `Bearer ${u.token}`;
+          headers["X-Session-Token"] = u.token;
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return headers;
+}
+
 // -------------------------------------------------------------
 // Products App APIs
 // -------------------------------------------------------------
@@ -317,6 +336,7 @@ export async function verifyOtpAndRegister(data: {
     return {
       success: res.ok,
       user: result.user,
+      token: result.token || (result.user ? result.user.token : undefined),
       message: result.message,
       error: result.error || (!res.ok ? "Verification failed." : undefined),
     };
@@ -360,6 +380,7 @@ export async function registerCustomer(data: {
     return {
       success: res.ok,
       user: result.user,
+      token: result.token || (result.user ? result.user.token : undefined),
       message: result.message,
       error: result.error || (result.email ? result.email[0] : undefined),
     };
@@ -374,12 +395,14 @@ export async function loginUser(email: string, password: string) {
     const res = await fetch(`${getApiBaseUrl()}/auth/login/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ email, password }),
     });
     const result = await res.json();
     return {
       success: res.ok,
       user: result.user,
+      token: result.token || (result.user ? result.user.token : undefined),
       message: result.message,
       error: result.error,
     };
@@ -425,7 +448,11 @@ export async function changePassword(data: {
 
 export async function getCurrentUser() {
   try {
-    const res = await fetch(`${getApiBaseUrl()}/auth/me/`);
+    const res = await fetch(`${getApiBaseUrl()}/auth/me/`, {
+      headers: getAuthHeaders(),
+      credentials: "include",
+      cache: "no-store",
+    });
     if (!res.ok) return { authenticated: false, user: null };
     return await res.json();
   } catch (error) {
@@ -627,12 +654,15 @@ export async function getAllOrders() {
 
 export async function updateOrderStatus(orderId: number | string, status: string, trackingNumber?: string) {
   try {
+    const headers = getAuthHeaders();
     const res = await fetch(`${getApiBaseUrl()}/orders/${orderId}/`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers,
+      credentials: "include",
       body: JSON.stringify({ status, ...(trackingNumber ? { tracking_number: trackingNumber } : {}) }),
     });
-    return { success: res.ok, data: await res.json() };
+    const data = await res.json().catch(() => null);
+    return { success: res.ok, data };
   } catch (error) {
     return { success: false, error: "Failed to update order" };
   }
@@ -640,8 +670,11 @@ export async function updateOrderStatus(orderId: number | string, status: string
 
 export async function deleteOrder(orderId: number | string) {
   try {
+    const headers = getAuthHeaders();
     const res = await fetch(`${getApiBaseUrl()}/orders/${orderId}/`, {
       method: "DELETE",
+      headers,
+      credentials: "include",
     });
     return { success: res.ok };
   } catch (error) {

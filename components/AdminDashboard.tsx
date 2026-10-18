@@ -1444,13 +1444,14 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   // -------------------------------------------------------------
   // Order Status Update Handler
   // -------------------------------------------------------------
-  const handleUpdateStatus = async (orderId: number, newStatus: string) => {
+  const handleUpdateStatus = async (orderId: number | string, newStatus: string) => {
     const res = await updateOrderStatus(orderId, newStatus);
     if (res.success) {
       showToast(`✓ Order #${orderId} status updated to ${newStatus.toUpperCase()}`);
       fetchData();
     } else {
-      alert("Failed updating order status.");
+      const errDetail = (res as any)?.data?.detail || (res as any)?.error || "Failed updating order status.";
+      alert(typeof errDetail === "string" ? errDetail : "Failed updating order status.");
     }
   };
 
