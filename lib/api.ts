@@ -1076,6 +1076,9 @@ export async function createOrder(orderData: {
   shipping_address?: string;
   total_amount: number;
   shipping_cost?: number;
+  discount_amount?: number;
+  discount?: number;
+  manual_discount?: number;
   status?: string;
   carrier?: string;
   tracking_number?: string;
