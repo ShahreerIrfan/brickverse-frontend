@@ -174,6 +174,8 @@ export async function getHeroSlides(apiBaseOverride?: string): Promise<HeroSlide
 export async function getHeroSlidesAdmin(): Promise<HeroSlide[]> {
   try {
     const res = await fetch(`${getApiBaseUrl()}/marketing/hero-slides/all/`, {
+      headers: getAuthHeaders(),
+      credentials: "include",
       cache: "no-store",
     });
     if (!res.ok) return [];
@@ -189,6 +191,8 @@ export async function createHeroSlide(data: FormData) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/marketing/hero-slides/all/`, {
       method: "POST",
+      headers: getAuthHeaders(true),
+      credentials: "include",
       body: data,
     });
     const result = await res.json();
@@ -202,6 +206,8 @@ export async function updateHeroSlide(id: number, data: FormData) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/marketing/hero-slides/${id}/`, {
       method: "PATCH",
+      headers: getAuthHeaders(true),
+      credentials: "include",
       body: data,
     });
     const result = await res.json();
@@ -215,6 +221,8 @@ export async function deleteHeroSlide(id: number) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/marketing/hero-slides/${id}/`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
+      credentials: "include",
     });
     return { success: res.ok };
   } catch (error) {
@@ -242,6 +250,8 @@ export async function getPromoBanners(apiBaseOverride?: string): Promise<PromoBa
 export async function getPromoBannersAdmin(): Promise<PromoBanner[]> {
   try {
     const res = await fetch(`${getApiBaseUrl()}/marketing/promo-banners/all/`, {
+      headers: getAuthHeaders(),
+      credentials: "include",
       cache: "no-store",
     });
     if (!res.ok) return [];
@@ -257,6 +267,8 @@ export async function createPromoBanner(data: FormData) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/marketing/promo-banners/all/`, {
       method: "POST",
+      headers: getAuthHeaders(true),
+      credentials: "include",
       body: data,
     });
     const result = await res.json();
@@ -270,6 +282,8 @@ export async function updatePromoBanner(id: number, data: FormData) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/marketing/promo-banners/${id}/`, {
       method: "PATCH",
+      headers: getAuthHeaders(true),
+      credentials: "include",
       body: data,
     });
     const result = await res.json();
@@ -283,6 +297,8 @@ export async function deletePromoBanner(id: number) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/marketing/promo-banners/${id}/`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
+      credentials: "include",
     });
     return { success: res.ok };
   } catch (error) {
@@ -295,6 +311,8 @@ export async function deletePromoBanner(id: number) {
 export async function getCategoryTree(): Promise<Category[]> {
   try {
     const res = await fetch(`${getApiBaseUrl()}/products/categories/all/`, {
+      headers: getAuthHeaders(),
+      credentials: "include",
       cache: "no-store",
     });
     if (!res.ok) return [];
@@ -734,7 +752,11 @@ export async function getAllProducts(params?: {
     if (params?.is_active !== undefined) queryParts.push(`is_active=${encodeURIComponent(String(params.is_active))}`);
     if (queryParts.length > 0) url += `?${queryParts.join("&")}`;
 
-    const res = await fetch(url, { cache: "no-store" });
+    const res = await fetch(url, {
+      headers: getAuthHeaders(),
+      credentials: "include",
+      cache: "no-store",
+    });
     if (!res.ok) return [];
     return await res.json();
   } catch (error) {
@@ -809,7 +831,8 @@ export async function createProduct(productData: any) {
     const isFormData = typeof FormData !== "undefined" && productData instanceof FormData;
     const res = await fetch(`${getApiBaseUrl()}/products/`, {
       method: "POST",
-      headers: isFormData ? undefined : { "Content-Type": "application/json" },
+      headers: getAuthHeaders(isFormData),
+      credentials: "include",
       body: isFormData ? productData : JSON.stringify(productData),
     });
     const data = await res.json();
@@ -824,7 +847,8 @@ export async function updateProduct(id: string, productData: any) {
     const isFormData = typeof FormData !== "undefined" && productData instanceof FormData;
     const res = await fetch(`${getApiBaseUrl()}/products/${encodeURIComponent(id)}/`, {
       method: "PATCH",
-      headers: isFormData ? undefined : { "Content-Type": "application/json" },
+      headers: getAuthHeaders(isFormData),
+      credentials: "include",
       body: isFormData ? productData : JSON.stringify(productData),
     });
     const data = await res.json();
@@ -839,6 +863,8 @@ export async function deleteProduct(id: string) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/products/${encodeURIComponent(id)}/`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
+      credentials: "include",
     });
     if (res.ok) return { success: true };
     const data = await res.json().catch(() => null);
@@ -852,6 +878,8 @@ export async function deleteProductGalleryImage(galleryId: number | string) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/products/gallery/${galleryId}/`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
+      credentials: "include",
     });
     return { success: res.ok };
   } catch (error) {
@@ -864,7 +892,8 @@ export async function bulkDeleteProducts(ids: string[]) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/products/bulk-delete/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify({ ids }),
     });
     if (res.ok) {
@@ -895,7 +924,8 @@ export async function createCategory(data: any) {
     const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
     const res = await fetch(`${getApiBaseUrl()}/products/categories/`, {
       method: "POST",
-      headers: isFormData ? undefined : { "Content-Type": "application/json" },
+      headers: getAuthHeaders(isFormData),
+      credentials: "include",
       body: isFormData ? data : JSON.stringify(data),
     });
     const result = await res.json();
@@ -910,7 +940,8 @@ export async function updateCategory(id: string, data: any) {
     const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
     const res = await fetch(`${getApiBaseUrl()}/products/categories/${encodeURIComponent(id)}/`, {
       method: "PATCH",
-      headers: isFormData ? undefined : { "Content-Type": "application/json" },
+      headers: getAuthHeaders(isFormData),
+      credentials: "include",
       body: isFormData ? data : JSON.stringify(data),
     });
     const result = await res.json();
@@ -924,7 +955,8 @@ export async function reorderMegaMenuCategories(ids: string[]) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/products/categories/mega-menu/reorder/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify({ ids }),
     });
     const result = await res.json().catch(() => null);
@@ -938,7 +970,8 @@ export async function reorderHomepageSections(ids: string[]) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/products/categories/homepage-sections/reorder/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify({ ids }),
     });
     const result = await res.json().catch(() => null);
@@ -952,6 +985,8 @@ export async function deleteCategory(id: string) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/products/categories/${encodeURIComponent(id)}/`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
+      credentials: "include",
     });
     return { success: res.ok };
   } catch (error) {
@@ -1158,7 +1193,8 @@ export async function createStore(data: any) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/stores/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify(data),
     });
     const result = await res.json();
@@ -1172,7 +1208,8 @@ export async function updateStore(id: number | string, data: any) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/stores/${id}/`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify(data),
     });
     const result = await res.json();
@@ -1184,7 +1221,11 @@ export async function updateStore(id: number | string, data: any) {
 
 export async function deleteStore(id: number | string) {
   try {
-    const res = await fetch(`${getApiBaseUrl()}/stores/${id}/`, { method: "DELETE" });
+    const res = await fetch(`${getApiBaseUrl()}/stores/${id}/`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+      credentials: "include",
+    });
     return { success: res.ok };
   } catch (error) {
     return { success: false };
@@ -1195,7 +1236,8 @@ export async function addStoreProduct(storeId: number | string, productId: strin
   try {
     const res = await fetch(`${getApiBaseUrl()}/stores/${storeId}/add-product/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify({ productId, qty }),
     });
     const data = await res.json().catch(() => null);
@@ -1209,7 +1251,8 @@ export async function recordStoreSale(storeId: number | string, lineId: number, 
   try {
     const res = await fetch(`${getApiBaseUrl()}/stores/${storeId}/record-sale/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify({ lineId, qty }),
     });
     const data = await res.json().catch(() => null);
@@ -1223,7 +1266,8 @@ export async function recordStoreReturn(storeId: number | string, lineId: number
   try {
     const res = await fetch(`${getApiBaseUrl()}/stores/${storeId}/record-return/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify({ lineId, qty }),
     });
     const data = await res.json().catch(() => null);
@@ -1509,6 +1553,8 @@ export async function getBlogPostsAdmin(params?: {
   const empty: BlogPostListResponse = { count: 0, next: null, previous: null, results: [] };
   try {
     const res = await fetch(`${getApiBaseUrl()}/blog/admin/posts/${blogQueryString(params)}`, {
+      headers: getAuthHeaders(),
+      credentials: "include",
       cache: "no-store",
     });
     if (!res.ok) return empty;
@@ -1529,6 +1575,8 @@ export async function getBlogPostsAdmin(params?: {
 export async function getBlogPostAdmin(id: string | number): Promise<BlogPost | null> {
   try {
     const res = await fetch(`${getApiBaseUrl()}/blog/admin/posts/${encodeURIComponent(String(id))}/`, {
+      headers: getAuthHeaders(),
+      credentials: "include",
       cache: "no-store",
     });
     if (!res.ok) return null;
@@ -1570,7 +1618,8 @@ export async function createBlogPost(draft: BlogPostDraft): Promise<{ success: b
   try {
     const res = await fetch(`${getApiBaseUrl()}/blog/admin/posts/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify(toBlogPostWritePayload(draft)),
     });
     const data = await res.json().catch(() => null);
@@ -1588,7 +1637,8 @@ export async function updateBlogPost(
   try {
     const res = await fetch(`${getApiBaseUrl()}/blog/admin/posts/${encodeURIComponent(String(id))}/`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify(toBlogPostWritePayload(draft)),
     });
     const data = await res.json().catch(() => null);
@@ -1603,6 +1653,8 @@ export async function deleteBlogPost(id: string | number): Promise<{ success: bo
   try {
     const res = await fetch(`${getApiBaseUrl()}/blog/admin/posts/${encodeURIComponent(String(id))}/`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
+      credentials: "include",
     });
     return { success: res.ok };
   } catch (error) {
@@ -1612,7 +1664,11 @@ export async function deleteBlogPost(id: string | number): Promise<{ success: bo
 
 export async function getBlogCategoriesAdmin(): Promise<BlogCategoryRef[]> {
   try {
-    const res = await fetch(`${getApiBaseUrl()}/blog/admin/categories/`, { cache: "no-store" });
+    const res = await fetch(`${getApiBaseUrl()}/blog/admin/categories/`, {
+      headers: getAuthHeaders(),
+      credentials: "include",
+      cache: "no-store",
+    });
     if (!res.ok) return [];
     const data = await res.json();
     return Array.isArray(data) ? data : data?.results ?? [];
@@ -1626,7 +1682,8 @@ export async function createBlogCategory(payload: { name: string; slug?: string 
   try {
     const res = await fetch(`${getApiBaseUrl()}/blog/admin/categories/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify(payload),
     });
     const data = await res.json().catch(() => null);
@@ -1640,7 +1697,8 @@ export async function updateBlogCategory(id: string | number, payload: { name?: 
   try {
     const res = await fetch(`${getApiBaseUrl()}/blog/admin/categories/${encodeURIComponent(String(id))}/`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify(payload),
     });
     const data = await res.json().catch(() => null);
@@ -1654,6 +1712,8 @@ export async function deleteBlogCategory(id: string | number): Promise<{ success
   try {
     const res = await fetch(`${getApiBaseUrl()}/blog/admin/categories/${encodeURIComponent(String(id))}/`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
+      credentials: "include",
     });
     return { success: res.ok };
   } catch (error) {
@@ -1663,7 +1723,11 @@ export async function deleteBlogCategory(id: string | number): Promise<{ success
 
 export async function getBlogTagsAdmin(): Promise<BlogTagRef[]> {
   try {
-    const res = await fetch(`${getApiBaseUrl()}/blog/admin/tags/`, { cache: "no-store" });
+    const res = await fetch(`${getApiBaseUrl()}/blog/admin/tags/`, {
+      headers: getAuthHeaders(),
+      credentials: "include",
+      cache: "no-store",
+    });
     if (!res.ok) return [];
     const data = await res.json();
     return Array.isArray(data) ? data : data?.results ?? [];
@@ -1677,7 +1741,8 @@ export async function createBlogTag(payload: { name: string; slug?: string }) {
   try {
     const res = await fetch(`${getApiBaseUrl()}/blog/admin/tags/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify(payload),
     });
     const data = await res.json().catch(() => null);
@@ -1691,7 +1756,8 @@ export async function updateBlogTag(id: string | number, payload: { name?: strin
   try {
     const res = await fetch(`${getApiBaseUrl()}/blog/admin/tags/${encodeURIComponent(String(id))}/`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify(payload),
     });
     const data = await res.json().catch(() => null);
@@ -1705,6 +1771,8 @@ export async function deleteBlogTag(id: string | number): Promise<{ success: boo
   try {
     const res = await fetch(`${getApiBaseUrl()}/blog/admin/tags/${encodeURIComponent(String(id))}/`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
+      credentials: "include",
     });
     return { success: res.ok };
   } catch (error) {
@@ -1718,6 +1786,8 @@ export async function uploadBlogMedia(file: File): Promise<{ success: boolean; u
     formData.append("file", file);
     const res = await fetch(`${getApiBaseUrl()}/blog/media/upload/`, {
       method: "POST",
+      headers: getAuthHeaders(true),
+      credentials: "include",
       body: formData,
     });
     const data = await res.json().catch(() => null);
@@ -1757,7 +1827,11 @@ export async function getCoupons(params?: { search?: string; status?: string }):
     if (params?.search) query.set("search", params.search);
     if (params?.status) query.set("status", params.status);
     const qs = query.toString() ? `?${query.toString()}` : "";
-    const res = await fetch(`${getApiBaseUrl()}/coupons/${qs}`, { cache: "no-store" });
+    const res = await fetch(`${getApiBaseUrl()}/coupons/${qs}`, {
+      headers: getAuthHeaders(),
+      credentials: "include",
+      cache: "no-store",
+    });
     if (!res.ok) return [];
     const data = await res.json();
     return Array.isArray(data) ? data : data?.results ?? [];
@@ -1771,7 +1845,8 @@ export async function createCoupon(payload: Partial<Coupon>): Promise<{ success:
   try {
     const res = await fetch(`${getApiBaseUrl()}/coupons/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify(payload),
     });
     const data = await res.json().catch(() => null);
@@ -1795,7 +1870,8 @@ export async function updateCoupon(id: number | string, payload: Partial<Coupon>
   try {
     const res = await fetch(`${getApiBaseUrl()}/coupons/${id}/`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify(payload),
     });
     const data = await res.json().catch(() => null);
@@ -1819,6 +1895,8 @@ export async function deleteCoupon(id: number | string): Promise<{ success: bool
   try {
     const res = await fetch(`${getApiBaseUrl()}/coupons/${id}/`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
+      credentials: "include",
     });
     return { success: res.ok };
   } catch (error: any) {
@@ -1905,6 +1983,8 @@ export async function getExpenses(params?: {
 
     const queryString = query.toString() ? `?${query.toString()}` : "";
     const res = await fetch(`${getApiBaseUrl()}/expenses/${queryString}`, {
+      headers: getAuthHeaders(),
+      credentials: "include",
       cache: "no-store",
     });
     if (!res.ok) throw new Error("Failed to fetch expenses");
@@ -1918,6 +1998,8 @@ export async function getExpenses(params?: {
 export async function getExpenseSummary(): Promise<ExpenseSummary | null> {
   try {
     const res = await fetch(`${getApiBaseUrl()}/expenses/summary/`, {
+      headers: getAuthHeaders(),
+      credentials: "include",
       cache: "no-store",
     });
     if (!res.ok) return null;
@@ -1931,6 +2013,8 @@ export async function getExpenseSummary(): Promise<ExpenseSummary | null> {
 export async function getExpenseCategories(): Promise<{ value: string; label: string }[]> {
   try {
     const res = await fetch(`${getApiBaseUrl()}/expenses/categories/`, {
+      headers: getAuthHeaders(),
+      credentials: "include",
       cache: "no-store",
     });
     if (!res.ok) return [];
@@ -1953,9 +2037,8 @@ export async function createExpense(
   try {
     const res = await fetch(`${getApiBaseUrl()}/expenses/`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify(data),
     });
     const json = await res.json();
@@ -1975,9 +2058,8 @@ export async function updateExpense(
   try {
     const res = await fetch(`${getApiBaseUrl()}/expenses/${id}/`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify(data),
     });
     const json = await res.json();
@@ -1996,6 +2078,8 @@ export async function deleteExpense(
   try {
     const res = await fetch(`${getApiBaseUrl()}/expenses/${id}/`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
+      credentials: "include",
     });
     if (!res.ok) {
       return { success: false, error: "Failed to delete expense" };
