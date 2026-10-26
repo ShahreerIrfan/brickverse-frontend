@@ -2090,5 +2090,134 @@ export async function deleteExpense(
   }
 }
 
+// ==========================================
+// FIFO Lot / Batch Inventory API
+// ==========================================
+
+export interface ProductLotResponse {
+  productId: string;
+  productName: string;
+  currentStock: number;
+  currentTradePrice: string;
+  currentRegularPrice: string;
+  currentPrice: string;
+  totalLotRemaining: number;
+  activeLotId: number | null;
+  activeLotNumber: string | null;
+  lots: any[];
+}
+
+export async function getProductLots(productId: string): Promise<{ success: boolean; data?: ProductLotResponse; error?: string }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/products/${productId}/lots/`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+      credentials: "include",
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      return { success: false, error: err.error || "Failed to fetch lots" };
+    }
+    const data = await res.json();
+    return { success: true, data };
+  } catch (error: any) {
+    return { success: false, error: error?.message || "Failed to fetch lots" };
+  }
+}
+
+export async function createProductLot(
+  productId: string,
+  payload: {
+    lotNumber?: string;
+    tradePrice: string;
+    mrp: string;
+    discountedPrice?: string;
+    quantity: number;
+    notes?: string;
+  }
+): Promise<{ success: boolean; data?: any; error?: string }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/products/${productId}/lots/`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { success: false, error: json.error || "Failed to create lot" };
+    }
+    return { success: true, data: json };
+  } catch (error: any) {
+    return { success: false, error: error?.message || "Failed to create lot" };
+  }
+}
+
+export async function initProductLotFromStock(productId: string): Promise<{ success: boolean; data?: any; error?: string }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/products/${productId}/lots/`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      credentials: "include",
+      body: JSON.stringify({ action: "init_from_stock" }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { success: false, error: json.error || "Failed to initialize lot from stock" };
+    }
+    return { success: true, data: json };
+  } catch (error: any) {
+    return { success: false, error: error?.message || "Failed to initialize lot" };
+  }
+}
+
+export async function updateProductLot(
+  lotId: number,
+  payload: Partial<{
+    lotNumber: string;
+    tradePrice: string;
+    mrp: string;
+    discountedPrice: string;
+    remainingQuantity: number;
+    initialQuantity: number;
+    isActive: boolean;
+    notes: string;
+  }>
+): Promise<{ success: boolean; data?: any; error?: string }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/products/lots/${lotId}/`, {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { success: false, error: json.error || "Failed to update lot" };
+    }
+    return { success: true, data: json };
+  } catch (error: any) {
+    return { success: false, error: error?.message || "Failed to update lot" };
+  }
+}
+
+export async function deleteProductLot(lotId: number): Promise<{ success: boolean; error?: string }> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/products/lots/${lotId}/`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+      credentials: "include",
+    });
+    if (!res.ok && res.status !== 204) {
+      const err = await res.json().catch(() => ({}));
+      return { success: false, error: err.error || "Failed to delete lot" };
+    }
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error?.message || "Failed to delete lot" };
+  }
+}
+
+
 
 

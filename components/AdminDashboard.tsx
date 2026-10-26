@@ -88,6 +88,7 @@ import AdminLogsView from "./admin/AdminLogsView";
 import CategoriesManager from "./admin/CategoriesManager";
 import HeroSlidesManager from "./admin/HeroSlidesManager";
 import PromoBannersManager from "./admin/PromoBannersManager";
+import ProductLotModal from "./admin/ProductLotModal";
 import HomepageSectionsManager from "./admin/HomepageSectionsManager";
 import CategoryTreePicker, { findRootCategoryId } from "./admin/CategoryTreePicker";
 import BlogPostsList from "./admin/BlogPostsList";
@@ -430,6 +431,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [formProductType, setFormProductType] = useState<"simple" | "grouped">("simple");
   const [formGroupItems, setFormGroupItems] = useState<BundleLine[]>([]);
   const [formIsActive, setFormIsActive] = useState<boolean>(true);
+  const [lotModalProduct, setLotModalProduct] = useState<Product | null>(null);
 
   // Change Password Form State
   const [pwdCurrent, setPwdCurrent] = useState("");
@@ -3205,6 +3207,17 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                     ? `${p.stock ?? 0} bundles available`
                                     : `${p.stock ?? 0} in stock`}
                                 </span>
+                                {p.productType !== "grouped" && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setLotModalProduct(p)}
+                                    className="mt-1 flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-[#7B5CFF]/10 hover:bg-[#7B5CFF]/20 text-[#7B5CFF] border border-[#7B5CFF]/25 transition-all cursor-pointer"
+                                    title="Manage FIFO inventory batches & automatic price transitions"
+                                  >
+                                    <IconLayers className="w-3 h-3 shrink-0" />
+                                    <span>{p.hasLots ? `FIFO (${p.lotsCount || 1} Lots)` : "FIFO Lots"}</span>
+                                  </button>
+                                )}
                               </td>
                               <td className="py-3.5 px-3 text-left whitespace-nowrap">
                                 <div className="flex flex-col">
@@ -3257,6 +3270,16 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                               </td>
                               <td className="py-3.5 pl-3 pr-4 text-right whitespace-nowrap">
                                 <div className="flex items-center justify-end gap-2">
+                                  {p.productType !== "grouped" && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setLotModalProduct(p)}
+                                      className="p-1.5 rounded-lg text-[#7B5CFF] hover:bg-[#EFE9FF] transition-colors cursor-pointer"
+                                      title="Manage FIFO Inventory Batches / Lots"
+                                    >
+                                      <IconLayers className="w-4 h-4" />
+                                    </button>
+                                  )}
                                   <Link
                                     href={`/product/${p.slug || p.id}`}
                                     target="_blank"
@@ -3780,6 +3803,26 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                           min={0}
                           className="w-full px-4 py-3 rounded-2xl border border-[#EAE3F7] bg-[#FAF8FD] focus:bg-white text-xs font-bold text-[#171136] focus:outline-none focus:border-[#FF4D6D] transition-all"
                         />
+                        {editingProduct && (
+                          <div className="mt-2.5 p-3 rounded-2xl bg-gradient-to-r from-[#FAF8FD] to-[#FFF5F7] border border-[#EAE3F7] flex items-center justify-between gap-3">
+                            <div>
+                              <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#171136]">
+                                <IconLayers className="w-3.5 h-3.5 text-[#7B5CFF]" />
+                                <span>FIFO Lot & Batch Management</span>
+                              </div>
+                              <p className="text-[10.5px] text-[#736E9B]">
+                                Restock batches with their own TP and MRP with automatic price transitions.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setLotModalProduct(editingProduct)}
+                              className="px-3 py-1.5 rounded-xl bg-[#7B5CFF] hover:bg-[#6A49F2] text-white text-xs font-bold shrink-0 cursor-pointer transition-all shadow-xs"
+                            >
+                              Manage Lots
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -5893,6 +5936,26 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
             </form>
           </div>
         </div>
+      )}
+
+      {lotModalProduct && (
+        <ProductLotModal
+          product={lotModalProduct}
+          onClose={() => setLotModalProduct(null)}
+          onProductUpdated={(updated) => {
+            setProducts((prev) =>
+              prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item))
+            );
+            if (editingProduct && editingProduct.id === updated.id) {
+              setEditingProduct((prev: any) => ({ ...prev, ...updated }));
+              setFormStock(updated.stock ?? 0);
+              if (updated.tradePrice) setFormTradePrice(updated.tradePrice.replace("৳", ""));
+              if (updated.regularPrice) setFormRegularPrice(updated.regularPrice.replace("৳", ""));
+              if (updated.discountedPrice) setFormDiscountedPrice(updated.discountedPrice.replace("৳", ""));
+            }
+          }}
+          showToast={showToast}
+        />
       )}
     </div>
   );

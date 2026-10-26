@@ -58,7 +58,35 @@ export type Product = {
     date: string;
   }[];
   is_active?: boolean;
+
+  hasLots?: boolean;
+  activeLot?: {
+    id: number;
+    lotNumber: string;
+    tradePrice: string;
+    mrp: string;
+    discountedPrice?: string;
+    remainingQuantity: number;
+    initialQuantity: number;
+  } | null;
+  lotsCount?: number;
 };
+
+export type ProductLot = {
+  id: number;
+  productId: string;
+  lotNumber: string;
+  tradePrice: string;
+  mrp: string;
+  discountedPrice?: string;
+  initialQuantity: number;
+  remainingQuantity: number;
+  isActive: boolean;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 
 
 // A category tree node. Categories are self-referential now (parent can be
