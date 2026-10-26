@@ -1692,7 +1692,59 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
               )}
             </div>
 
-            {/* 2b) Appearance Accordion */}
+            {/* 2b) Orders Accordion (Immediately after Products) */}
+            <div className="space-y-1">
+              <button
+                onClick={() => setOrdersMenuOpen(!ordersMenuOpen)}
+                title="Orders"
+                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-bold text-xs sm:text-[13.5px] transition-all cursor-pointer relative ${
+                  activeNav.startsWith("orders")
+                    ? "bg-[#2A2159] text-white before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-sm before:bg-[#FF4D6D]"
+                    : "text-[#C7C0E8] hover:bg-[#2A2159]/60 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <IconOrders className={`w-4 h-4 shrink-0 ${activeNav.startsWith("orders") ? "text-white" : "text-[#A79FD1]"}`} />
+                  {!sidebarCollapsed && <span>Orders</span>}
+                </div>
+                {!sidebarCollapsed && (
+                  <IconChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      ordersMenuOpen ? "rotate-0 text-white" : "-rotate-90 text-[#A79FD1]"
+                    }`}
+                  />
+                )}
+              </button>
+
+              {ordersMenuOpen && !sidebarCollapsed && (
+                <div className="pl-8 pr-1 py-1 space-y-1">
+                  <button
+                    onClick={() => navigateTo("orders-all", "/admin/orders")}
+                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                      activeNav === "orders-all"
+                        ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
+                        : "text-[#A79FD1] hover:text-white hover:bg-[#2A2159]/40"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    <span>All Orders</span>
+                  </button>
+                  <button
+                    onClick={() => navigateTo("orders-custom", "/admin/custom-order")}
+                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                      activeNav === "orders-custom"
+                        ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
+                        : "text-[#A79FD1] hover:text-white hover:bg-[#2A2159]/40"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    <span>Add Custom Order</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 2c) Appearance Accordion */}
             <div className="space-y-1">
               <button
                 onClick={() => setAppearanceMenuOpen(!appearanceMenuOpen)}
@@ -1889,58 +1941,6 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                       SOON
                     </span>
                   </div>
-                </div>
-              )}
-            </div>
-
-            {/* 3) Orders Accordion */}
-            <div className="space-y-1">
-              <button
-                onClick={() => setOrdersMenuOpen(!ordersMenuOpen)}
-                title="Orders"
-                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-bold text-xs sm:text-[13.5px] transition-all cursor-pointer relative ${
-                  activeNav.startsWith("orders")
-                    ? "bg-[#2A2159] text-white before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-sm before:bg-[#FF4D6D]"
-                    : "text-[#C7C0E8] hover:bg-[#2A2159]/60 hover:text-white"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <IconOrders className={`w-4 h-4 shrink-0 ${activeNav.startsWith("orders") ? "text-white" : "text-[#A79FD1]"}`} />
-                  {!sidebarCollapsed && <span>Orders</span>}
-                </div>
-                {!sidebarCollapsed && (
-                  <IconChevronDown
-                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                      ordersMenuOpen ? "rotate-0 text-white" : "-rotate-90 text-[#A79FD1]"
-                    }`}
-                  />
-                )}
-              </button>
-
-              {ordersMenuOpen && !sidebarCollapsed && (
-                <div className="pl-8 pr-1 py-1 space-y-1">
-                  <button
-                    onClick={() => navigateTo("orders-all", "/admin/orders")}
-                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
-                      activeNav === "orders-all"
-                        ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
-                        : "text-[#A79FD1] hover:text-white hover:bg-[#2A2159]/40"
-                    }`}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                    <span>All Orders</span>
-                  </button>
-                  <button
-                    onClick={() => navigateTo("orders-custom", "/admin/custom-order")}
-                    className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
-                      activeNav === "orders-custom"
-                        ? "text-[#FF4D6D] font-extrabold bg-[#2A2159]"
-                        : "text-[#A79FD1] hover:text-white hover:bg-[#2A2159]/40"
-                    }`}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                    <span>Add Custom Order</span>
-                  </button>
                 </div>
               )}
             </div>
