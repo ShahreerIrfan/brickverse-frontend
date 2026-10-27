@@ -3,7 +3,7 @@ import NavLinks from "@/components/NavLinks";
 import CategoryRail from "@/components/CategoryRail";
 import Hero from "@/components/Hero";
 import PromoColumns from "@/components/PromoColumns";
-import ProductGrid from "@/components/ProductGrid";
+import HomepageSectionsFeed from "@/components/HomepageSectionsFeed";
 import PromoBanner from "@/components/PromoBanner";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
@@ -15,10 +15,8 @@ import {
   getHeroSlides,
   getNewArrivals,
 } from "@/lib/api";
-import type { ProductSection } from "@/components/productData";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 30;
 
 export default async function Home() {
   const [fixedSections, categorySections, categories, heroSlides, newArrivals] = await Promise.all([
@@ -35,17 +33,6 @@ export default async function Home() {
     .filter((c) => c.show_in_mega_menu !== false)
     .sort((a, b) => (a.mega_menu_order ?? 0) - (b.mega_menu_order ?? 0));
 
-  const newArrivalsSection: ProductSection = {
-    id: "new-arrivals",
-    eyebrow: "JUST LANDED IN STORE",
-    eyebrowColor: "#FF4D6D",
-    title: "New Arrivals",
-    itemCount: `${newArrivals.length} items`,
-    accent: "#FF4D6D",
-    products: newArrivals,
-    href: "/shop?sort=newest",
-  };
-
   return (
     <div className="flex flex-col flex-1 bg-[#FFF6EE] pb-16 lg:pb-0">
       <Navbar categories={categories} />
@@ -60,13 +47,10 @@ export default async function Home() {
           </div>
         </div>
 
-        {sections.map((section) => (
-          <ProductGrid key={section.id} section={section} />
-        ))}
-
-        {newArrivals.length > 0 && (
-          <ProductGrid section={newArrivalsSection} />
-        )}
+        <HomepageSectionsFeed
+          initialSections={sections}
+          initialNewArrivals={newArrivals}
+        />
 
         <PromoBanner />
         <Newsletter />
