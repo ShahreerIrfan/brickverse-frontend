@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef, useLayoutEffect } from "react";
+import { useState, useRef, useLayoutEffect, useEffect } from "react";
 import Link from "next/link";
 import { IconChevronRight, IconGrid, IconArrowRight } from "./icons";
 import { categories as defaultCategories, Category } from "./productData";
-import { getMediaUrl } from "@/lib/api";
+import { getMediaUrl, getCategories } from "@/lib/api";
 
 export function CategoryGlyph({
   id,
@@ -125,7 +125,25 @@ export function CategoryGlyph({
 }
 
 export default function CategoryRail({ initialCategories }: { initialCategories?: Category[] }) {
-  const displayCategories = initialCategories && initialCategories.length > 0 ? initialCategories : defaultCategories;
+  const [categories, setCategories] = useState<Category[]>(initialCategories || []);
+
+  useEffect(() => {
+    if (initialCategories && initialCategories.length > 0) {
+      setCategories(initialCategories);
+    } else {
+      // Client-side fallback: if server provided 0 categories (cold start / network flicker), fetch in browser
+      getCategories().then((cats) => {
+        if (cats && cats.length > 0) {
+          const megaMenu = cats
+            .filter((c) => c.show_in_mega_menu !== false)
+            .sort((a, b) => (a.mega_menu_order ?? 0) - (b.mega_menu_order ?? 0));
+          setCategories(megaMenu.length > 0 ? megaMenu : cats);
+        }
+      }).catch(() => {});
+    }
+  }, [initialCategories]);
+
+  const displayCategories = categories.length > 0 ? categories : (initialCategories && initialCategories.length > 0 ? initialCategories : defaultCategories);
   const [hoveredCatId, setHoveredCatId] = useState<string | null>(null);
   const [flyoutTop, setFlyoutTop] = useState(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);

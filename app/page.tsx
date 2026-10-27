@@ -17,7 +17,8 @@ import {
 } from "@/lib/api";
 import type { ProductSection } from "@/components/productData";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function Home() {
   const [fixedSections, categorySections, categories, heroSlides, newArrivals] = await Promise.all([

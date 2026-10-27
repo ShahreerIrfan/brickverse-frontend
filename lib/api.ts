@@ -76,7 +76,7 @@ export async function getProductSections(apiBaseOverride?: string): Promise<Prod
   try {
     const base = apiBaseOverride || getApiBaseUrl();
     const res = await fetch(`${base}/sections/`, {
-      next: { revalidate: 30 },
+      cache: "no-store",
     });
     if (!res.ok) return [];
     const data = await res.json();
@@ -94,7 +94,7 @@ export async function getProductSections(apiBaseOverride?: string): Promise<Prod
 export async function getHomepageSections(apiBaseOverride?: string): Promise<ProductSection[]> {
   try {
     const base = apiBaseOverride || getApiBaseUrl();
-    const res = await fetch(`${base}/products/homepage-sections/?limit=10`, { next: { revalidate: 30 } });
+    const res = await fetch(`${base}/products/homepage-sections/?limit=10`, { cache: "no-store" });
     if (!res.ok) return [];
     const data = await res.json();
     if (!Array.isArray(data)) return [];
@@ -120,7 +120,7 @@ export async function getNewArrivals(limit = 10, apiBaseOverride?: string): Prom
   try {
     const base = apiBaseOverride || getApiBaseUrl();
     const res = await fetch(`${base}/products/?all=1&is_active=true`, {
-      next: { revalidate: 30 },
+      cache: "no-store",
     });
     if (!res.ok) return [];
     const data = await res.json();
@@ -143,7 +143,7 @@ export async function getCategories(apiBaseOverride?: string): Promise<Category[
   try {
     const base = apiBaseOverride || getApiBaseUrl();
     const res = await fetch(`${base}/categories/`, {
-      next: { revalidate: 60 },
+      cache: "no-store",
     });
     if (!res.ok) return [];
     const data = await res.json();
@@ -159,7 +159,7 @@ export async function getHeroSlides(apiBaseOverride?: string): Promise<HeroSlide
   try {
     const base = apiBaseOverride || getApiBaseUrl();
     const res = await fetch(`${base}/marketing/hero-slides/`, {
-      next: { revalidate: 60 },
+      cache: "no-store",
     });
     if (!res.ok) return [];
     const data = await res.json();
