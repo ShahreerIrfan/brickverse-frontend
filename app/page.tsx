@@ -19,15 +19,17 @@ import {
 export const revalidate = 30;
 
 export default async function Home() {
-  const [fixedSections, categorySections, categories, heroSlides, newArrivals] = await Promise.all([
-    getProductSections(),
+  const [categorySections, categories, heroSlides, newArrivals] = await Promise.all([
     getHomepageSections(),
     getCategories(),
     getHeroSlides(),
     getNewArrivals(10),
   ]);
-  // Admin-chosen category sections win; with none chosen, keep the fixed ones.
-  const sections = categorySections.length > 0 ? categorySections : fixedSections;
+  // Admin-chosen category sections win; with none chosen, fall back to fixed sections.
+  const sections =
+    categorySections && categorySections.length > 0
+      ? categorySections
+      : await getProductSections();
 
   const megaMenuCategories = categories
     .filter((c) => c.show_in_mega_menu !== false)

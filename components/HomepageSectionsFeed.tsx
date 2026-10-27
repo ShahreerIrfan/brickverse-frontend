@@ -28,20 +28,25 @@ export default function HomepageSectionsFeed({
 
     // Client-side fallback: If server rendered 0 sections or 0 arrivals (e.g. backend restart/timeout),
     // fetch directly in browser so products always appear!
-    if (!initialSections || initialSections.length === 0 || !initialNewArrivals || initialNewArrivals.length === 0) {
-      Promise.all([
-        getHomepageSections(),
-        getProductSections(),
-        getNewArrivals(10),
-      ])
-        .then(([catSections, fixSections, arrivals]) => {
-          const resolved = catSections && catSections.length > 0 ? catSections : fixSections;
-          if (resolved && resolved.length > 0) {
-            setSections(resolved);
+    if (!initialSections || initialSections.length === 0) {
+      getHomepageSections()
+        .then((catSections) => {
+          if (catSections && catSections.length > 0) {
+            setSections(catSections);
+          } else {
+            getProductSections()
+              .then((fixSections) => {
+                if (fixSections && fixSections.length > 0) setSections(fixSections);
+              })
+              .catch(() => {});
           }
-          if (arrivals && arrivals.length > 0) {
-            setNewArrivals(arrivals);
-          }
+        })
+        .catch(() => {});
+    }
+    if (!initialNewArrivals || initialNewArrivals.length === 0) {
+      getNewArrivals(10)
+        .then((arrivals) => {
+          if (arrivals && arrivals.length > 0) setNewArrivals(arrivals);
         })
         .catch(() => {});
     }

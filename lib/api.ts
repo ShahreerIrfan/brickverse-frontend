@@ -119,20 +119,14 @@ export async function getHomepageSections(apiBaseOverride?: string): Promise<Pro
 export async function getNewArrivals(limit = 10, apiBaseOverride?: string): Promise<Product[]> {
   try {
     const base = apiBaseOverride || getApiBaseUrl();
-    const res = await fetch(`${base}/products/?all=1&is_active=true`, {
+    const res = await fetch(`${base}/products/?page=1&page_size=${limit}&sort=newest`, {
       next: { revalidate: 30 },
     });
     if (!res.ok) return [];
     const data = await res.json();
-    const items = Array.isArray(data) ? data : Array.isArray(data.results) ? data.results : [];
-    // Sort by newest created_at / id
-    const sorted = [...items].sort((a, b) => {
-      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
-      if (dateB !== dateA) return dateB - dateA;
-      return Number(b.id || 0) - Number(a.id || 0);
-    });
-    return sorted.slice(0, limit);
+    if (Array.isArray(data?.results)) return data.results;
+    if (Array.isArray(data)) return data.slice(0, limit);
+    return [];
   } catch (error) {
     console.warn("[API] Failed to fetch new arrivals:", error);
     return [];
