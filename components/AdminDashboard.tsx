@@ -601,6 +601,11 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   // Fetch all live backend data
   const fetchData = async () => {
     setRefreshing(true);
+    // Fetch live KPI stats in parallel immediately so revenue and cards load in milliseconds
+    getAdminStats().then((stats) => {
+      if (stats) setStatsData(stats);
+    }).catch(() => {});
+
     try {
       const [stats, prods, cats, tree, ords, usrs, strs] = await Promise.all([
         getAdminStats(),
@@ -741,15 +746,15 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
 
   // Compute live KPI metrics (exclude cancelled orders from revenue)
   const stats = statsData?.stats || {
-    total_revenue: orders.filter((o) => o.status !== "cancelled").reduce((acc, o) => acc + Number(o.total_amount || 0), 0) || 5120.0,
-    total_orders: orders.length || 13,
-    total_customers: usersList.filter((u) => u.role === "customer").length || 37,
-    total_products: products.length || 12,
-    total_categories: categories.length || 11,
-    active_vendors: 4,
-    avg_rating: 4.8,
-    profit_est: 72.0,
-    commission_est: 316.0,
+    total_revenue: orders.filter((o) => o.status !== "cancelled").reduce((acc, o) => acc + Number(o.total_amount || 0), 0),
+    total_orders: orders.length,
+    total_customers: usersList.filter((u) => u.role === "customer").length,
+    total_products: products.length,
+    total_categories: categories.length,
+    active_vendors: 0,
+    avg_rating: 5.0,
+    profit_est: 0,
+    commission_est: 0,
   };
 
   const statusDist = statsData?.status_distribution || {
@@ -2328,9 +2333,13 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                     </span>
                   </div>
                   <div className="mt-4">
-                    <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block font-mono">
-                      ৳{Number(stats.total_revenue || 48920.50).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
+                    {loading && !statsData ? (
+                      <div className="h-8 w-36 bg-[#F4F0FB] animate-pulse rounded-lg my-1" />
+                    ) : (
+                      <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block font-mono">
+                        ৳{Number(stats.total_revenue || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    )}
                     <div className="flex items-center gap-2 mt-2">
                       <span className="px-2 py-0.5 rounded-full bg-[#E7F8F0] text-[#2ECC8F] text-[11px] font-extrabold flex items-center gap-1">
                         <IconTrendingUp className="w-3 h-3" />
@@ -2352,9 +2361,13 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                     </span>
                   </div>
                   <div className="mt-4">
-                    <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block">
-                      {stats.total_orders ? stats.total_orders.toLocaleString("en-US") : "1,284"}
-                    </span>
+                    {loading && !statsData ? (
+                      <div className="h-8 w-20 bg-[#F4F0FB] animate-pulse rounded-lg my-1" />
+                    ) : (
+                      <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block font-mono">
+                        {(stats.total_orders || 0).toLocaleString("en-US")}
+                      </span>
+                    )}
                     <div className="flex items-center gap-2 mt-2">
                       <span className="px-2 py-0.5 rounded-full bg-[#E7F8F0] text-[#2ECC8F] text-[11px] font-extrabold flex items-center gap-1">
                         <IconTrendingUp className="w-3 h-3" />
@@ -2376,9 +2389,13 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                     </span>
                   </div>
                   <div className="mt-4">
-                    <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block">
-                      {stats.total_customers ? stats.total_customers.toLocaleString("en-US") : "382"}
-                    </span>
+                    {loading && !statsData ? (
+                      <div className="h-8 w-20 bg-[#F4F0FB] animate-pulse rounded-lg my-1" />
+                    ) : (
+                      <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block font-mono">
+                        {(stats.total_customers || 0).toLocaleString("en-US")}
+                      </span>
+                    )}
                     <div className="flex items-center gap-2 mt-2">
                       <span className="px-2 py-0.5 rounded-full bg-[#E7F8F0] text-[#2ECC8F] text-[11px] font-extrabold flex items-center gap-1">
                         <IconTrendingUp className="w-3 h-3" />
