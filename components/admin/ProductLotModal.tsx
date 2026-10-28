@@ -65,6 +65,7 @@ export default function ProductLotModal({
   const [editRemainingQty, setEditRemainingQty] = useState<number>(0);
   const [editTradePrice, setEditTradePrice] = useState("");
   const [editMrp, setEditMrp] = useState("");
+  const [editDiscountedPrice, setEditDiscountedPrice] = useState("");
   const [editNotes, setEditNotes] = useState("");
 
   const fetchLots = async () => {
@@ -137,6 +138,7 @@ export default function ProductLotModal({
       if (showToast) showToast(`✓ New lot restocked successfully!`);
       setShowAddForm(false);
       setNewLotNumber("");
+      setNewDiscountedPrice("");
       setNewNotes("");
       if (res.data?.product && onProductUpdated) {
         onProductUpdated(res.data.product);
@@ -155,6 +157,11 @@ export default function ProductLotModal({
       remainingQuantity: editRemainingQty,
       tradePrice: editTradePrice.startsWith("৳") ? editTradePrice : `৳${editTradePrice}`,
       mrp: editMrp.startsWith("৳") ? editMrp : `৳${editMrp}`,
+      discountedPrice: editDiscountedPrice
+        ? editDiscountedPrice.startsWith("৳")
+          ? editDiscountedPrice
+          : `৳${editDiscountedPrice}`
+        : "",
       notes: editNotes,
     };
     const res = await updateProductLot(lotId, payload);
@@ -366,7 +373,7 @@ export default function ProductLotModal({
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
                 {/* 1. Lot Quantity */}
                 <div>
                   <label className="block text-[11px] font-extrabold text-[#171136] mb-1">
@@ -383,6 +390,7 @@ export default function ProductLotModal({
                     placeholder="e.g. 10"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[#DCD3F5] bg-white text-xs font-bold text-[#171136] focus:outline-none focus:border-[#7B5CFF]"
                   />
+                  <p className="text-[10px] text-[#736E9B] mt-0.5">Units received</p>
                 </div>
 
                 {/* 2. Trade Price (TP) */}
@@ -395,29 +403,44 @@ export default function ProductLotModal({
                     required
                     value={newTradePrice}
                     onChange={(e) => setNewTradePrice(e.target.value)}
-                    placeholder="e.g. 10.00"
+                    placeholder="e.g. 45.00"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[#DCD3F5] bg-white text-xs font-bold text-[#059669] focus:outline-none focus:border-[#059669]"
                   />
                   <p className="text-[10px] text-[#736E9B] mt-0.5">Supplier purchase cost</p>
                 </div>
 
-                {/* 3. MRP (Selling Price) */}
+                {/* 3. MRP (Regular Price) */}
                 <div>
                   <label className="block text-[11px] font-extrabold text-[#171136] mb-1">
-                    MRP (Selling Price ৳) <span className="text-[#FF4D6D]">*</span>
+                    Regular Price (৳) <span className="text-[#FF4D6D]">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={newMrp}
                     onChange={(e) => setNewMrp(e.target.value)}
-                    placeholder="e.g. 13.00"
+                    placeholder="e.g. 100.00"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[#DCD3F5] bg-white text-xs font-bold text-[#FF4D6D] focus:outline-none focus:border-[#FF4D6D]"
                   />
-                  <p className="text-[10px] text-[#736E9B] mt-0.5">Customer sale price</p>
+                  <p className="text-[10px] text-[#736E9B] mt-0.5">Original regular price</p>
                 </div>
 
-                {/* 4. Lot Number / Batch ID */}
+                {/* 4. Discounted Price (৳) */}
+                <div>
+                  <label className="block text-[11px] font-extrabold text-[#171136] mb-1">
+                    Discounted Price (৳) <span className="text-[#8A84A6] text-[10px] font-normal">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newDiscountedPrice}
+                    onChange={(e) => setNewDiscountedPrice(e.target.value)}
+                    placeholder="e.g. 60.00"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#DCD3F5] bg-white text-xs font-bold text-[#7B5CFF] focus:outline-none focus:border-[#7B5CFF]"
+                  />
+                  <p className="text-[10px] text-[#736E9B] mt-0.5">Customer selling price</p>
+                </div>
+
+                {/* 5. Lot Number / Batch ID */}
                 <div>
                   <label className="block text-[11px] font-extrabold text-[#171136] mb-1">
                     Lot / Batch ID (Optional)
@@ -505,7 +528,7 @@ export default function ProductLotModal({
                             Cancel
                           </button>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                           <div>
                             <label className="text-[11px] font-extrabold text-[#171136] block mb-1">
                               Remaining Stock
@@ -531,13 +554,25 @@ export default function ProductLotModal({
                           </div>
                           <div>
                             <label className="text-[11px] font-extrabold text-[#171136] block mb-1">
-                              MRP (৳)
+                              Regular Price (৳)
                             </label>
                             <input
                               type="text"
                               value={editMrp}
                               onChange={(e) => setEditMrp(e.target.value)}
                               className="w-full px-3 py-2 rounded-xl border border-[#DCD3F5] text-xs font-bold text-[#FF4D6D]"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[11px] font-extrabold text-[#171136] block mb-1">
+                              Discounted Price (৳)
+                            </label>
+                            <input
+                              type="text"
+                              value={editDiscountedPrice}
+                              onChange={(e) => setEditDiscountedPrice(e.target.value)}
+                              placeholder="e.g. 60.00"
+                              className="w-full px-3 py-2 rounded-xl border border-[#DCD3F5] text-xs font-bold text-[#7B5CFF]"
                             />
                           </div>
                         </div>
@@ -628,9 +663,27 @@ export default function ProductLotModal({
                         {/* Right: Pricing & Actions */}
                         <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-0 border-[#F0EBF8]">
                           <div className="text-right">
-                            <div className="text-xs font-black text-[#171136]">
-                              MRP: <span className="text-[#FF4D6D]">{lot.mrp}</span>
-                            </div>
+                            {lot.discountedPrice &&
+                            lot.discountedPrice !== "৳0.00" &&
+                            lot.discountedPrice !== lot.mrp ? (
+                              <div>
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <span className="line-through text-[10.5px] text-[#8A84A6]">
+                                    {lot.mrp}
+                                  </span>
+                                  <span className="text-xs font-black text-[#7B5CFF]">
+                                    {lot.discountedPrice}
+                                  </span>
+                                </div>
+                                <div className="text-[10px] font-bold text-[#FF4D6D]">
+                                  Sale Price
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-xs font-black text-[#171136]">
+                                MRP: <span className="text-[#FF4D6D]">{lot.mrp}</span>
+                              </div>
+                            )}
                             <div className="text-[11px] font-bold text-[#059669]">
                               TP: {lot.tradePrice}
                             </div>
@@ -642,8 +695,9 @@ export default function ProductLotModal({
                               onClick={() => {
                                 setEditingLotId(lot.id);
                                 setEditRemainingQty(lot.remainingQuantity);
-                                setEditTradePrice(lot.tradePrice?.replace("৳", "") || "");
-                                setEditMrp(lot.mrp?.replace("৳", "") || "");
+                                setEditTradePrice(lot.tradePrice?.replace("৳", "").trim() || "");
+                                setEditMrp(lot.mrp?.replace("৳", "").trim() || "");
+                                setEditDiscountedPrice(lot.discountedPrice?.replace("৳", "").trim() || "");
                                 setEditNotes(lot.notes || "");
                               }}
                               className="p-1.5 rounded-lg text-[#736E9B] hover:text-[#171136] hover:bg-[#F4F0FB] transition-colors"
