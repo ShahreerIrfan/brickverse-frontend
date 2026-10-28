@@ -784,7 +784,17 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   }, [initialOrderId, orders]);
 
   // Compute live KPI metrics (exclude cancelled orders from revenue)
+  const totalNetIncome = useMemo(() => {
+    if (typeof statsData?.stats?.total_net_income === "number") {
+      return statsData.stats.total_net_income;
+    }
+    return orders
+      .filter((o) => o.status !== "cancelled")
+      .reduce((acc, o) => acc + getOrderNetIncome(o).netIncome, 0);
+  }, [statsData?.stats?.total_net_income, orders]);
+
   const stats = statsData?.stats || {
+    total_net_income: totalNetIncome,
     total_revenue: orders.filter((o) => o.status !== "cancelled").reduce((acc, o) => acc + Number(o.total_amount || 0), 0),
     total_orders: orders.length,
     total_customers: usersList.filter((u) => u.role === "customer").length,
@@ -2445,8 +2455,33 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                   </div>
                 </div>
 
-                {/* 4. Kept empty */}
-                <div className="hidden lg:block" />
+                {/* 4. Net income */}
+                <div className="bg-white rounded-[20px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.04)] flex flex-col justify-between">
+                  <div className="flex items-start justify-between">
+                    <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#10B981] to-[#059669] flex items-center justify-center text-white shadow-md shadow-[#10B981]/20">
+                      <IconTrendingUp className="w-5 h-5" />
+                    </div>
+                    <span className="text-[11.5px] font-semibold text-[#736E9B]">
+                      Net income
+                    </span>
+                  </div>
+                  <div className="mt-4">
+                    {loading && !statsData ? (
+                      <div className="h-8 w-36 bg-[#F4F0FB] animate-pulse rounded-lg my-1" />
+                    ) : (
+                      <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block font-mono">
+                        ৳{Number((stats as any).total_net_income ?? totalNetIncome ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    )}
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="px-2 py-0.5 rounded-full bg-[#E7F8F0] text-[#059669] text-[11px] font-extrabold flex items-center gap-1">
+                        <IconTrendingUp className="w-3 h-3" />
+                        All orders
+                      </span>
+                      <span className="text-[10.5px] text-[#736E9B]">excluding cancelled</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Middle Row Grid: Sales Overview (Left) + Top Selling Products (Right) */}
