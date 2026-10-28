@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCart, formatPrice } from "@/context/CartContext";
+import { useCart, formatPrice, calculateCartItemTotal } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import {
   IconClose,
@@ -177,7 +177,9 @@ export default function RightSidebarCart() {
               </Link>
             </div>
           ) : (
-            items.map((item) => (
+            items.map((item) => {
+              const itemTotalInfo = calculateCartItemTotal(item);
+              return (
               <div
                 key={item.id}
                 className="py-4 flex gap-3.5 items-start relative group transition-all"
@@ -240,11 +242,17 @@ export default function RightSidebarCart() {
                 </button>
 
                 {/* Item Line Total (Right bottom aligned) */}
-                <div className="text-right font-bold text-xs sm:text-[13px] text-[#171136] font-mono mt-auto pt-6 shrink-0">
-                  {formatPrice(item.price * item.quantity)}
+                <div className="text-right font-bold text-xs sm:text-[13px] text-[#171136] font-mono mt-auto pt-4 shrink-0">
+                  <div>{formatPrice(itemTotalInfo.total)}</div>
+                  {itemTotalInfo.breakdown.length > 1 && (
+                    <div className="text-[10px] text-[#7B5CFF] font-semibold tracking-tight mt-0.5 whitespace-nowrap">
+                      {itemTotalInfo.breakdown.map((b) => `${b.quantity}×৳${b.unitPrice}`).join(" + ")}
+                    </div>
+                  )}
                 </div>
               </div>
-            ))
+            );
+            })
           )}
         </div>
 

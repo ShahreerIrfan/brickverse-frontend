@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCart, formatPrice } from "@/context/CartContext";
+import { useCart, formatPrice, calculateCartItemTotal } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { createOrder, validateCoupon } from "@/lib/api";
 import {
@@ -702,6 +702,7 @@ export default function CheckoutPage() {
               {/* Cart Items List */}
               <div className="divide-y divide-[#EAE3F7] max-h-72 overflow-y-auto pr-1">
                 {items.map((it, idx) => {
+                  const itemTotalInfo = calculateCartItemTotal(it);
                   const bgColors = ["#FFEAF0", "#E4F7F8", "#FFF4DA", "#EFE9FF"];
                   const itemBg = it.cardBg || bgColors[idx % bgColors.length];
 
@@ -744,9 +745,16 @@ export default function CheckoutPage() {
                       </div>
 
                       {/* Price */}
-                      <span className="font-[family-name:var(--font-display)] font-extrabold text-sm sm:text-[15px] text-[#171136] font-mono shrink-0">
-                        {formatPrice(it.price * it.quantity)}
-                      </span>
+                      <div className="text-right shrink-0">
+                        <span className="font-[family-name:var(--font-display)] font-extrabold text-sm sm:text-[15px] text-[#171136] font-mono block">
+                          {formatPrice(itemTotalInfo.total)}
+                        </span>
+                        {itemTotalInfo.breakdown.length > 1 && (
+                          <span className="text-[10px] text-[#7B5CFF] font-semibold font-mono block mt-0.5 whitespace-nowrap">
+                            {itemTotalInfo.breakdown.map((b) => `${b.quantity}×৳${b.unitPrice}`).join(" + ")}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   );
                 })}

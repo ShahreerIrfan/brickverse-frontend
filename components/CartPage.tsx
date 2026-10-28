@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCart, formatPrice } from "@/context/CartContext";
+import { useCart, formatPrice, calculateCartItemTotal } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { validateCoupon } from "@/lib/api";
@@ -283,6 +283,7 @@ export default function CartPage() {
               <div className="divide-y divide-[#EAE3F7]">
                 {items.map((item, index) => {
                   const isSaved = savedForLaterIds.includes(item.id);
+                  const itemTotalInfo = calculateCartItemTotal(item);
                   // Deterministic pastel background for thumbnails matching design
                   const bgColors = ["#FFEAF0", "#E4F7F8", "#FFF4DA", "#EFE9FF"];
                   const itemBg = item.cardBg || bgColors[index % bgColors.length];
@@ -390,8 +391,19 @@ export default function CartPage() {
                             </p>
                           )}
                           <p className="font-[family-name:var(--font-display)] font-extrabold text-base sm:text-lg text-[#171136] font-mono">
-                            {formatPrice(item.price)}
+                            {formatPrice(itemTotalInfo.total)}
                           </p>
+                          {itemTotalInfo.breakdown.length > 1 ? (
+                            <p className="text-[11px] text-[#7B5CFF] font-semibold font-mono mt-0.5">
+                              {itemTotalInfo.breakdown.map((b) => `${b.quantity}×৳${b.unitPrice}`).join(" + ")}
+                            </p>
+                          ) : (
+                            item.quantity > 1 && (
+                              <p className="text-[11px] text-[#8A84A6] font-medium font-mono mt-0.5">
+                                ({formatPrice(item.price)} each)
+                              </p>
+                            )
+                          )}
                         </div>
                       </div>
                     </div>

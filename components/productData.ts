@@ -69,6 +69,15 @@ export type Product = {
     remainingQuantity: number;
     initialQuantity: number;
   } | null;
+  activeLots?: Array<{
+    id: number;
+    lotNumber: string;
+    remainingQuantity: number;
+    mrp: string;
+    discountedPrice?: string;
+    tradePrice?: string;
+    sellingPrice: number;
+  }>;
   lotsCount?: number;
 };
 
