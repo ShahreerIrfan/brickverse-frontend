@@ -1515,7 +1515,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
               : prev
           );
         }
-        const errDetail = (res as any)?.data?.detail || (res as any)?.error || "Failed updating order status.";
+        const errDetail = (res as any)?.data?.error || (res as any)?.error || (res as any)?.data?.detail || "Failed updating order status.";
         alert(typeof errDetail === "string" ? errDetail : "Failed updating order status.");
       }
     } catch (err: any) {

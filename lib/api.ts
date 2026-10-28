@@ -709,7 +709,8 @@ export async function updateOrderStatus(orderId: number | string, status: string
       body: JSON.stringify({ status, ...(trackingNumber ? { tracking_number: trackingNumber } : {}) }),
     });
     const data = await res.json().catch(() => null);
-    return { success: res.ok, data };
+    const errorMsg = data?.error || data?.detail || (!res.ok ? "Failed to update order" : undefined);
+    return { success: res.ok, data, error: errorMsg };
   } catch (error) {
     return { success: false, error: "Failed to update order" };
   }
