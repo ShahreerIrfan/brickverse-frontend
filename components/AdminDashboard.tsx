@@ -528,6 +528,45 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  const getOrderNetIncome = (order: any): { netIncome: number; totalTP: number; totalSelling: number } => {
+    if (!order || String(order.status || "").toLowerCase() === "cancelled") {
+      return { netIncome: 0, totalTP: 0, totalSelling: 0 };
+    }
+
+    // If already computed by authoritative backend serializer
+    if (typeof order.netIncome === "number" || typeof order.net_income === "number") {
+      const net = Number(order.netIncome ?? order.net_income ?? 0);
+      const tp = Number(order.total_tp ?? order.totalTp ?? 0);
+      const tot = Number(order.total_amount ?? 0);
+      return { netIncome: net, totalTP: tp, totalSelling: tot };
+    }
+
+    // Calculate line-by-line across all products and lots
+    const items = Array.isArray(order.items) ? order.items : [];
+    let totalSelling = 0;
+    let totalTP = 0;
+
+    for (const it of items) {
+      const sellPrice = Number(it.price || 0);
+      const qty = Math.max(1, Number(it.quantity || 1));
+
+      const rawTP = it.tradePrice || it.trade_price || it.tradePriceVal || "";
+      const cleanTP = String(rawTP).replace(/[^0-9.]/g, "");
+      const tp = parseFloat(cleanTP) || 0;
+
+      totalSelling += sellPrice * qty;
+      totalTP += tp * qty;
+    }
+
+    const discount = Number(order.discount || order.discount_amount || 0);
+    const netIncome = Math.round((totalSelling - totalTP - discount) * 100) / 100;
+    return {
+      netIncome,
+      totalTP: Math.round(totalTP * 100) / 100,
+      totalSelling: Math.round(totalSelling * 100) / 100,
+    };
+  };
+
   const formatOrderDate = (dateStr?: string) => {
     if (!dateStr) return { date: "—", time: "" };
     try {
@@ -4465,6 +4504,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                         <th className="py-4 px-5 font-bold tracking-wider text-[10.5px]">DATE</th>
                         <th className="py-4 px-5 font-bold tracking-wider text-[10.5px]">STATUS</th>
                         <th className="py-4 px-5 font-bold tracking-wider text-[10.5px]">TOTAL</th>
+                        <th className="py-4 px-5 font-bold tracking-wider text-[10.5px]">NET INCOME</th>
                         <th className="py-4 px-5 font-bold tracking-wider text-[10.5px] text-right">ACTIONS</th>
                       </tr>
                     </thead>
@@ -4510,6 +4550,11 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                               <div className="h-4 w-16 bg-[#F0EBF8] rounded-md" />
                             </td>
 
+                            {/* NET INCOME */}
+                            <td className="py-4 px-5 whitespace-nowrap">
+                              <div className="h-4 w-16 bg-[#F0EBF8] rounded-md" />
+                            </td>
+
                             {/* ACTIONS */}
                             <td className="py-4 px-5 whitespace-nowrap text-right">
                               <div className="inline-flex items-center gap-2 justify-end">
@@ -4521,7 +4566,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                         ))
                       ) : filteredOrders.length === 0 ? (
                         <tr>
-                          <td colSpan={7} className="py-12 text-center text-sm text-[#736E9B]">
+                          <td colSpan={8} className="py-12 text-center text-sm text-[#736E9B]">
                             No orders found matching your filter.
                           </td>
                         </tr>
@@ -4635,6 +4680,36 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                 >
                                   ৳{Number(o.total_amount || 0).toLocaleString()}
                                 </span>
+                              </td>
+
+                              {/* NET INCOME */}
+                              <td className="py-4 px-5 whitespace-nowrap">
+                                {(() => {
+                                  const { netIncome, totalTP } = getOrderNetIncome(o);
+                                  if (o.status === "cancelled") {
+                                    return (
+                                      <span className="font-extrabold font-[family-name:var(--font-display)] text-xs text-[#8A84A6] line-through">
+                                        ৳0
+                                      </span>
+                                    );
+                                  }
+                                  return (
+                                    <div>
+                                      <span
+                                        className={`font-extrabold font-[family-name:var(--font-display)] text-sm ${
+                                          netIncome >= 0 ? "text-[#059669]" : "text-[#E11D48]"
+                                        }`}
+                                      >
+                                        {netIncome >= 0 ? "+" : ""}৳{netIncome.toLocaleString()}
+                                      </span>
+                                      {totalTP > 0 && (
+                                        <p className="text-[10px] text-[#736E9B] mt-0.5 font-medium">
+                                          TP: ৳{totalTP.toLocaleString()}
+                                        </p>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                               </td>
 
                               {/* ACTIONS */}
@@ -5186,14 +5261,43 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                     </div>
 
                     {/* Order Total Card */}
-                    <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div>
-                        <span className="text-[11px] font-bold text-[#8A84A6] uppercase tracking-wider block">
-                          Order Total
-                        </span>
-                        <p className="font-[family-name:var(--font-display)] font-extrabold text-3xl sm:text-4xl text-[#FF4D6D] mt-1">
-                          ৳{Number(currentOrder.total_amount || 0).toLocaleString()}
-                        </p>
+                    <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                      <div className="flex flex-wrap items-center gap-6 sm:gap-10">
+                        <div>
+                          <span className="text-[11px] font-bold text-[#8A84A6] uppercase tracking-wider block">
+                            Order Total
+                          </span>
+                          <p className="font-[family-name:var(--font-display)] font-extrabold text-3xl sm:text-4xl text-[#FF4D6D] mt-1">
+                            ৳{Number(currentOrder.total_amount || 0).toLocaleString()}
+                          </p>
+                        </div>
+
+                        {(() => {
+                          const { netIncome, totalTP } = getOrderNetIncome(currentOrder);
+                          return (
+                            <div className="border-l border-[#F0EBF8] pl-6 sm:pl-8">
+                              <span className="text-[11px] font-bold text-[#8A84A6] uppercase tracking-wider block">
+                                Net Income (Profit)
+                              </span>
+                              <p
+                                className={`font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-3xl mt-1 ${
+                                  currentOrder.status === "cancelled"
+                                    ? "text-[#8A84A6] line-through"
+                                    : netIncome >= 0
+                                    ? "text-[#059669]"
+                                    : "text-[#E11D48]"
+                                }`}
+                              >
+                                {currentOrder.status === "cancelled" ? "৳0" : `${netIncome >= 0 ? "+" : ""}৳${netIncome.toLocaleString()}`}
+                              </p>
+                              {totalTP > 0 && currentOrder.status !== "cancelled" && (
+                                <p className="text-[11px] text-[#736E9B] mt-0.5 font-medium">
+                                  Total Cost (TP): ৳{totalTP.toLocaleString()}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       <button
