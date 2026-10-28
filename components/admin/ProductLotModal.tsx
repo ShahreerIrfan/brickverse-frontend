@@ -155,6 +155,7 @@ export default function ProductLotModal({
     setErrorMsg("");
     const payload = {
       remainingQuantity: editRemainingQty,
+      initialQuantity: editRemainingQty,
       tradePrice: editTradePrice.startsWith("৳") ? editTradePrice : `৳${editTradePrice}`,
       mrp: editMrp.startsWith("৳") ? editMrp : `৳${editMrp}`,
       discountedPrice: editDiscountedPrice
@@ -497,10 +498,6 @@ export default function ProductLotModal({
               {lots.map((lot, idx) => {
                 const isActive = lot.id === activeLotId;
                 const isExhausted = lot.remainingQuantity <= 0;
-                const percentLeft =
-                  lot.initialQuantity > 0
-                    ? Math.round((lot.remainingQuantity / lot.initialQuantity) * 100)
-                    : 0;
 
                 const isEditing = editingLotId === lot.id;
 
@@ -640,26 +637,18 @@ export default function ProductLotModal({
                           </div>
                         </div>
 
-                        {/* Middle: Stock Progress */}
-                        <div className="w-full sm:w-44 space-y-1">
-                          <div className="flex items-center justify-between text-[11px] font-bold">
-                            <span className="text-[#171136]">
-                              {lot.remainingQuantity} / {lot.initialQuantity} left
-                            </span>
-                            <span className="text-[#8A84A6]">{percentLeft}%</span>
-                          </div>
-                          <div className="w-full h-2 rounded-full bg-[#EAE3F7] overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all ${
-                                isActive
-                                  ? "bg-gradient-to-r from-[#FF4D6D] to-[#7B5CFF]"
-                                  : isExhausted
-                                  ? "bg-[#DCD3F5]"
-                                  : "bg-[#7B5CFF]"
-                              }`}
-                              style={{ width: `${percentLeft}%` }}
-                            />
-                          </div>
+                        {/* Middle: Remaining Stock */}
+                        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#FAF8FE] border border-[#EAE3F7]">
+                          <span className="text-[11px] font-bold text-[#736E9B]">
+                            Remaining:
+                          </span>
+                          <span
+                            className={`font-[family-name:var(--font-display)] font-extrabold text-sm ${
+                              lot.remainingQuantity > 0 ? "text-[#171136]" : "text-[#8A84A6]"
+                            }`}
+                          >
+                            {lot.remainingQuantity} {lot.remainingQuantity === 1 ? "unit" : "units"}
+                          </span>
                         </div>
 
                         {/* Right: Pricing & Actions */}
