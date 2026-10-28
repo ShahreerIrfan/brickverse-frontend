@@ -373,12 +373,12 @@ export default function ProductLotModal({
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 items-start">
                 {/* 1. Lot Quantity */}
-                <div>
-                  <label className="block text-[11px] font-extrabold text-[#171136] mb-1">
-                    Quantity (Units) <span className="text-[#FF4D6D]">*</span>
-                  </label>
+                <div className="flex flex-col">
+                  <div className="h-5 flex items-center justify-between text-[11px] font-extrabold text-[#171136] mb-1.5 whitespace-nowrap">
+                    <span>Quantity (Units) <span className="text-[#FF4D6D]">*</span></span>
+                  </div>
                   <input
                     type="number"
                     min="1"
@@ -388,85 +388,87 @@ export default function ProductLotModal({
                       setNewQuantity(e.target.value === "" ? "" : Number(e.target.value))
                     }
                     placeholder="e.g. 10"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#DCD3F5] bg-white text-xs font-bold text-[#171136] focus:outline-none focus:border-[#7B5CFF]"
+                    className="h-10 w-full px-3.5 py-2 rounded-xl border border-[#DCD3F5] bg-white text-xs font-bold text-[#171136] focus:outline-none focus:border-[#7B5CFF]"
                   />
-                  <p className="text-[10px] text-[#736E9B] mt-0.5">Units received</p>
+                  <p className="text-[10px] text-[#736E9B] mt-1.5 h-4 leading-4 truncate">Units received</p>
                 </div>
 
                 {/* 2. Trade Price (TP) */}
-                <div>
-                  <label className="block text-[11px] font-extrabold text-[#171136] mb-1">
-                    Trade Price (TP ৳) <span className="text-[#FF4D6D]">*</span>
-                  </label>
+                <div className="flex flex-col">
+                  <div className="h-5 flex items-center justify-between text-[11px] font-extrabold text-[#171136] mb-1.5 whitespace-nowrap">
+                    <span>Trade Price (TP ৳) <span className="text-[#FF4D6D]">*</span></span>
+                  </div>
                   <input
                     type="text"
                     required
                     value={newTradePrice}
                     onChange={(e) => setNewTradePrice(e.target.value)}
                     placeholder="e.g. 45.00"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#DCD3F5] bg-white text-xs font-bold text-[#059669] focus:outline-none focus:border-[#059669]"
+                    className="h-10 w-full px-3.5 py-2 rounded-xl border border-[#DCD3F5] bg-white text-xs font-bold text-[#059669] focus:outline-none focus:border-[#059669]"
                   />
-                  <p className="text-[10px] text-[#736E9B] mt-0.5">Supplier purchase cost</p>
+                  <p className="text-[10px] text-[#736E9B] mt-1.5 h-4 leading-4 truncate">Supplier purchase cost</p>
                 </div>
 
                 {/* 3. MRP (Regular Price) */}
-                <div>
-                  <label className="block text-[11px] font-extrabold text-[#171136] mb-1">
-                    Regular Price (৳) <span className="text-[#FF4D6D]">*</span>
-                  </label>
+                <div className="flex flex-col">
+                  <div className="h-5 flex items-center justify-between text-[11px] font-extrabold text-[#171136] mb-1.5 whitespace-nowrap">
+                    <span>Regular Price (৳) <span className="text-[#FF4D6D]">*</span></span>
+                  </div>
                   <input
                     type="text"
                     required
                     value={newMrp}
                     onChange={(e) => setNewMrp(e.target.value)}
                     placeholder="e.g. 100.00"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#DCD3F5] bg-white text-xs font-bold text-[#FF4D6D] focus:outline-none focus:border-[#FF4D6D]"
+                    className="h-10 w-full px-3.5 py-2 rounded-xl border border-[#DCD3F5] bg-white text-xs font-bold text-[#FF4D6D] focus:outline-none focus:border-[#FF4D6D]"
                   />
-                  <p className="text-[10px] text-[#736E9B] mt-0.5">Original regular price</p>
+                  <p className="text-[10px] text-[#736E9B] mt-1.5 h-4 leading-4 truncate">Original regular price</p>
                 </div>
 
                 {/* 4. Discounted Price (৳) */}
-                <div>
-                  <label className="block text-[11px] font-extrabold text-[#171136] mb-1">
-                    Discounted Price (৳) <span className="text-[#8A84A6] text-[10px] font-normal">(Optional)</span>
-                  </label>
+                <div className="flex flex-col">
+                  <div className="h-5 flex items-center justify-between text-[11px] font-extrabold text-[#171136] mb-1.5 whitespace-nowrap">
+                    <span>Discounted Price (৳)</span>
+                    <span className="text-[#8A84A6] text-[10px] font-normal">Opt</span>
+                  </div>
                   <input
                     type="text"
                     value={newDiscountedPrice}
                     onChange={(e) => setNewDiscountedPrice(e.target.value)}
                     placeholder="e.g. 60.00"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#DCD3F5] bg-white text-xs font-bold text-[#7B5CFF] focus:outline-none focus:border-[#7B5CFF]"
+                    className="h-10 w-full px-3.5 py-2 rounded-xl border border-[#DCD3F5] bg-white text-xs font-bold text-[#7B5CFF] focus:outline-none focus:border-[#7B5CFF]"
                   />
-                  <p className="text-[10px] text-[#736E9B] mt-0.5">Customer selling price</p>
+                  <p className="text-[10px] text-[#736E9B] mt-1.5 h-4 leading-4 truncate">Customer sale price</p>
                 </div>
 
                 {/* 5. Lot Number / Batch ID */}
-                <div>
-                  <label className="block text-[11px] font-extrabold text-[#171136] mb-1">
-                    Lot / Batch ID (Optional)
-                  </label>
+                <div className="flex flex-col">
+                  <div className="h-5 flex items-center justify-between text-[11px] font-extrabold text-[#171136] mb-1.5 whitespace-nowrap">
+                    <span>Lot / Batch ID</span>
+                    <span className="text-[#8A84A6] text-[10px] font-normal">Opt</span>
+                  </div>
                   <input
                     type="text"
                     value={newLotNumber}
                     onChange={(e) => setNewLotNumber(e.target.value)}
                     placeholder="Auto (e.g. LOT-20261026-01)"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#DCD3F5] bg-white text-xs font-medium text-[#171136] focus:outline-none focus:border-[#7B5CFF]"
+                    className="h-10 w-full px-3.5 py-2 rounded-xl border border-[#DCD3F5] bg-white text-xs font-medium text-[#171136] focus:outline-none focus:border-[#7B5CFF]"
                   />
-                  <p className="text-[10px] text-[#736E9B] mt-0.5">Leave blank to auto-generate</p>
+                  <p className="text-[10px] text-[#736E9B] mt-1.5 h-4 leading-4 truncate">Auto-generated if blank</p>
                 </div>
               </div>
 
               {/* Optional Notes */}
-              <div>
-                <label className="block text-[11px] font-extrabold text-[#171136] mb-1">
-                  Supplier or Batch Notes (Optional)
+              <div className="pt-2 mt-1 border-t border-[#EDE6FA]/60">
+                <label className="block text-[11px] font-extrabold text-[#171136] mb-1.5">
+                  Supplier or Batch Notes <span className="text-[#8A84A6] text-[10px] font-normal">(Optional)</span>
                 </label>
                 <input
                   type="text"
                   value={newNotes}
                   onChange={(e) => setNewNotes(e.target.value)}
                   placeholder="e.g. Received from Supplier X, New packaging batch"
-                  className="w-full px-3.5 py-2 rounded-xl border border-[#DCD3F5] bg-white text-xs font-medium text-[#171136] focus:outline-none focus:border-[#7B5CFF]"
+                  className="h-10 w-full px-3.5 rounded-xl border border-[#DCD3F5] bg-white text-xs font-medium text-[#171136] focus:outline-none focus:border-[#7B5CFF]"
                 />
               </div>
 
@@ -528,9 +530,9 @@ export default function ProductLotModal({
                             Cancel
                           </button>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                          <div>
-                            <label className="text-[11px] font-extrabold text-[#171136] block mb-1">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 items-start">
+                          <div className="flex flex-col">
+                            <label className="h-5 flex items-center text-[11px] font-extrabold text-[#171136] mb-1.5 whitespace-nowrap">
                               Remaining Stock
                             </label>
                             <input
@@ -538,33 +540,33 @@ export default function ProductLotModal({
                               min="0"
                               value={editRemainingQty}
                               onChange={(e) => setEditRemainingQty(Number(e.target.value))}
-                              className="w-full px-3 py-2 rounded-xl border border-[#DCD3F5] text-xs font-bold text-[#171136]"
+                              className="h-10 w-full px-3 py-2 rounded-xl border border-[#DCD3F5] text-xs font-bold text-[#171136]"
                             />
                           </div>
-                          <div>
-                            <label className="text-[11px] font-extrabold text-[#171136] block mb-1">
+                          <div className="flex flex-col">
+                            <label className="h-5 flex items-center text-[11px] font-extrabold text-[#171136] mb-1.5 whitespace-nowrap">
                               Trade Price (TP ৳)
                             </label>
                             <input
                               type="text"
                               value={editTradePrice}
                               onChange={(e) => setEditTradePrice(e.target.value)}
-                              className="w-full px-3 py-2 rounded-xl border border-[#DCD3F5] text-xs font-bold text-[#059669]"
+                              className="h-10 w-full px-3 py-2 rounded-xl border border-[#DCD3F5] text-xs font-bold text-[#059669]"
                             />
                           </div>
-                          <div>
-                            <label className="text-[11px] font-extrabold text-[#171136] block mb-1">
+                          <div className="flex flex-col">
+                            <label className="h-5 flex items-center text-[11px] font-extrabold text-[#171136] mb-1.5 whitespace-nowrap">
                               Regular Price (৳)
                             </label>
                             <input
                               type="text"
                               value={editMrp}
                               onChange={(e) => setEditMrp(e.target.value)}
-                              className="w-full px-3 py-2 rounded-xl border border-[#DCD3F5] text-xs font-bold text-[#FF4D6D]"
+                              className="h-10 w-full px-3 py-2 rounded-xl border border-[#DCD3F5] text-xs font-bold text-[#FF4D6D]"
                             />
                           </div>
-                          <div>
-                            <label className="text-[11px] font-extrabold text-[#171136] block mb-1">
+                          <div className="flex flex-col">
+                            <label className="h-5 flex items-center text-[11px] font-extrabold text-[#171136] mb-1.5 whitespace-nowrap">
                               Discounted Price (৳)
                             </label>
                             <input
@@ -572,7 +574,7 @@ export default function ProductLotModal({
                               value={editDiscountedPrice}
                               onChange={(e) => setEditDiscountedPrice(e.target.value)}
                               placeholder="e.g. 60.00"
-                              className="w-full px-3 py-2 rounded-xl border border-[#DCD3F5] text-xs font-bold text-[#7B5CFF]"
+                              className="h-10 w-full px-3 py-2 rounded-xl border border-[#DCD3F5] text-xs font-bold text-[#7B5CFF]"
                             />
                           </div>
                         </div>
