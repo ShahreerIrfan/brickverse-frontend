@@ -12,6 +12,8 @@ export interface OrderItem {
   sku?: string;
   isPreorder?: boolean;
   is_preorder?: boolean;
+  lotNumber?: string;
+  lot_number?: string;
 }
 
 export interface OrderInvoiceData {
@@ -114,6 +116,7 @@ export function generateInvoiceHtml(order: OrderInvoiceData): string {
           <td style="padding: 10px 12px;">
             <div style="font-weight: 700; color: #111827; font-size: 12px; line-height: 1.3;">${itemTitle}</div>
             ${sku ? `<div style="font-size: 10px; color: #6B7280; margin-top: 2px;">SKU: ${sku}</div>` : ""}
+            ${item.lotNumber || item.lot_number ? `<div style="font-size: 10px; color: #4F46E5; margin-top: 2px; font-family: monospace; font-weight: 600;">Lot: ${item.lotNumber || item.lot_number}</div>` : ""}
             ${isPre ? `<div style="display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; color: #B76E00; background-color: #FFF1D6; padding: 2px 6px; border-radius: 4px; margin-top: 3px;">Pre-order · No stock deducted</div>` : ""}
           </td>
           <td style="padding: 10px 12px; text-align: right; font-family: monospace; font-size: 12px; color: #374151;">

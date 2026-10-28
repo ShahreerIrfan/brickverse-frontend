@@ -5107,11 +5107,18 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                             {item.product_name}
                                           </p>
                                         )}
-                                        {itemSku ? (
-                                          <p className="text-[10.5px] text-[#736E9B] mt-0.5 font-mono">
-                                            SKU: {itemSku}
-                                          </p>
-                                        ) : null}
+                                        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                                          {itemSku ? (
+                                            <p className="text-[10.5px] text-[#736E9B] font-mono">
+                                              SKU: {itemSku}
+                                            </p>
+                                          ) : null}
+                                          {(item.lotNumber || item.lot_number) && (
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#EEF2FF] text-[#4F46E5] text-[10px] font-bold font-mono border border-[#C7D2FE]">
+                                              <span className="text-[#6366F1] font-semibold">Lot:</span> {item.lotNumber || item.lot_number}
+                                            </span>
+                                          )}
+                                        </div>
                                         {(item.isPreorder || item.is_preorder) && (
                                           <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-[#FFF1D6] text-[#B76E00] text-[10px] font-extrabold uppercase tracking-wide">
                                             Pre-order · no stock deducted
