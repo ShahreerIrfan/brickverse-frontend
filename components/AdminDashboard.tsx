@@ -3247,6 +3247,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                       width={40}
                                       height={40}
                                       className="object-contain max-h-10 max-w-10"
+                                      unoptimized
                                     />
                                   </div>
                                   <div className="min-w-0 max-w-[280px]">
@@ -3971,6 +3972,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                 width={110}
                                 height={110}
                                 className="object-contain max-h-28"
+                                unoptimized
                               />
                             </div>
                             <label
@@ -3999,7 +4001,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                         <input
                           id="primary-image-input"
                           type="file"
-                          accept="image/*"
+                          accept="image/*,.svg,image/svg+xml"
                           onChange={handlePrimaryFileChange}
                           className="hidden"
                         />
@@ -4091,6 +4093,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                     width={64}
                                     height={64}
                                     className="object-contain max-h-16"
+                                    unoptimized
                                   />
                                   <span className="text-[9px] font-bold text-[#8A84A6] mt-1 truncate">Saved</span>
                                   <button
@@ -4117,6 +4120,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                   width={64}
                                   height={64}
                                   className="object-contain max-h-16"
+                                  unoptimized
                                 />
                                 <span className="text-[9px] font-bold text-[#7B5CFF] mt-1 truncate">New</span>
                                 <button
@@ -4148,7 +4152,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                           id="gallery-image-input"
                           type="file"
                           multiple
-                          accept="image/*"
+                          accept="image/*,.svg,image/svg+xml"
                           onChange={handleGalleryFilesChange}
                           disabled={existingGalleryImages.length + galleryFiles.length >= 4}
                           className="hidden"
