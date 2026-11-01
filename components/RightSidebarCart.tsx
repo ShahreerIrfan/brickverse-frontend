@@ -166,7 +166,7 @@ export default function RightSidebarCart() {
                 Your cart is empty
               </h3>
               <p className="text-xs text-[#736E9B] max-w-[220px] mt-1 mb-5">
-                Explore anime figures, brick sets and robotics kits to add here!
+                Explore anime figures, brick sets to add here!
               </p>
               <Link
                 href="/shop"
