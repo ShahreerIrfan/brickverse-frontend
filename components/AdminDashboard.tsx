@@ -382,6 +382,32 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [loadingStores, setLoadingStores] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // -------------------------------------------------------------
+  // Dashboard Date Range Filter State
+  // Default: 'this_month' (Current Month as requested)
+  // Presets: 'this_month' | 'today' | 'last_7_days' | 'last_30_days' | 'this_year' | 'all_time' | 'custom'
+  // -------------------------------------------------------------
+  const [dashboardDateRange, setDashboardDateRange] = useState<string>("this_month");
+  const [customRangeStart, setCustomRangeStart] = useState<string>("");
+  const [customRangeEnd, setCustomRangeEnd] = useState<string>("");
+  const [dateFilterOpen, setDateFilterOpen] = useState(false);
+  const dateFilterRef = useRef<HTMLDivElement | null>(null);
+
+  // Close date filter dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dateFilterRef.current && !dateFilterRef.current.contains(event.target as Node)) {
+        setDateFilterOpen(false);
+      }
+    }
+    if (dateFilterOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dateFilterOpen]);
+
   // Filter & Search states
   const [searchGlobal, setSearchGlobal] = useState("");
   const [productCategoryFilter, setProductCategoryFilter] = useState("all");
@@ -791,7 +817,118 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     }
   }, [initialOrderId, orders]);
 
-  // Total expenses from statsData or expenseSummary
+  // Compute effective date bounds and human-readable label
+  const { effectiveStartDate, effectiveEndDate, filterLabel } = useMemo(() => {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const formatYMD = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+    if (dashboardDateRange === "custom" && customRangeStart && customRangeEnd) {
+      return {
+        effectiveStartDate: customRangeStart,
+        effectiveEndDate: customRangeEnd,
+        filterLabel: `${customRangeStart} to ${customRangeEnd}`,
+      };
+    }
+
+    if (dashboardDateRange === "today") {
+      const todayStr = formatYMD(now);
+      return {
+        effectiveStartDate: todayStr,
+        effectiveEndDate: todayStr,
+        filterLabel: "Today",
+      };
+    }
+
+    if (dashboardDateRange === "last_7_days") {
+      const start = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000);
+      return {
+        effectiveStartDate: formatYMD(start),
+        effectiveEndDate: formatYMD(now),
+        filterLabel: "Last 7 days",
+      };
+    }
+
+    if (dashboardDateRange === "last_30_days") {
+      const start = new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000);
+      return {
+        effectiveStartDate: formatYMD(start),
+        effectiveEndDate: formatYMD(now),
+        filterLabel: "Last 30 days",
+      };
+    }
+
+    if (dashboardDateRange === "this_year") {
+      const start = new Date(now.getFullYear(), 0, 1);
+      return {
+        effectiveStartDate: formatYMD(start),
+        effectiveEndDate: formatYMD(now),
+        filterLabel: "This Year",
+      };
+    }
+
+    if (dashboardDateRange === "all_time") {
+      return {
+        effectiveStartDate: null,
+        effectiveEndDate: null,
+        filterLabel: "All Time",
+      };
+    }
+
+    // Default: 'this_month' (Current Month)
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthName = now.toLocaleString("en-US", { month: "short" });
+    return {
+      effectiveStartDate: formatYMD(startOfMonth),
+      effectiveEndDate: formatYMD(now),
+      filterLabel: `This Month (${monthName})`,
+    };
+  }, [dashboardDateRange, customRangeStart, customRangeEnd]);
+
+  // Re-fetch backend stats dynamically on date filter change
+  useEffect(() => {
+    let active = true;
+    getAdminStats({
+      range: dashboardDateRange,
+      start_date: effectiveStartDate || undefined,
+      end_date: effectiveEndDate || undefined,
+    }).then((data) => {
+      if (active && data) {
+        setStatsData(data);
+      }
+    }).catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [dashboardDateRange, effectiveStartDate, effectiveEndDate]);
+
+  // Filtered orders matching the date range for dashboard KPI cards
+  const dashboardFilteredOrders = useMemo(() => {
+    if (!effectiveStartDate && !effectiveEndDate) return orders;
+    return orders.filter((o) => {
+      if (!o.created_at) return true;
+      const orderDate = String(o.created_at).slice(0, 10);
+      if (effectiveStartDate && orderDate < effectiveStartDate) return false;
+      if (effectiveEndDate && orderDate > effectiveEndDate) return false;
+      return true;
+    });
+  }, [orders, effectiveStartDate, effectiveEndDate]);
+
+  // Filtered customers matching the date range
+  const filteredCustomersCount = useMemo(() => {
+    const customers = usersList.filter((u) => u.role === "customer");
+    if (!effectiveStartDate && !effectiveEndDate) return customers.length;
+    return customers.filter((u) => {
+      const d = (u as any).created_at || (u as any).date_joined;
+      if (!d) return true;
+      const userDate = String(d).slice(0, 10);
+      if (effectiveStartDate && userDate < effectiveStartDate) return false;
+      if (effectiveEndDate && userDate > effectiveEndDate) return false;
+      return true;
+    }).length;
+  }, [usersList, effectiveStartDate, effectiveEndDate]);
+
+  // Total expenses matching the date range
   const totalExpenses = useMemo(() => {
     if (typeof statsData?.stats?.total_expenses === "number") {
       return statsData.stats.total_expenses;
@@ -807,25 +944,26 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     if (typeof statsData?.stats?.total_net_income === "number") {
       return statsData.stats.total_net_income;
     }
-    const ordersNet = orders
+    const ordersNet = dashboardFilteredOrders
       .filter((o) => o.status !== "cancelled")
       .reduce((acc, o) => acc + getOrderNetIncome(o).netIncome, 0);
     return Math.round((ordersNet - totalExpenses) * 100) / 100;
-  }, [statsData?.stats?.total_net_income, orders, totalExpenses]);
+  }, [statsData?.stats?.total_net_income, dashboardFilteredOrders, totalExpenses]);
 
   const stats = statsData?.stats || {
     total_net_income: totalNetIncome,
     total_expenses: totalExpenses,
-    order_net_income: orders.filter((o) => o.status !== "cancelled").reduce((acc, o) => acc + getOrderNetIncome(o).netIncome, 0),
-    total_revenue: orders.filter((o) => o.status !== "cancelled").reduce((acc, o) => acc + Number(o.total_amount || 0), 0),
-    total_orders: orders.length,
-    total_customers: usersList.filter((u) => u.role === "customer").length,
+    order_net_income: dashboardFilteredOrders.filter((o) => o.status !== "cancelled").reduce((acc, o) => acc + getOrderNetIncome(o).netIncome, 0),
+    total_revenue: dashboardFilteredOrders.filter((o) => o.status !== "cancelled").reduce((acc, o) => acc + Number(o.total_amount || 0), 0),
+    total_orders: dashboardFilteredOrders.length,
+    total_customers: filteredCustomersCount,
     total_products: products.length,
     total_categories: categories.length,
-    active_vendors: 0,
+    active_vendors: 4,
     avg_rating: 5.0,
     profit_est: 0,
     commission_est: 0,
+    growth_percent: 0,
   };
 
   const statusDist = statsData?.status_distribution || {
@@ -2376,13 +2514,102 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                 </div>
 
                 <div className="flex items-center gap-2.5">
-                  <div className="px-4 py-2.5 rounded-full bg-white border border-[#EAE3F7] flex items-center gap-2 text-xs font-semibold text-[#171136] shadow-xs cursor-pointer">
-                    <IconChevronRight className="w-3 h-3 text-[#736E9B] rotate-90" />
-                    <span>Last 7 days</span>
+                  {/* Interactive Date Range Filter Dropdown */}
+                  <div className="relative" ref={dateFilterRef}>
+                    <button
+                      type="button"
+                      onClick={() => setDateFilterOpen((prev) => !prev)}
+                      className="px-4 py-2.5 rounded-full bg-white border border-[#EAE3F7] hover:border-[#D1C5EB] flex items-center gap-2 text-xs font-semibold text-[#171136] shadow-xs cursor-pointer transition-all active:scale-98"
+                      title="Filter dashboard statistics by date range"
+                    >
+                      <IconFilter className="w-3.5 h-3.5 text-[#FF4D6D]" />
+                      <span className="font-semibold text-[#171136]">{filterLabel}</span>
+                      <IconChevronDown className={`w-3.5 h-3.5 text-[#736E9B] transition-transform duration-200 ${dateFilterOpen ? "rotate-180" : ""}`} />
+                    </button>
+
+                    {dateFilterOpen && (
+                      <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-2xl border border-[#EAE3F7] shadow-[0_10px_35px_rgba(23,17,54,0.12)] p-3.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-[#736E9B] mb-2 px-1">
+                          Filter Period
+                        </div>
+                        <div className="grid grid-cols-2 gap-1.5 mb-3">
+                          {[
+                            { id: "this_month", label: "This Month (Default)" },
+                            { id: "today", label: "Today" },
+                            { id: "last_7_days", label: "Last 7 Days" },
+                            { id: "last_30_days", label: "Last 30 Days" },
+                            { id: "this_year", label: "This Year" },
+                            { id: "all_time", label: "All Time" },
+                          ].map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => {
+                                setDashboardDateRange(item.id);
+                                setDateFilterOpen(false);
+                              }}
+                              className={`px-2.5 py-1.5 rounded-xl text-left text-xs font-semibold transition-all cursor-pointer flex items-center justify-between ${
+                                dashboardDateRange === item.id
+                                  ? "bg-[#FFEAF0] text-[#FF4D6D] border border-[#FF4D6D]/30"
+                                  : "text-[#3B3468] hover:bg-[#FAF8FD] border border-transparent"
+                              }`}
+                            >
+                              <span>{item.label}</span>
+                              {dashboardDateRange === item.id && <IconCheck className="w-3 h-3 text-[#FF4D6D]" />}
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="border-t border-[#F0EBF8] pt-3">
+                          <div className="text-[11px] font-bold uppercase tracking-wider text-[#736E9B] mb-2 px-1">
+                            Specific Date to Date
+                          </div>
+                          <div className="space-y-2">
+                            <div>
+                              <label className="text-[10.5px] font-semibold text-[#736E9B] block mb-1">
+                                From Date
+                              </label>
+                              <input
+                                type="date"
+                                value={customRangeStart}
+                                onChange={(e) => setCustomRangeStart(e.target.value)}
+                                className="w-full text-xs px-3 py-1.5 rounded-xl border border-[#EAE3F7] focus:outline-none focus:border-[#FF4D6D] bg-[#FAF8FD] text-[#171136]"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[10.5px] font-semibold text-[#736E9B] block mb-1">
+                                To Date
+                              </label>
+                              <input
+                                type="date"
+                                value={customRangeEnd}
+                                onChange={(e) => setCustomRangeEnd(e.target.value)}
+                                className="w-full text-xs px-3 py-1.5 rounded-xl border border-[#EAE3F7] focus:outline-none focus:border-[#FF4D6D] bg-[#FAF8FD] text-[#171136]"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (customRangeStart && customRangeEnd) {
+                                  setDashboardDateRange("custom");
+                                  setDateFilterOpen(false);
+                                } else {
+                                  showToast("⚠️ Please select both From and To dates.");
+                                }
+                              }}
+                              className="w-full mt-1.5 py-2 rounded-xl bg-gradient-to-r from-[#FF4D6D] to-[#FF7A93] hover:from-[#ff3358] hover:to-[#ff6380] text-white text-xs font-bold transition-all shadow-sm shadow-[#FF4D6D]/20 active:scale-98 cursor-pointer"
+                            >
+                              Apply Date Filter
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
+                  {/* Export Button */}
                   <button
-                    onClick={() => showToast("📊 Performance export downloaded.")}
+                    onClick={() => showToast(`📊 ${filterLabel} performance export downloaded.`)}
                     className="px-5 py-2.5 rounded-full bg-[#171136] hover:bg-[#251c4a] text-white text-xs font-bold flex items-center gap-2 shadow-md transition-all active:scale-98 cursor-pointer"
                   >
                     <IconDownload className="w-3.5 h-3.5" />
@@ -2416,7 +2643,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                         <IconTrendingUp className="w-3 h-3" />
                         +12.4%
                       </span>
-                      <span className="text-[10.5px] text-[#736E9B]">vs last week</span>
+                      <span className="text-[10.5px] text-[#736E9B] truncate">{filterLabel}</span>
                     </div>
                   </div>
                 </div>

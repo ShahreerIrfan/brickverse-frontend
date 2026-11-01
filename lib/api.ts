@@ -1046,9 +1046,18 @@ export async function deleteUser(userId: number | string) {
   }
 }
 
-export async function getAdminStats() {
+export async function getAdminStats(params?: {
+  range?: string;
+  start_date?: string;
+  end_date?: string;
+}) {
   try {
-    const res = await fetch(`${getApiBaseUrl()}/orders/admin-stats/`, {
+    const q = new URLSearchParams();
+    if (params?.range) q.set("range", params.range);
+    if (params?.start_date) q.set("start_date", params.start_date);
+    if (params?.end_date) q.set("end_date", params.end_date);
+    const qs = q.toString() ? `?${q.toString()}` : "";
+    const res = await fetch(`${getApiBaseUrl()}/orders/admin-stats/${qs}`, {
       headers: getAuthHeaders(),
       credentials: "include",
       cache: "no-store",
