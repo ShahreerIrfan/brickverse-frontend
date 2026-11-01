@@ -25,7 +25,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "kawaiisubete",
   description:
-    "Anime figures, cartoon collectibles, brick sets and coding kits — shipped from Melbourne in 48 hours.",
+    "Anime figures, cartoon collectibles, brick sets and coding kits — shipped from Dhaka in 48 hours.",
   icons: {
     icon: [
       { url: "/logo.png" },
