@@ -28,6 +28,8 @@ import {
   deleteUser,
   getAllStores,
   changePassword,
+  getExpenseSummary,
+  type ExpenseSummary,
 } from "@/lib/api";
 import {
   IconShield,
@@ -370,6 +372,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [statsData, setStatsData] = useState<any>(null);
+  const [expenseSummary, setExpenseSummary] = useState<ExpenseSummary | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryTree, setCategoryTree] = useState<Category[]>([]);
@@ -644,9 +647,12 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     getAdminStats().then((stats) => {
       if (stats) setStatsData(stats);
     }).catch(() => {});
+    getExpenseSummary().then((exp) => {
+      if (exp) setExpenseSummary(exp);
+    }).catch(() => {});
 
     try {
-      const [stats, prods, cats, tree, ords, usrs, strs] = await Promise.all([
+      const [stats, prods, cats, tree, ords, usrs, strs, exp] = await Promise.all([
         getAdminStats(),
         getAllProducts({ all: true }),
         getCategories(),
@@ -654,6 +660,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
         getAllOrders(),
         getAllUsers(),
         getAllStores(),
+        getExpenseSummary(),
       ]);
       if (stats) setStatsData(stats);
       if (prods && Array.isArray(prods)) setProducts(prods);
@@ -662,6 +669,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       if (ords && Array.isArray(ords)) setOrders(ords);
       if (usrs && Array.isArray(usrs)) setUsersList(usrs);
       if (strs && Array.isArray(strs)) setStores(strs);
+      if (exp) setExpenseSummary(exp);
     } catch (err) {
       console.error("Failed fetching admin data:", err);
     } finally {
@@ -783,18 +791,32 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     }
   }, [initialOrderId, orders]);
 
-  // Compute live KPI metrics (exclude cancelled orders from revenue)
+  // Total expenses from statsData or expenseSummary
+  const totalExpenses = useMemo(() => {
+    if (typeof statsData?.stats?.total_expenses === "number") {
+      return statsData.stats.total_expenses;
+    }
+    if (expenseSummary && typeof expenseSummary.total_expense === "number") {
+      return expenseSummary.total_expense;
+    }
+    return 0;
+  }, [statsData?.stats?.total_expenses, expenseSummary]);
+
+  // Compute live KPI metrics: Actual Net Income = Orders Net Income - Total Expenses
   const totalNetIncome = useMemo(() => {
     if (typeof statsData?.stats?.total_net_income === "number") {
       return statsData.stats.total_net_income;
     }
-    return orders
+    const ordersNet = orders
       .filter((o) => o.status !== "cancelled")
       .reduce((acc, o) => acc + getOrderNetIncome(o).netIncome, 0);
-  }, [statsData?.stats?.total_net_income, orders]);
+    return Math.round((ordersNet - totalExpenses) * 100) / 100;
+  }, [statsData?.stats?.total_net_income, orders, totalExpenses]);
 
   const stats = statsData?.stats || {
     total_net_income: totalNetIncome,
+    total_expenses: totalExpenses,
+    order_net_income: orders.filter((o) => o.status !== "cancelled").reduce((acc, o) => acc + getOrderNetIncome(o).netIncome, 0),
     total_revenue: orders.filter((o) => o.status !== "cancelled").reduce((acc, o) => acc + Number(o.total_amount || 0), 0),
     total_orders: orders.length,
     total_customers: usersList.filter((u) => u.role === "customer").length,
@@ -2476,9 +2498,18 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                     <div className="flex items-center gap-2 mt-2">
                       <span className="px-2 py-0.5 rounded-full bg-[#E7F8F0] text-[#059669] text-[11px] font-extrabold flex items-center gap-1">
                         <IconTrendingUp className="w-3 h-3" />
-                        All orders
+                        After expenses
                       </span>
-                      <span className="text-[10.5px] text-[#736E9B]">excluding cancelled</span>
+                      <span 
+                        className="text-[10.5px] text-[#736E9B] truncate"
+                        title={`Actual Net = Orders Net (৳${Number((stats as any).order_net_income ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}) - Expenses (৳${Number((stats as any).total_expenses ?? totalExpenses ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })})`}
+                      >
+                        {Number((stats as any).total_expenses ?? totalExpenses ?? 0) > 0 ? (
+                          `-৳${Number((stats as any).total_expenses ?? totalExpenses ?? 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} exp`
+                        ) : (
+                          "excluding cancelled"
+                        )}
+                      </span>
                     </div>
                   </div>
                 </div>
