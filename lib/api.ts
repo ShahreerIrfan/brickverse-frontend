@@ -55,12 +55,6 @@ export function getAuthHeaders(isFormData = false): Record<string, string> {
           headers["Authorization"] = `Bearer ${u.token}`;
           headers["X-Session-Token"] = u.token;
         }
-        if (u?.email) {
-          headers["X-User-Email"] = u.email;
-        }
-        if (u?.id) {
-          headers["X-User-Id"] = String(u.id);
-        }
       }
     } catch {
       // ignore
