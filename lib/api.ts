@@ -649,6 +649,17 @@ export async function getNavLinks() {
 export async function getCustomerOrders(email?: string) {
   try {
     const headers = getAuthHeaders();
+    // Primary secure session-bound endpoint (zero query parameter snooping risk)
+    let res = await fetch(`${getApiBaseUrl()}/orders/mine/`, {
+      headers,
+      credentials: "include",
+      cache: "no-store",
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+
+    // Fallback to /orders/list/
     let queryEmail = email;
     if (!queryEmail && typeof window !== "undefined") {
       try {
@@ -664,7 +675,7 @@ export async function getCustomerOrders(email?: string) {
     const url = queryEmail
       ? `${getApiBaseUrl()}/orders/list/?email=${encodeURIComponent(queryEmail)}`
       : `${getApiBaseUrl()}/orders/list/`;
-    const res = await fetch(url, {
+    res = await fetch(url, {
       headers,
       credentials: "include",
       cache: "no-store",
