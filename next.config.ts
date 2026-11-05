@@ -34,6 +34,123 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 31536000,
     remotePatterns: getImageRemotePatterns(),
   },
+  async redirects() {
+    return [
+      // 301 Redirects from query-param URLs to clean category paths (Task 07 / Part 2)
+      {
+        source: "/shop",
+        has: [{ type: "query", key: "category", value: "action-figures" }],
+        destination: "/category/action-figures",
+        permanent: true,
+      },
+      {
+        source: "/shop",
+        has: [{ type: "query", key: "category", value: "building-bricks" }],
+        destination: "/category/building-bricks",
+        permanent: true,
+      },
+      {
+        source: "/shop",
+        has: [{ type: "query", key: "category", value: "character-bricks" }],
+        destination: "/category/character-bricks",
+        permanent: true,
+      },
+      {
+        source: "/shop",
+        has: [{ type: "query", key: "category", value: "flower-bricks" }],
+        destination: "/category/flower-bricks",
+        permanent: true,
+      },
+      {
+        source: "/shop",
+        has: [{ type: "query", key: "category", value: "cards-stickers-9ai7" }],
+        destination: "/category/cards-stickers",
+        permanent: true,
+      },
+      {
+        source: "/shop",
+        has: [{ type: "query", key: "category", value: "cards-stickers" }],
+        destination: "/category/cards-stickers",
+        permanent: true,
+      },
+      {
+        source: "/shop",
+        has: [{ type: "query", key: "category", value: "accessories" }],
+        destination: "/category/accessories",
+        permanent: true,
+      },
+      {
+        source: "/shop",
+        has: [{ type: "query", key: "category", value: "animal-bricks" }],
+        destination: "/category/animal-bricks",
+        permanent: true,
+      },
+      {
+        source: "/shop",
+        has: [{ type: "query", key: "category", value: "vehicle-bricks" }],
+        destination: "/category/vehicle",
+        permanent: true,
+      },
+      {
+        source: "/shop",
+        has: [{ type: "query", key: "category", value: "vehicle" }],
+        destination: "/category/vehicle",
+        permanent: true,
+      },
+      {
+        source: "/shop",
+        has: [{ type: "query", key: "category", value: "premium-building-bricks-bh03" }],
+        destination: "/category/premium-building-bricks",
+        permanent: true,
+      },
+      {
+        source: "/shop",
+        has: [{ type: "query", key: "category", value: "premium-building-bricks" }],
+        destination: "/category/premium-building-bricks",
+        permanent: true,
+      },
+      {
+        source: "/shop",
+        has: [{ type: "query", key: "category", value: "plushies" }],
+        destination: "/category/plushies",
+        permanent: true,
+      },
+      {
+        source: "/shop",
+        has: [{ type: "query", key: "category", value: "bundle-deals" }],
+        destination: "/category/bundle-deals",
+        permanent: true,
+      },
+      {
+        source: "/shop",
+        has: [{ type: "query", key: "deals", value: "true" }],
+        destination: "/category/bundle-deals",
+        permanent: true,
+      },
+      // Slug mismatch redirects for direct URLs
+      {
+        source: "/category/cards-stickers-9ai7",
+        destination: "/category/cards-stickers",
+        permanent: true,
+      },
+      {
+        source: "/category/vehicle-bricks",
+        destination: "/category/vehicle",
+        permanent: true,
+      },
+      {
+        source: "/category/premium-building-bricks-bh03",
+        destination: "/category/premium-building-bricks",
+        permanent: true,
+      },
+      // Broken blog post unicode ellipsis redirect (Part 5)
+      {
+        source: "/blog/:slug((?:5-coding-kits|five-coding-kits).*)",
+        destination: "/blog",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

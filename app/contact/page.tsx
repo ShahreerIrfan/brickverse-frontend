@@ -4,23 +4,35 @@ import NavLinks from "@/components/NavLinks";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import ContactClient from "@/components/contact/ContactClient";
+import { CONTACT_SEO, buildContactFaqJsonLd } from "@/lib/seoData";
 
 export const metadata: Metadata = {
-  title: "Contact Us | Kawaii Subete - Support, Phone & Store Location",
-  description:
-    "Get in touch with Kawaii Subete. Visit our Mohakhali DOHS Dhaka office, call our hotline 01402494401, or message us on WhatsApp for fast customer support.",
+  title: CONTACT_SEO.title,
+  description: CONTACT_SEO.description,
+  alternates: {
+    canonical: CONTACT_SEO.canonical,
+  },
   openGraph: {
-    title: "Contact Us | Kawaii Subete",
-    description:
-      "Get in touch with Kawaii Subete. Visit our Mohakhali DOHS Dhaka office, call our hotline 01402494401, or message us on WhatsApp.",
-    url: "https://kawaiisubete.com/contact",
+    title: CONTACT_SEO.title,
+    description: CONTACT_SEO.description,
+    url: CONTACT_SEO.canonical,
+    siteName: "Kawaii Subete",
+    locale: "en_BD",
     type: "website",
   },
 };
 
 export default function ContactPage() {
+  const faqJsonLd = buildContactFaqJsonLd();
+
   return (
     <div className="flex flex-col min-h-screen bg-[#FFF6EE] pb-16 lg:pb-0">
+      {/* FAQPage Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+
       <Navbar />
       <NavLinks />
 

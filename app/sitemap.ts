@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { CATEGORY_SEO_MAP, SUBCATEGORY_SEO_MAP } from "@/lib/seoData";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kawaiisubete.com";
@@ -18,9 +19,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/products`,
+      url: `${baseUrl}/contact`,
       lastModified: new Date(),
-      changeFrequency: "daily",
+      changeFrequency: "monthly",
       priority: 0.8,
     },
     {
@@ -31,5 +32,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  return staticRoutes;
+  // 11 Clean Category Pages (Part 2)
+  const categoryRoutes: MetadataRoute.Sitemap = Object.keys(CATEGORY_SEO_MAP).map((slug) => ({
+    url: `${baseUrl}/category/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: "daily",
+    priority: 0.85,
+  }));
+
+  // 10 Clean Subcategory Pages (Part 3)
+  const subcategoryRoutes: MetadataRoute.Sitemap = Object.values(SUBCATEGORY_SEO_MAP).map((sub) => ({
+    url: `${baseUrl}/category/${sub.parentSlug}/${sub.subSlug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly",
+    priority: 0.75,
+  }));
+
+  return [...staticRoutes, ...categoryRoutes, ...subcategoryRoutes];
 }

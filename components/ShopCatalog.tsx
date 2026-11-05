@@ -33,9 +33,22 @@ type ShopCatalogProps = {
   initialCategories: Category[];
   initialSeed?: string;
   initialSort?: string;
+  forcedCategory?: string;
+  forcedSubcategory?: string;
+  customH1?: string;
 };
 
-function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, initialCategories, initialSeed, initialSort }: ShopCatalogProps) {
+function ShopCatalogContent({
+  initialProducts,
+  initialCount,
+  initialHasMore,
+  initialCategories,
+  initialSeed,
+  initialSort,
+  forcedCategory,
+  forcedSubcategory,
+  customH1,
+}: ShopCatalogProps) {
   const searchParams = useSearchParams();
   const { addToCart } = useCart();
   const router = useRouter();
@@ -43,12 +56,12 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
 
   const [seed] = useState<string>(() => initialSeed || Math.random().toString(36).substring(2, 10));
 
-  // URL Query parameter states
-  const paramCategory = searchParams.get("category") || "all";
-  const paramSubcategory = searchParams.get("subcategory") || "all";
+  // URL Query parameter states (forced props take precedence on dedicated clean routes)
+  const paramCategory = forcedCategory || searchParams.get("category") || "all";
+  const paramSubcategory = forcedSubcategory || searchParams.get("subcategory") || "all";
   const paramSearch = searchParams.get("search") || "";
   const paramSort = searchParams.get("sort") || "";
-  const paramDeals = searchParams.get("deals") === "true" || searchParams.get("deals") === "1";
+  const paramDeals = forcedCategory === "bundle-deals" || searchParams.get("deals") === "true" || searchParams.get("deals") === "1";
 
   const defaultSortForParams = paramSort || initialSort || ((paramCategory !== "all" || paramSubcategory !== "all") ? "newest" : "random");
 
@@ -416,7 +429,7 @@ function ShopCatalogContent({ initialProducts, initialCount, initialHasMore, ini
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 sm:gap-4 pb-4 border-b border-[#EAE3F7] mb-5 sm:mb-6">
         <div>
           <h1 className="font-[family-name:var(--font-display)] font-extrabold text-xl sm:text-3xl text-[#171136] tracking-tight">
-            {paramDeals && selectedCategory === "all" ? "Exclusive Deals & Bundles" : (activeCategoryLabel || "All Products")}
+            {customH1 || (paramDeals && selectedCategory === "all" ? "Exclusive Deals & Bundles" : (activeCategoryLabel || "Shop All Products"))}
           </h1>
           <p className="text-xs sm:text-sm text-[#736E9B] mt-0.5 sm:mt-1 font-medium">
             Showing <span className="font-bold text-[#171136]">{totalCount}</span>{" "}

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
@@ -6,10 +7,34 @@ import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import BlockRenderer from "@/components/blog/BlockRenderer";
 import { getBlogPostBySlug, getMediaUrl } from "@/lib/api";
+import { getBlogPostSeo, SITE_URL } from "@/lib/seoData";
 import { IconArrowLeft } from "@/components/icons";
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getBlogPostBySlug(slug);
+  const seo = getBlogPostSeo(slug, post?.title, post?.excerpt || undefined);
+  const canonicalUrl = `${SITE_URL}/blog/${slug}`;
+
+  return {
+    title: seo.title,
+    description: seo.description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: seo.title,
+      description: seo.description,
+      url: canonicalUrl,
+      siteName: "Kawaii Subete",
+      locale: "en_BD",
+      type: "article",
+    },
+  };
 }
 
 function formatDate(value?: string | null) {

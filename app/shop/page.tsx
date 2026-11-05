@@ -1,13 +1,31 @@
+import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import NavLinks from "@/components/NavLinks";
 import ShopCatalog from "@/components/ShopCatalog";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import { getCategories, getServerApiBaseUrl } from "@/lib/api";
+import { SHOP_SEO } from "@/lib/seoData";
 import type { Product } from "@/components/productData";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+export const metadata: Metadata = {
+  title: SHOP_SEO.title,
+  description: SHOP_SEO.description,
+  alternates: {
+    canonical: SHOP_SEO.canonical,
+  },
+  openGraph: {
+    title: SHOP_SEO.title,
+    description: SHOP_SEO.description,
+    url: SHOP_SEO.canonical,
+    siteName: "Kawaii Subete",
+    locale: "en_BD",
+    type: "website",
+  },
+};
 
 interface ShopPageProps {
   searchParams?: Promise<{
@@ -71,6 +89,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
           initialCategories={categories}
           initialSeed={randomSeed}
           initialSort={initialSort}
+          customH1={SHOP_SEO.h1}
         />
       </main>
 
@@ -79,4 +98,3 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
     </div>
   );
 }
-

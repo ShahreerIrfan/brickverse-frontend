@@ -64,9 +64,9 @@ function SlideContent({ slide }: { slide: HeroSlide }) {
       )}
 
       <div className="relative z-10 px-4 py-3.5 sm:px-9 sm:py-7 lg:px-12 lg:py-10 w-full max-w-[68%] sm:max-w-[62%] lg:max-w-[560px]">
-        <h1 className="hero-content-in font-[family-name:var(--font-display)] font-extrabold text-white text-[16.5px] sm:text-[28px] lg:text-[42px] xl:text-[46px] leading-[1.12] tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
+        <h2 className="hero-content-in font-[family-name:var(--font-display)] font-extrabold text-white text-[16.5px] sm:text-[28px] lg:text-[42px] xl:text-[46px] leading-[1.12] tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]">
           {slide.title}
-        </h1>
+        </h2>
         {slide.subtitle && (
           <p
             className="hero-content-in text-white/90 text-[10px] sm:text-[13px] lg:text-[16px] mt-1.5 sm:mt-2.5 lg:mt-4 leading-tight sm:leading-snug line-clamp-2 drop-shadow-[0_1px_4px_rgba(0,0,0,0.35)]"

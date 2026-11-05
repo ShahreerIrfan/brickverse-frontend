@@ -130,6 +130,15 @@ export default function ContactClient() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+      {/* Primary H1 for SEO */}
+      <div className="mb-6 sm:mb-8">
+        <h1 className="font-[family-name:var(--font-display)] text-2xl sm:text-4xl font-extrabold text-[#171136] tracking-tight">
+          Contact Kawaii Subete
+        </h1>
+        <p className="text-xs sm:text-sm text-[#5D5589] mt-1.5 max-w-xl">
+          Get in touch with our Dhaka office for product inquiries, bulk orders, and fast customer support.
+        </p>
+      </div>
       
       {/* 2-Column Section matching screenshot layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start mb-12 sm:mb-16">

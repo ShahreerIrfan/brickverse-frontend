@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import NavLinks from "@/components/NavLinks";
 import CategoryRail from "@/components/CategoryRail";
@@ -15,8 +16,25 @@ import {
   getHeroSlides,
   getNewArrivals,
 } from "@/lib/api";
+import { HOMEPAGE_SEO, buildHomepageJsonLd } from "@/lib/seoData";
 
 export const revalidate = 30;
+
+export const metadata: Metadata = {
+  title: HOMEPAGE_SEO.title,
+  description: HOMEPAGE_SEO.description,
+  alternates: {
+    canonical: HOMEPAGE_SEO.canonical,
+  },
+  openGraph: {
+    title: HOMEPAGE_SEO.title,
+    description: HOMEPAGE_SEO.description,
+    url: HOMEPAGE_SEO.canonical,
+    siteName: "Kawaii Subete",
+    locale: "en_BD",
+    type: "website",
+  },
+};
 
 export default async function Home() {
   const [categorySections, categories, heroSlides, newArrivals] = await Promise.all([
@@ -35,8 +53,16 @@ export default async function Home() {
     .filter((c) => c.show_in_mega_menu !== false)
     .sort((a, b) => (a.mega_menu_order ?? 0) - (b.mega_menu_order ?? 0));
 
+  const jsonLd = buildHomepageJsonLd();
+
   return (
     <div className="flex flex-col flex-1 bg-[#FFF6EE] pb-16 lg:pb-0">
+      {/* Homepage Structured Data (Organization + WebSite) */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <Navbar categories={categories} />
       <NavLinks />
 
@@ -44,6 +70,16 @@ export default async function Home() {
         <div className="flex flex-col lg:flex-row items-start gap-4 sm:gap-6">
           <CategoryRail initialCategories={megaMenuCategories} />
           <div className="flex-1 w-full min-w-0 flex flex-col gap-3 sm:gap-4">
+            {/* Primary SEO H1 & Intro Paragraph */}
+            <header className="flex flex-col gap-1.5 pt-1 pb-1">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-[family-name:var(--font-display)] font-extrabold text-[#171136] tracking-tight leading-tight">
+                {HOMEPAGE_SEO.h1}
+              </h1>
+              <p className="text-xs sm:text-sm text-[#5D5589] leading-relaxed max-w-3xl">
+                {HOMEPAGE_SEO.introParagraph}
+              </p>
+            </header>
+
             <Hero slides={heroSlides} />
             <PromoColumns />
           </div>
