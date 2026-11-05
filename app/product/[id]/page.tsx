@@ -28,25 +28,75 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     };
   }
 
-  // Hard rule: Do not put brand name first in product titles — put product name first
-  const title = `${product.name} | Kawaii Subete`;
-  const plainDesc = (product.description || `${product.name} available at Kawaii Subete Bangladesh. Ships from Dhaka within 48 hours. Cash on delivery nationwide.`)
-    .replace(/<[^>]*>/g, "")
-    .slice(0, 160)
+  // 1. Extract clean numeric price
+  const rawPrice = product.discountedPrice || product.price || "0";
+  const priceNum = String(rawPrice).replace(/[^\d]/g, "") || "0";
+  const priceSuffix = priceNum && priceNum !== "0" ? ` — ৳${priceNum}` : "";
+
+  // 2. Title formula: {Product Name} — ৳{Price} | Kawaii Subete
+  // Hard Rule: Title must strictly be <= 60 characters
+  const nameOnly = product.name.trim();
+  const titleWithBrand = `${nameOnly}${priceSuffix} | Kawaii Subete`;
+
+  let title = titleWithBrand;
+  if (titleWithBrand.length > 60) {
+    const titleWithoutBrand = `${nameOnly}${priceSuffix}`;
+    if (titleWithoutBrand.length <= 60) {
+      title = titleWithoutBrand;
+    } else {
+      // Truncate name at word boundary to guarantee total length <= 60 chars
+      const maxNameLen = 60 - priceSuffix.length - 1; // 1 char for ellipsis
+      const slicedName = nameOnly.slice(0, maxNameLen);
+      const lastSpace = slicedName.lastIndexOf(" ");
+      const truncatedName = (lastSpace > 15 ? slicedName.slice(0, lastSpace) : slicedName).trim() + "…";
+      title = `${truncatedName}${priceSuffix}`;
+    }
+  }
+
+  // 3. Strip ALL HTML and remove boilerplate headings (Product Description / Key Features)
+  let plain = (product.description || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 
+  plain = plain.replace(/^Product Description\s*[:\-–—]?\s*/i, "");
+  plain = plain.replace(/^Key Features\s*[:\-–—]?\s*/i, "");
+  plain = plain.replace(/^Overview\s*[:\-–—]?\s*/i, "").trim();
+
+  // If description is short, pad it so final meta description reaches the 140–160 char target
+  if (plain.length < 80) {
+    plain = plain
+      ? `${plain.replace(/\.+$/, "")}. In stock now at Kawaii Subete Dhaka.`
+      : `Authentic ${nameOnly} collectible in stock at Kawaii Subete Dhaka.`;
+  }
+
+  // 4. Cut description at word boundary and append authoritative closing
+  const descSuffix = priceNum && priceNum !== "0"
+    ? ` ৳${priceNum}. Cash on delivery across Bangladesh.`
+    : ` Cash on delivery across Bangladesh.`;
+
+  const maxPlainLen = 155 - descSuffix.length;
+  let cutPlain = plain;
+  if (plain.length > maxPlainLen) {
+    const sliced = plain.slice(0, maxPlainLen);
+    const lastSpace = sliced.lastIndexOf(" ");
+    cutPlain = (lastSpace > 20 ? sliced.slice(0, lastSpace) : sliced).trim() + "…";
+  }
+
+  const finalDescription = `${cutPlain}${descSuffix}`;
   const productUrl = `${SITE_URL}/product/${product.slug || product.id}`;
   const imageUrl = product.image ? getMediaUrl(product.image) : `${SITE_URL}/logo.png`;
 
   return {
     title,
-    description: plainDesc,
+    description: finalDescription,
     alternates: {
       canonical: productUrl,
     },
     openGraph: {
       title,
-      description: plainDesc,
+      description: finalDescription,
       url: productUrl,
       siteName: "Kawaii Subete",
       locale: "en_BD",
