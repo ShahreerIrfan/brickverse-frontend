@@ -83,7 +83,7 @@ const UPSELL_PRODUCTS = [
     id: "upsell-circuit-lab",
     name: "Circuit Lab",
     subtitle: "40 build-along projects",
-    category: "Coding kits",
+    category: "Building bricks",
     categoryColor: "#7B5CFF",
     badge: "23% OFF",
     badgeColor: "#7B5CFF",
@@ -256,7 +256,7 @@ export default function CartPage() {
                 Your cart is empty
               </h2>
               <p className="text-xs sm:text-sm text-[#736E9B] max-w-sm mb-6">
-                Looks like you haven&apos;t added any figures, brick sets, or STEM coding kits to your cart yet.
+                Looks like you haven&apos;t added any figures, brick sets, or anime collectibles to your cart yet.
               </p>
               <Link
                 href="/shop"

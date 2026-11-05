@@ -8,7 +8,7 @@ const columns = [
       { label: "Anime figures", href: "/shop?search=anime" },
       { label: "Cartoon toys", href: "/shop?search=cartoon" },
       { label: "Brick sets", href: "/shop?search=brick" },
-      { label: "Coding kits", href: "/shop?search=coding" },
+      { label: "Cards & stickers", href: "/category/cards-stickers" },
       { label: "New arrivals", href: "/shop?sort=newest" },
     ],
   },

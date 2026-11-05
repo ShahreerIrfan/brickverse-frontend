@@ -524,8 +524,14 @@ export async function getRelatedProducts(category?: string, excludeId?: string):
     const res = await fetch(url, { next: { revalidate: 60 } });
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        return data.filter((p: Product) => p.id !== excludeId).slice(0, 4);
+      const rawList = Array.isArray(data) ? data : (Array.isArray(data?.results) ? data.results : []);
+      if (rawList.length > 0) {
+        const filtered = rawList.filter((p: Product) => p.id !== excludeId);
+        const inStock = filtered.filter((p: Product) => (p.stock ?? 1) > 0);
+        if (inStock.length >= 4) {
+          return inStock.slice(0, 4);
+        }
+        return filtered.slice(0, 4);
       }
     }
   } catch (error) {

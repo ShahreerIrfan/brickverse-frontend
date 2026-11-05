@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import NavLinks from "@/components/NavLinks";
 import ShopCatalog from "@/components/ShopCatalog";
@@ -8,6 +9,8 @@ import { getCategories, getServerApiBaseUrl } from "@/lib/api";
 import {
   getCategorySeo,
   getSubcategorySeo,
+  isValidCategorySlug,
+  SUBCATEGORY_SEO_MAP,
   SITE_URL,
 } from "@/lib/seoData";
 import type { Product } from "@/components/productData";
@@ -23,8 +26,38 @@ interface SubcategoryPageProps {
   }>;
 }
 
+async function verifySubcategoryExists(slug: string, subslug: string, apiBase: string): Promise<boolean> {
+  if (!isValidCategorySlug(slug)) return false;
+  const parentSeo = getCategorySeo(slug);
+  const key = `${parentSeo.slug}/${subslug}`;
+  if (SUBCATEGORY_SEO_MAP[key]) return true;
+
+  try {
+    const categories = await getCategories(apiBase);
+    const parent = categories.find((c) => c.slug === slug || c.id === slug || c.slug === parentSeo.slug);
+    if (!parent) return false;
+    if (Array.isArray(parent.subcategories)) {
+      return parent.subcategories.some(
+        (s: any) =>
+          s.slug === subslug ||
+          s.id === subslug ||
+          (s.label || s.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-") === subslug
+      );
+    }
+  } catch {
+    // fallback
+  }
+  return false;
+}
+
 export async function generateMetadata({ params }: SubcategoryPageProps): Promise<Metadata> {
   const { slug, subslug } = await params;
+  const apiBase = await getServerApiBaseUrl();
+  const exists = await verifySubcategoryExists(slug, subslug, apiBase);
+  if (!exists) {
+    notFound();
+  }
+
   const seo = getSubcategorySeo(slug, subslug);
   const canonicalUrl = `${SITE_URL}/category/${seo.parentSlug}/${seo.subSlug}`;
 
@@ -47,11 +80,16 @@ export async function generateMetadata({ params }: SubcategoryPageProps): Promis
 
 export default async function SubcategoryPage({ params, searchParams }: SubcategoryPageProps) {
   const { slug, subslug } = await params;
+  const apiBase = await getServerApiBaseUrl();
+  const exists = await verifySubcategoryExists(slug, subslug, apiBase);
+  if (!exists) {
+    notFound();
+  }
+
   const resolvedParams = searchParams ? await searchParams : {};
   const parentSeo = getCategorySeo(slug);
   const subSeo = getSubcategorySeo(slug, subslug);
   const randomSeed = Math.random().toString(36).substring(2, 10);
-  const apiBase = await getServerApiBaseUrl();
 
   const initialSort = resolvedParams?.sort || "newest";
 
@@ -78,6 +116,12 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
   const products: Product[] = Array.isArray(firstPage?.results) ? firstPage.results : [];
   const totalCount = typeof firstPage?.count === "number" ? firstPage.count : products.length;
 
+  const itemElements = products.slice(0, 20).map((p, index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    url: `${SITE_URL}/product/${p.slug || p.id}`,
+  }));
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -102,12 +146,8 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
       {
         "@type": "ItemList",
         name: subSeo.h1,
-        numberOfItems: totalCount,
-        itemListElement: products.slice(0, 20).map((p, index) => ({
-          "@type": "ListItem",
-          position: index + 1,
-          url: `${SITE_URL}/product/${p.slug || p.id}`,
-        })),
+        numberOfItems: itemElements.length,
+        itemListElement: itemElements,
       },
     ],
   };

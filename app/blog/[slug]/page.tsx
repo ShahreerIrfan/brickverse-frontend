@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import BlockRenderer from "@/components/blog/BlockRenderer";
 import { getBlogPostBySlug, getMediaUrl } from "@/lib/api";
-import { getBlogPostSeo, SITE_URL } from "@/lib/seoData";
+import { getBlogPostSeo, buildBlogPostJsonLd, SITE_URL } from "@/lib/seoData";
 import { IconArrowLeft } from "@/components/icons";
 
 interface BlogPostPageProps {
@@ -17,7 +17,12 @@ interface BlogPostPageProps {
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   const { slug } = await params;
   const post = await getBlogPostBySlug(slug);
-  const seo = getBlogPostSeo(slug, post?.title, post?.excerpt || undefined);
+
+  if (!post) {
+    notFound();
+  }
+
+  const seo = getBlogPostSeo(slug, post.title, post.excerpt || undefined);
   const canonicalUrl = `${SITE_URL}/blog/${slug}`;
 
   return {
@@ -60,8 +65,17 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     post.author?.email ||
     "Kawaii Subete Team";
 
+  const seo = getBlogPostSeo(slug, post.title, post.excerpt || undefined);
+  const articleJsonLd = buildBlogPostJsonLd(post, seo);
+
   return (
     <div className="flex flex-col min-h-screen bg-[#FFF6EE] pb-16 lg:pb-0">
+      {/* Blog Post Article Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+      />
+
       <Navbar />
       <NavLinks />
 

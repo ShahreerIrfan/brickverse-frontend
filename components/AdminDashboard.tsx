@@ -1411,7 +1411,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
         {
           id: "3",
           name: "Robo Coder",
-          category: "Coding kits",
+          category: "Building bricks",
           sold: "190 sold",
           sold_count: 190,
           revenue: "৳16,910",

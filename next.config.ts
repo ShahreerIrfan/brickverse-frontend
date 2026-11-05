@@ -129,6 +129,11 @@ const nextConfig: NextConfig = {
       },
       // Slug mismatch redirects for direct URLs
       {
+        source: "/category/coding-kits",
+        destination: "/shop",
+        permanent: true,
+      },
+      {
         source: "/category/cards-stickers-9ai7",
         destination: "/category/cards-stickers",
         permanent: true,

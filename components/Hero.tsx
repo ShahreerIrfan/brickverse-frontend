@@ -9,7 +9,7 @@ import { IconArrowRight, IconArrowLeft, IconArrowRightSlim } from "./icons";
 const fallbackSlide: HeroSlide = {
   id: -1,
   title: "Build your own universe.",
-  subtitle: "Anime figures, cartoon collectibles, brick sets & coding kits — shipped in 48h.",
+  subtitle: "Anime figures, cartoon collectibles & brick sets — shipped in 48h.",
   button_text: "Shop now",
   button_link: "/shop",
   image: null,

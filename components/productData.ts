@@ -7,6 +7,7 @@ export type GroupItem = {
   price: string;
   priceValue: number;
   stock?: number;
+  preOrderEnabled?: boolean;
 };
 
 export type ProductType = "simple" | "grouped";
@@ -46,6 +47,7 @@ export type Product = {
   accent?: string;
   description?: string;
   stock?: number;
+  preOrderEnabled?: boolean;
   productType?: ProductType;
   groupItems?: GroupItem[];
   bundleTotal?: number | null;

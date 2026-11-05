@@ -8,7 +8,7 @@ export const SITE_URL = "https://kawaiisubete.com";
 export const HOMEPAGE_SEO = {
   title: "Kawaii Subete — Anime Figures & Brick Sets in Bangladesh",
   description:
-    "Anime figures, cartoon collectibles and brick sets from ৳70. Cash on delivery across Bangladesh, shipped from Dhaka in 48 hours. 498 items in stock.",
+    "Anime figures, cartoon collectibles and brick sets from ৳70. Cash on delivery across Bangladesh, shipped from Dhaka in 48 hours. 472 items in stock.",
   h1: "Anime Figures, Brick Sets & Collectibles in Bangladesh",
   introParagraph:
     "Kawaii Subete stocks anime figures, character brick sets and cartoon collectibles for buyers across Bangladesh. Everything ships from our Dhaka warehouse within 48 hours, and every price you see is the price you pay in taka — no import markup, no surprise shipping.",
@@ -32,7 +32,7 @@ export const CATEGORY_SEO_MAP: Record<string, CategorySeoItem> = {
     apiSlugs: ["action-figures", "anime-action-figures", "anime-figures"],
     title: "Anime & Action Figure Price in Bangladesh | Kawaii Subete",
     description:
-      "Shop 154 anime and action figures in Bangladesh from ৳250. Demon Slayer, Naruto, One Piece, Pokémon and more. Cash on delivery, ships from Dhaka in 48h.",
+      "Shop over 150 anime and action figures in Bangladesh from ৳250. Demon Slayer, Naruto, One Piece, Pokémon and more. Cash on delivery, ships from Dhaka in 48h.",
     h1: "Anime & Action Figures in Bangladesh",
   },
   "building-bricks": {
@@ -40,7 +40,7 @@ export const CATEGORY_SEO_MAP: Record<string, CategorySeoItem> = {
     apiSlugs: ["building-bricks", "bricks-blocks"],
     title: "Building Blocks Price in Bangladesh | Kawaii Subete",
     description:
-      "64 building block sets from ৳250 — shops, cafés, treehouses and street-food carts. Compatible with major brick brands. Delivered from Dhaka in 48 hours.",
+      "Over 60 building block sets from ৳250 — shops, cafés, treehouses and street-food carts. Compatible with major brick brands. Delivered from Dhaka in 48 hours.",
     h1: "Building Block Sets in Bangladesh",
   },
   "character-bricks": {
@@ -48,7 +48,7 @@ export const CATEGORY_SEO_MAP: Record<string, CategorySeoItem> = {
     apiSlugs: ["character-bricks"],
     title: "Character Brick Figures in Bangladesh | Kawaii Subete",
     description:
-      "Build Disney, Sanrio, Tom & Jerry and anime characters from ৳200. 72 character brick figures in stock, shipped from Dhaka across Bangladesh in 48 hours.",
+      "Build Disney, Sanrio, Tom & Jerry and anime characters from ৳200. Over 70 character brick figures in stock, shipped from Dhaka across Bangladesh in 48 hours.",
     h1: "Character Building Block Figures",
   },
   "flower-bricks": {
@@ -56,7 +56,7 @@ export const CATEGORY_SEO_MAP: Record<string, CategorySeoItem> = {
     apiSlugs: ["flower-bricks"],
     title: "Flower Building Blocks in Bangladesh | Kawaii Subete",
     description:
-      "41 flower and botanical building block sets from ৳200 — roses, sakura, orchids and bouquets that never wilt. Delivered across Bangladesh from Dhaka in 48h.",
+      "Over 40 flower and botanical building block sets from ৳200 — roses, sakura, orchids and bouquets that never wilt. Delivered across Bangladesh from Dhaka in 48h.",
     h1: "Flower & Botanical Building Blocks",
   },
   "cards-stickers": {
@@ -64,7 +64,7 @@ export const CATEGORY_SEO_MAP: Record<string, CategorySeoItem> = {
     apiSlugs: ["cards-stickers", "cards-stickers-9ai7"],
     title: "Anime Cards & Stickers in Bangladesh | Kawaii Subete",
     description:
-      "One Piece, Demon Slayer and anime card boxes, waterproof sticker packs and wanted posters from ৳70. 64 collectibles, shipped from Dhaka across Bangladesh.",
+      "One Piece, Demon Slayer and anime card boxes, waterproof sticker packs and wanted posters from ৳70. Over 60 collectibles, shipped from Dhaka across Bangladesh.",
     h1: "Anime Cards, Stickers & Wanted Posters",
   },
   "accessories": {
@@ -123,6 +123,25 @@ const CATEGORY_ALIAS_MAP: Record<string, string> = {
   "vehicle-bricks": "vehicle",
   "premium-building-bricks-bh03": "premium-building-bricks",
 };
+
+export const VALID_CATEGORY_SLUGS = new Set([
+  "action-figures",
+  "building-bricks",
+  "character-bricks",
+  "flower-bricks",
+  "cards-stickers",
+  "accessories",
+  "animal-bricks",
+  "vehicle",
+  "premium-building-bricks",
+  "bundle-deals",
+  "plushies",
+]);
+
+export function isValidCategorySlug(slug: string): boolean {
+  const norm = CATEGORY_ALIAS_MAP[slug] || slug;
+  return VALID_CATEGORY_SLUGS.has(norm);
+}
 
 export function getCategorySeo(rawSlug: string): CategorySeoItem {
   const normalized = CATEGORY_ALIAS_MAP[rawSlug] || rawSlug;
@@ -273,7 +292,7 @@ export function getSubcategorySeo(parentSlug: string, subSlug: string): Subcateg
 export const SHOP_SEO = {
   title: "Shop All Anime Figures & Brick Sets | Kawaii Subete",
   description:
-    "Browse all 498 anime figures, brick sets and collectibles at Kawaii Subete. Prices from ৳70 with delivery across Bangladesh. Ships from Dhaka in 48 hours.",
+    "Browse all 535 anime figures, brick sets and collectibles at Kawaii Subete. Prices from ৳70 with delivery across Bangladesh. Ships from Dhaka in 48 hours.",
   h1: "Shop All Products",
   canonical: `${SITE_URL}/shop`,
 };
@@ -411,7 +430,24 @@ export function buildProductJsonLd(product: Product) {
   // Strip non-numeric currency characters
   const rawPrice = product.discountedPrice || product.price || "0";
   const numericPrice = String(rawPrice).replace(/[^0-9.]/g, "").trim() || "0";
-  const isInStock = (product.stock ?? 1) > 0;
+  const stockNum = Number(product.stock ?? 1);
+  const isInStock = stockNum > 0;
+  
+  // Section 5.2 Availability logic:
+  // stock > 0 => InStock
+  // stock === 0 => PreOrder (never InStock)
+  const isPreOrderDisallowed = product.preOrderEnabled === false || (product as any).allow_preorder === false;
+  const availability = isInStock
+    ? "https://schema.org/InStock"
+    : isPreOrderDisallowed
+    ? "https://schema.org/OutOfStock"
+    : "https://schema.org/PreOrder";
+
+  // Section 5.4: priceValidUntil (today + 1 year)
+  const nextYear = new Date();
+  nextYear.setFullYear(nextYear.getFullYear() + 1);
+  const priceValidUntil = nextYear.toISOString().split("T")[0];
+
   const productSlug = product.slug || product.id;
   const imageUrl = product.image?.startsWith("http")
     ? product.image
@@ -488,8 +524,9 @@ export function buildProductJsonLd(product: Product) {
           url: `${SITE_URL}/product/${productSlug}`,
           priceCurrency: "BDT",
           price: numericPrice,
-          availability: isInStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          availability: availability,
           itemCondition: "https://schema.org/NewCondition",
+          priceValidUntil: priceValidUntil,
           seller: { "@id": `${SITE_URL}/#organization` },
         },
       },
@@ -526,10 +563,51 @@ export function buildCategoryJsonLd(
       {
         "@type": "ItemList",
         name: categoryName,
-        numberOfItems: count,
+        numberOfItems: itemElements.length,
         itemListElement: itemElements,
       },
     ],
+  };
+}
+
+export function buildBlogPostJsonLd(
+  post: {
+    slug: string;
+    title: string;
+    excerpt?: string | null;
+    publishedAt?: string | null;
+    createdAt?: string | null;
+    updatedAt?: string | null;
+    featuredImage?: string | null;
+  },
+  seo: { title: string; description: string }
+) {
+  const publishedDate = post.publishedAt || post.createdAt || "2026-10-01T00:00:00+06:00";
+  const modifiedDate = post.updatedAt || publishedDate;
+  const imageUrl = post.featuredImage
+    ? (post.featuredImage.startsWith("http")
+        ? post.featuredImage
+        : `${SITE_URL}${post.featuredImage.startsWith("/") ? "" : "/"}${post.featuredImage}`)
+    : `${SITE_URL}/logo.png`;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: (post.title || seo.title).slice(0, 110),
+    description: seo.description,
+    image: [imageUrl],
+    datePublished: publishedDate,
+    dateModified: modifiedDate,
+    author: {
+      "@type": "Organization",
+      name: "Kawaii Subete",
+      url: SITE_URL,
+    },
+    publisher: { "@id": `${SITE_URL}/#organization` },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${SITE_URL}/blog/${post.slug}`,
+    },
   };
 }
 

@@ -23,9 +23,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const product = await getProductById(id);
 
   if (!product) {
-    return {
-      title: "Product Not Found | Kawaii Subete",
-    };
+    notFound();
   }
 
   // 1. Extract clean numeric price

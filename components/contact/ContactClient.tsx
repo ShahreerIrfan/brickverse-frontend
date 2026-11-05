@@ -64,7 +64,6 @@ export default function ContactClient() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [copied, setCopied] = useState(false);
 
   const handleCopyAddress = () => {
@@ -537,33 +536,23 @@ export default function ContactClient() {
         </div>
 
         <div className="flex flex-col divide-y divide-[#F0ECE7] border-y border-[#F0ECE7]">
-          {faqs.map((faq, idx) => {
-            const isOpen = openFaq === idx;
-            return (
-              <div key={faq.q} className="py-4">
-                <button
-                  type="button"
-                  onClick={() => setOpenFaq(isOpen ? null : idx)}
-                  className="w-full text-left flex items-center justify-between gap-4 font-bold text-sm sm:text-base text-[#171136] hover:text-[#FF4D6D] transition-colors cursor-pointer"
-                >
-                  <span>{faq.q}</span>
-                  <span
-                    className={`w-7 h-7 rounded-full bg-[#FAF8FF] flex items-center justify-center text-[#7B5CFF] transition-transform duration-200 shrink-0 ${
-                      isOpen ? "rotate-90 bg-[#FFF1F4] text-[#FF4D6D]" : ""
-                    }`}
-                  >
-                    <IconChevronRight className="w-4 h-4" />
-                  </span>
-                </button>
-
-                {isOpen && (
-                  <p className="text-xs sm:text-sm text-[#5D5589] leading-relaxed mt-2.5 pr-6">
-                    {faq.a}
-                  </p>
-                )}
-              </div>
-            );
-          })}
+          {faqs.map((faq, idx) => (
+            <details
+              key={faq.q}
+              open={idx === 0}
+              className="group py-4 transition-colors"
+            >
+              <summary className="w-full text-left flex items-center justify-between gap-4 font-bold text-sm sm:text-base text-[#171136] hover:text-[#FF4D6D] transition-colors cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                <span>{faq.q}</span>
+                <span className="w-7 h-7 rounded-full bg-[#FAF8FF] group-open:bg-[#FFF1F4] flex items-center justify-center text-[#7B5CFF] group-open:text-[#FF4D6D] transition-transform duration-200 shrink-0 group-open:rotate-90">
+                  <IconChevronRight className="w-4 h-4" />
+                </span>
+              </summary>
+              <p className="text-xs sm:text-sm text-[#5D5589] leading-relaxed mt-2.5 pr-6">
+                {faq.a}
+              </p>
+            </details>
+          ))}
         </div>
       </div>
 

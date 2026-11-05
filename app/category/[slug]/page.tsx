@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import NavLinks from "@/components/NavLinks";
 import ShopCatalog from "@/components/ShopCatalog";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import { getCategories, getServerApiBaseUrl } from "@/lib/api";
-import { getCategorySeo, buildCategoryJsonLd, SITE_URL } from "@/lib/seoData";
+import { getCategorySeo, buildCategoryJsonLd, isValidCategorySlug, SITE_URL } from "@/lib/seoData";
 import type { Product } from "@/components/productData";
 
 export const dynamic = "force-dynamic";
@@ -20,8 +21,29 @@ interface CategoryPageProps {
   }>;
 }
 
+async function verifyCategoryExists(slug: string, apiBase: string): Promise<boolean> {
+  if (isValidCategorySlug(slug)) return true;
+  try {
+    const categories = await getCategories(apiBase);
+    return categories.some(
+      (c) =>
+        c.slug === slug ||
+        c.id === slug ||
+        (c.label || "").toLowerCase().replace(/[^a-z0-9]+/g, "-") === slug
+    );
+  } catch {
+    return false;
+  }
+}
+
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
+  const apiBase = await getServerApiBaseUrl();
+  const exists = await verifyCategoryExists(slug, apiBase);
+  if (!exists) {
+    notFound();
+  }
+
   const seo = getCategorySeo(slug);
   const canonicalUrl = `${SITE_URL}/category/${seo.slug}`;
 
@@ -44,10 +66,15 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 
 export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
   const { slug } = await params;
+  const apiBase = await getServerApiBaseUrl();
+  const exists = await verifyCategoryExists(slug, apiBase);
+  if (!exists) {
+    notFound();
+  }
+
   const resolvedParams = searchParams ? await searchParams : {};
   const seo = getCategorySeo(slug);
   const randomSeed = Math.random().toString(36).substring(2, 10);
-  const apiBase = await getServerApiBaseUrl();
 
   const isBundleDeals = seo.slug === "bundle-deals";
   const initialSort = resolvedParams?.sort || "newest";

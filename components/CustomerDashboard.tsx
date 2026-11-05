@@ -1338,7 +1338,7 @@ export default function CustomerDashboard({
                     </div>
                     <h3 className="font-bold text-sm text-[#171136]">Your wishlist is empty</h3>
                     <p className="text-xs text-[#736E9B] mt-1 max-w-xs mb-4">
-                      Browse our collection of anime figures, bricks, and coding kits to save your favorites.
+                      Browse our collection of anime figures, brick sets, and collectibles to save your favorites.
                     </p>
                     <Link
                       href="/shop"

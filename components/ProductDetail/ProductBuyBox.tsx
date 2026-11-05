@@ -129,7 +129,8 @@ export default function ProductBuyBox({ product }: ProductBuyBoxProps) {
 
       {isPreorder && (
         <p className="mt-4 rounded-2xl bg-[#FFF6E0] border border-[#F5DFA8] px-4 py-3 text-xs font-semibold text-[#8A5A00]">
-          This item is currently out of stock. You can pre-order it now and we&apos;ll ship it as soon as it&apos;s back.
+          <span className="block font-bold">Pre-order — expected to ship within 14–21 days.</span>
+          <span className="block mt-1 font-normal text-[#8A5A00]/90">Payment on delivery. You can cancel any time before dispatch.</span>
         </p>
       )}
 
