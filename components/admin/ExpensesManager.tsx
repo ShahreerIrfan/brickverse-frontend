@@ -154,7 +154,12 @@ export default function ExpensesManager() {
     setEditingExpense(item);
     setFormCategory(item.expense_title);
     setFormAmount(String(item.amount));
-    setFormDate(item.date || new Date().toISOString().split("T")[0]);
+    const safeDate = item.date
+      ? item.date.includes("T")
+        ? item.date.split("T")[0]
+        : item.date
+      : new Date().toISOString().split("T")[0];
+    setFormDate(safeDate);
     setFormDescription(item.description || "");
     setFormError(null);
     setModalOpen(true);

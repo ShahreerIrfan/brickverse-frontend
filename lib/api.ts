@@ -2089,7 +2089,7 @@ export async function updateExpense(
 ): Promise<{ success: boolean; data?: Expense; error?: string }> {
   try {
     const res = await fetch(`${getApiBaseUrl()}/expenses/${id}/`, {
-      method: "PUT",
+      method: "PATCH",
       headers: getAuthHeaders(),
       credentials: "include",
       body: JSON.stringify(data),
