@@ -795,7 +795,7 @@ export type ShopProductPage = { results: Product[]; count: number; hasMore: bool
 export async function getProductsPage(
   query: ShopProductQuery,
   page: number,
-  pageSize = 20,
+  pageSize = 24,
   signal?: AbortSignal
 ): Promise<ShopProductPage> {
   const qs = new URLSearchParams({ page: String(page), page_size: String(pageSize) });

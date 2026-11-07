@@ -18,6 +18,7 @@ interface CategoryPageProps {
     subcategory?: string;
     search?: string;
     sort?: string;
+    page?: string;
   }>;
 }
 
@@ -36,8 +37,9 @@ async function verifyCategoryExists(slug: string, apiBase: string): Promise<bool
   }
 }
 
-export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
+  const resolvedParams = searchParams ? await searchParams : {};
   const apiBase = await getServerApiBaseUrl();
   const exists = await verifyCategoryExists(slug, apiBase);
   if (!exists) {
@@ -45,7 +47,9 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   }
 
   const seo = getCategorySeo(slug);
-  const canonicalUrl = `${SITE_URL}/category/${seo.slug}`;
+  const pageNum = Math.max(1, Number(resolvedParams?.page) || 1);
+  const baseCanonical = `${SITE_URL}/category/${seo.slug}`;
+  const canonicalUrl = pageNum > 1 ? `${baseCanonical}?page=${pageNum}` : baseCanonical;
 
   return {
     title: seo.title,
@@ -74,16 +78,17 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
   const resolvedParams = searchParams ? await searchParams : {};
   const seo = getCategorySeo(slug);
-  const randomSeed = Math.random().toString(36).substring(2, 10);
+
+  const currentPage = Math.max(1, Number(resolvedParams?.page) || 1);
+  const pageSize = 24;
 
   const isBundleDeals = seo.slug === "bundle-deals";
   const initialSort = resolvedParams?.sort || "newest";
 
   const qs = new URLSearchParams({
-    page: "1",
-    page_size: "20",
+    page: String(currentPage),
+    page_size: String(pageSize),
     sort: initialSort,
-    seed: randomSeed,
   });
 
   if (isBundleDeals) {
@@ -100,15 +105,15 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     qs.set("search", resolvedParams.search.trim());
   }
 
-  const [firstPage, categories] = await Promise.all([
+  const [pageData, categories] = await Promise.all([
     fetch(`${apiBase}/products/?${qs.toString()}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null),
     getCategories(apiBase),
   ]);
 
-  const products: Product[] = Array.isArray(firstPage?.results) ? firstPage.results : [];
-  const totalCount = typeof firstPage?.count === "number" ? firstPage.count : products.length;
+  const products: Product[] = Array.isArray(pageData?.results) ? pageData.results : [];
+  const totalCount = typeof pageData?.count === "number" ? pageData.count : products.length;
 
   const jsonLd = buildCategoryJsonLd(seo.h1, seo.slug, totalCount, products);
 
@@ -127,12 +132,14 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
         <ShopCatalog
           initialProducts={products}
           initialCount={totalCount}
-          initialHasMore={Boolean(firstPage?.hasMore)}
+          initialHasMore={Boolean(pageData?.hasMore)}
           initialCategories={categories}
-          initialSeed={randomSeed}
           initialSort={initialSort}
-          forcedCategory={seo.slug}
+          forcedCategory={isBundleDeals ? "bundle-deals" : seo.slug}
           customH1={seo.h1}
+          basePath={`/category/${seo.slug}`}
+          currentPage={currentPage}
+          pageSize={pageSize}
         />
       </main>
 

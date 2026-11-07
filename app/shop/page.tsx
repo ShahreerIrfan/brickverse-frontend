@@ -5,27 +5,11 @@ import ShopCatalog from "@/components/ShopCatalog";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import { getCategories, getServerApiBaseUrl } from "@/lib/api";
-import { SHOP_SEO } from "@/lib/seoData";
+import { SHOP_SEO, SITE_URL } from "@/lib/seoData";
 import type { Product } from "@/components/productData";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-export const metadata: Metadata = {
-  title: SHOP_SEO.title,
-  description: SHOP_SEO.description,
-  alternates: {
-    canonical: SHOP_SEO.canonical,
-  },
-  openGraph: {
-    title: SHOP_SEO.title,
-    description: SHOP_SEO.description,
-    url: SHOP_SEO.canonical,
-    siteName: "Kawaii Subete",
-    locale: "en_BD",
-    type: "website",
-  },
-};
 
 interface ShopPageProps {
   searchParams?: Promise<{
@@ -34,26 +18,57 @@ interface ShopPageProps {
     search?: string;
     deals?: string;
     sort?: string;
+    page?: string;
   }>;
+}
+
+export async function generateMetadata({ searchParams }: ShopPageProps): Promise<Metadata> {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const pageNum = Math.max(1, Number(resolvedParams?.page) || 1);
+
+  // STEP 4 FIX 2: Self-referencing canonical on paginated pages
+  // If category is provided, canonical points to /category/{category}
+  let baseCanonical = `${SITE_URL}/shop`;
+  if (resolvedParams?.category && resolvedParams.category !== "all") {
+    baseCanonical = `${SITE_URL}/category/${resolvedParams.category}`;
+  }
+  const canonical = pageNum > 1 ? `${baseCanonical}?page=${pageNum}` : baseCanonical;
+
+  return {
+    title: SHOP_SEO.title,
+    description: SHOP_SEO.description,
+    alternates: {
+      canonical,
+    },
+    openGraph: {
+      title: SHOP_SEO.title,
+      description: SHOP_SEO.description,
+      url: canonical,
+      siteName: "Kawaii Subete",
+      locale: "en_BD",
+      type: "website",
+    },
+  };
 }
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
   const resolvedParams = searchParams ? await searchParams : {};
   const isDeals = resolvedParams?.deals === "true" || resolvedParams?.deals === "1";
-  const randomSeed = Math.random().toString(36).substring(2, 10);
   const apiBase = await getServerApiBaseUrl();
+
+  const currentPage = Math.max(1, Number(resolvedParams?.page) || 1);
+  const pageSize = 24;
 
   const hasCategoryFilter = Boolean(
     (resolvedParams?.category && resolvedParams.category !== "all") ||
     (resolvedParams?.subcategory && resolvedParams.subcategory !== "all")
   );
-  const initialSort = resolvedParams?.sort || (hasCategoryFilter ? "newest" : "random");
+  const initialSort = resolvedParams?.sort || (hasCategoryFilter ? "newest" : "newest");
 
   const qs = new URLSearchParams({
-    page: "1",
-    page_size: "20",
+    page: String(currentPage),
+    page_size: String(pageSize),
     sort: initialSort,
-    seed: randomSeed,
   });
   if (isDeals) {
     qs.set("deals", "true");
@@ -68,13 +83,14 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
     qs.set("search", resolvedParams.search.trim());
   }
 
-  const [firstPage, categories] = await Promise.all([
+  const [pageData, categories] = await Promise.all([
     fetch(`${apiBase}/products/?${qs.toString()}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null),
     getCategories(apiBase),
   ]);
-  const products: Product[] = Array.isArray(firstPage?.results) ? firstPage.results : [];
+  const products: Product[] = Array.isArray(pageData?.results) ? pageData.results : [];
+  const totalCount = typeof pageData?.count === "number" ? pageData.count : products.length;
 
   return (
     <div className="flex flex-col min-h-screen bg-[#FFF6EE] pb-16 lg:pb-0">
@@ -84,12 +100,14 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
       <main className="flex-1">
         <ShopCatalog
           initialProducts={products}
-          initialCount={typeof firstPage?.count === "number" ? firstPage.count : products.length}
-          initialHasMore={Boolean(firstPage?.hasMore)}
+          initialCount={totalCount}
+          initialHasMore={Boolean(pageData?.hasMore)}
           initialCategories={categories}
-          initialSeed={randomSeed}
           initialSort={initialSort}
           customH1={SHOP_SEO.h1}
+          basePath="/shop"
+          currentPage={currentPage}
+          pageSize={pageSize}
         />
       </main>
 

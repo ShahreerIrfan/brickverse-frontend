@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -36,6 +36,9 @@ type ShopCatalogProps = {
   forcedCategory?: string;
   forcedSubcategory?: string;
   customH1?: string;
+  basePath?: string;
+  currentPage?: number;
+  pageSize?: number;
 };
 
 function ShopCatalogContent({
@@ -48,6 +51,9 @@ function ShopCatalogContent({
   forcedCategory,
   forcedSubcategory,
   customH1,
+  basePath,
+  currentPage: propCurrentPage,
+  pageSize: propPageSize,
 }: ShopCatalogProps) {
   const searchParams = useSearchParams();
   const { addToCart } = useCart();
@@ -212,20 +218,57 @@ function ShopCatalogContent({
     };
   }, []);
 
-  // Server-driven infinite scroll: the first page arrives with the HTML, every
-  // later page is requested only when the visitor scrolls near the bottom.
-  const PAGE_SIZE = 20;
+  const PAGE_SIZE = propPageSize || 24;
+  const paramPage = Math.max(1, Number(searchParams.get("page")) || Number(propCurrentPage) || 1);
+  const currentPage = paramPage;
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [totalCount, setTotalCount] = useState(initialCount);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [loadingFirst, setLoadingFirst] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState(false);
-  const pageRef = useRef(1);
+  const pageRef = useRef(currentPage);
   const requestRef = useRef(0);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-  // Query the server-rendered first page corresponds to.
-  const loadedKey = useRef(JSON.stringify([paramCategory, paramSubcategory, paramSearch, null, null, false, defaultSortForParams, paramDeals]));
+
+  // Sync state when server props update (e.g. on navigation to ?page=N)
+  useEffect(() => {
+    setProducts(initialProducts);
+    setTotalCount(initialCount);
+    setHasMore(initialHasMore);
+    pageRef.current = currentPage;
+  }, [initialProducts, initialCount, initialHasMore, currentPage]);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+  const buildPageUrl = useCallback(
+    (n: number) => {
+      const p = new URLSearchParams(searchParams ? searchParams.toString() : "");
+      if (n <= 1) {
+        p.delete("page");
+      } else {
+        p.set("page", String(n));
+      }
+      const qs = p.toString();
+      const base = basePath || (typeof window !== "undefined" ? window.location.pathname : "/shop");
+      return qs ? `${base}?${qs}` : base;
+    },
+    [searchParams, basePath]
+  );
+
+  const pageNumbers = useMemo(() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (currentPage <= 4) {
+      return [1, 2, 3, 4, 5, "...", totalPages];
+    }
+    if (currentPage >= totalPages - 3) {
+      return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+    return [1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages];
+  }, [totalPages, currentPage]);
+
+  // Query the server-rendered page corresponds to.
+  const loadedKey = useRef(JSON.stringify([paramCategory, paramSubcategory, paramSearch, null, null, false, defaultSortForParams, paramDeals, currentPage]));
 
   const queryKey = JSON.stringify([
     selectedCategory,
@@ -253,10 +296,9 @@ function ShopCatalogContent({
     [selectedCategory, selectedSubcategory, searchQuery, appliedMinPrice, appliedMaxPrice, onSaleOnly, sortBy, seed, paramDeals]
   );
 
-
   // Filters changed: start again from page 1.
   useEffect(() => {
-    if (queryKey === loadedKey.current) return; // already showing this query's first page
+    if (queryKey === loadedKey.current) return; // already showing this query's page
     const controller = new AbortController();
     const requestId = ++requestRef.current;
     pageRef.current = 1;
@@ -282,43 +324,6 @@ function ShopCatalogContent({
     return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryKey]);
-
-  const loadMore = useCallback(() => {
-    if (loadingFirst || loadingMore || !hasMore) return;
-    const requestId = requestRef.current;
-    const nextPage = pageRef.current + 1;
-    setLoadingMore(true);
-    setLoadError(false);
-    getProductsPage(buildQuery(), nextPage, PAGE_SIZE)
-      .then((data) => {
-        if (requestId !== requestRef.current) return; // filters changed meanwhile
-        pageRef.current = nextPage;
-        setProducts((prev) => {
-          const seen = new Set(prev.map((p) => p.id));
-          return [...prev, ...data.results.filter((p) => !seen.has(p.id))];
-        });
-        setTotalCount(data.count);
-        setHasMore(data.hasMore);
-      })
-      .catch((err) => {
-        console.warn("[Shop] Failed to load more products", err);
-        if (requestId === requestRef.current) setLoadError(true);
-      })
-      .finally(() => setLoadingMore(false));
-  }, [buildQuery, hasMore, loadingFirst, loadingMore]);
-
-  useEffect(() => {
-    const node = sentinelRef.current;
-    if (!node || !hasMore || loadError) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) loadMore();
-      },
-      { rootMargin: "400px 0px" }
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [hasMore, loadError, loadMore, products.length]);
 
   // Resolve active category and subcategory objects accurately
   let parentCategory: Category | undefined = undefined;
@@ -718,31 +723,96 @@ function ShopCatalogContent({
                 })}
               </div>
 
-              {/* Infinite scroll: the next page is requested when this marker nears the viewport */}
-              <div ref={sentinelRef} aria-hidden className="h-px" />
-              <div className="mt-6 flex flex-col items-center gap-4 min-h-10 w-full" aria-live="polite">
-                {loadingMore && (
-                  <div className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4.5">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                      <ProductCardSkeleton key={`more-${i}`} />
-                    ))}
+              {/* SEO Server-Rendered Pagination Navigation */}
+              {totalPages > 1 && (
+                <nav
+                  aria-label="Pagination"
+                  className="mt-10 mb-6 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 select-none"
+                >
+                  {/* Previous Link */}
+                  {currentPage > 1 ? (
+                    <Link
+                      href={buildPageUrl(currentPage - 1)}
+                      className="inline-flex items-center gap-1 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-[#171136] bg-white border border-[#EAE3F7] hover:border-[#6B3BF7] hover:text-[#6B3BF7] transition-all shadow-sm active:scale-95"
+                      aria-label="Go to previous page"
+                    >
+                      <IconChevronLeft className="w-4 h-4" />
+                      <span>Previous</span>
+                    </Link>
+                  ) : (
+                    <span
+                      className="inline-flex items-center gap-1 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-[#8A84A6]/50 bg-[#F6F1FF]/50 border border-transparent cursor-not-allowed"
+                      aria-disabled="true"
+                    >
+                      <IconChevronLeft className="w-4 h-4" />
+                      <span>Previous</span>
+                    </span>
+                  )}
+
+                  {/* Page Numbers */}
+                  <div className="flex items-center gap-1 sm:gap-1.5">
+                    {pageNumbers.map((p: number | string, idx: number) => {
+                      if (p === "...") {
+                        return (
+                          <span
+                            key={`ellipsis-${idx}`}
+                            className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-xs font-bold text-[#8A84A6]"
+                          >
+                            …
+                          </span>
+                        );
+                      }
+                      const num = Number(p);
+                      const isCurrent = num === currentPage;
+                      return isCurrent ? (
+                        <span
+                          key={num}
+                          aria-current="page"
+                          className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-xs sm:text-sm font-extrabold text-white bg-[#6B3BF7] shadow-md shadow-[#6B3BF7]/25"
+                        >
+                          {num}
+                        </span>
+                      ) : (
+                        <Link
+                          key={num}
+                          href={buildPageUrl(num)}
+                          aria-label={`Go to page ${num}`}
+                          className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold text-[#171136] bg-white border border-[#EAE3F7] hover:border-[#6B3BF7] hover:text-[#6B3BF7] transition-all shadow-sm active:scale-95"
+                        >
+                          {num}
+                        </Link>
+                      );
+                    })}
                   </div>
-                )}
-                {loadError && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLoadError(false);
-                      setHasMore(true);
-                    }}
-                    className="px-5 py-2 rounded-full bg-white border border-[#EAE3F7] text-xs font-bold text-[#FF4D6D] hover:bg-[#FFF1F4] cursor-pointer"
-                  >
-                    Couldn&apos;t load more products - tap to retry
-                  </button>
-                )}
-                {!hasMore && !loadError && !loadingFirst && products.length > 0 && (
-                  <p className="text-xs text-[#8A84A6] font-medium">You&apos;ve seen all {totalCount} products</p>
-                )}
+
+                  {/* Next Link */}
+                  {currentPage < totalPages ? (
+                    <Link
+                      href={buildPageUrl(currentPage + 1)}
+                      className="inline-flex items-center gap-1 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-[#171136] bg-white border border-[#EAE3F7] hover:border-[#6B3BF7] hover:text-[#6B3BF7] transition-all shadow-sm active:scale-95"
+                      aria-label="Go to next page"
+                    >
+                      <span>Next</span>
+                      <IconChevronRight className="w-4 h-4" />
+                    </Link>
+                  ) : (
+                    <span
+                      className="inline-flex items-center gap-1 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-[#8A84A6]/50 bg-[#F6F1FF]/50 border border-transparent cursor-not-allowed"
+                      aria-disabled="true"
+                    >
+                      <span>Next</span>
+                      <IconChevronRight className="w-4 h-4" />
+                    </span>
+                  )}
+                </nav>
+              )}
+
+              {/* Total count indicator */}
+              <div className="text-center py-2">
+                <p className="text-xs text-[#8A84A6] font-medium">
+                  Showing page <span className="font-bold text-[#171136]">{currentPage}</span> of{" "}
+                  <span className="font-bold text-[#171136]">{totalPages}</span> ({totalCount} total products)
+                </p>
               </div>
             </>
           )}

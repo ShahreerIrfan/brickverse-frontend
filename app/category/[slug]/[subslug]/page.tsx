@@ -23,6 +23,7 @@ interface SubcategoryPageProps {
   searchParams?: Promise<{
     search?: string;
     sort?: string;
+    page?: string;
   }>;
 }
 
@@ -50,8 +51,9 @@ async function verifySubcategoryExists(slug: string, subslug: string, apiBase: s
   return false;
 }
 
-export async function generateMetadata({ params }: SubcategoryPageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: SubcategoryPageProps): Promise<Metadata> {
   const { slug, subslug } = await params;
+  const resolvedParams = searchParams ? await searchParams : {};
   const apiBase = await getServerApiBaseUrl();
   const exists = await verifySubcategoryExists(slug, subslug, apiBase);
   if (!exists) {
@@ -59,7 +61,9 @@ export async function generateMetadata({ params }: SubcategoryPageProps): Promis
   }
 
   const seo = getSubcategorySeo(slug, subslug);
-  const canonicalUrl = `${SITE_URL}/category/${seo.parentSlug}/${seo.subSlug}`;
+  const pageNum = Math.max(1, Number(resolvedParams?.page) || 1);
+  const baseCanonical = `${SITE_URL}/category/${seo.parentSlug}/${seo.subSlug}`;
+  const canonicalUrl = pageNum > 1 ? `${baseCanonical}?page=${pageNum}` : baseCanonical;
 
   return {
     title: seo.title,
@@ -89,15 +93,15 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
   const resolvedParams = searchParams ? await searchParams : {};
   const parentSeo = getCategorySeo(slug);
   const subSeo = getSubcategorySeo(slug, subslug);
-  const randomSeed = Math.random().toString(36).substring(2, 10);
 
+  const currentPage = Math.max(1, Number(resolvedParams?.page) || 1);
+  const pageSize = 24;
   const initialSort = resolvedParams?.sort || "newest";
 
   const qs = new URLSearchParams({
-    page: "1",
-    page_size: "20",
+    page: String(currentPage),
+    page_size: String(pageSize),
     sort: initialSort,
-    seed: randomSeed,
     category: parentSeo.apiSlugs[0] || parentSeo.slug,
     subcategory: subSeo.apiSubSlugs[0] || subSeo.subSlug,
   });
@@ -169,11 +173,13 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
           initialCount={totalCount}
           initialHasMore={Boolean(firstPage?.hasMore)}
           initialCategories={categories}
-          initialSeed={randomSeed}
           initialSort={initialSort}
           forcedCategory={parentSeo.slug}
           forcedSubcategory={subSeo.subSlug}
           customH1={subSeo.h1}
+          basePath={`/category/${parentSeo.slug}/${subSeo.subSlug}`}
+          currentPage={currentPage}
+          pageSize={pageSize}
         />
       </main>
 

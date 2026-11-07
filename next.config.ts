@@ -154,6 +154,17 @@ const nextConfig: NextConfig = {
         destination: "/blog",
         permanent: true,
       },
+      // STEP 4 FIX 3: 301 redirect zombie /products to /shop
+      {
+        source: "/products",
+        destination: "/shop",
+        permanent: true,
+      },
+      {
+        source: "/products/:id",
+        destination: "/product/:id",
+        permanent: true,
+      },
     ];
   },
   async headers() {
