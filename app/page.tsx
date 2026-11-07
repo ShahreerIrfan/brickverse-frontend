@@ -70,15 +70,8 @@ export default async function Home() {
         <div className="flex flex-col lg:flex-row items-start gap-4 sm:gap-6">
           <CategoryRail initialCategories={megaMenuCategories} />
           <div className="flex-1 w-full min-w-0 flex flex-col gap-3 sm:gap-4">
-            {/* Primary SEO H1 & Intro Paragraph */}
-            <header className="flex flex-col gap-1.5 pt-1 pb-1">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-[family-name:var(--font-display)] font-extrabold text-[#171136] tracking-tight leading-tight">
-                {HOMEPAGE_SEO.h1}
-              </h1>
-              <p className="text-xs sm:text-sm text-[#5D5589] leading-relaxed max-w-3xl">
-                {HOMEPAGE_SEO.introParagraph}
-              </p>
-            </header>
+            {/* Visually hidden H1 for semantic SEO & accessibility without cluttering hero layout */}
+            <h1 className="sr-only">{HOMEPAGE_SEO.h1}</h1>
 
             <Hero slides={heroSlides} />
             <PromoColumns />
