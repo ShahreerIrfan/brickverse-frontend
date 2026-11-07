@@ -111,14 +111,15 @@ export default function ExpensesManager() {
   const loadData = async () => {
     setLoading(true);
     try {
+      const filterParams = {
+        category: categoryFilter,
+        search,
+        start_date: startDate,
+        end_date: endDate,
+      };
       const [list, sum] = await Promise.all([
-        getExpenses({
-          category: categoryFilter,
-          search,
-          start_date: startDate,
-          end_date: endDate,
-        }),
-        getExpenseSummary(),
+        getExpenses(filterParams),
+        getExpenseSummary(filterParams),
       ]);
       setExpenses(list);
       setSummary(sum);
@@ -234,10 +235,35 @@ export default function ExpensesManager() {
     return summary.category_breakdown[0];
   }, [summary]);
 
-  const totalExpenseComputed = useMemo(() => {
-    if (summary && summary.total_expense != null) return summary.total_expense;
+  const isDateFiltered = Boolean(startDate || endDate);
+  const isAnyFilterActive = Boolean(startDate || endDate || categoryFilter !== "all" || search);
+
+  const filteredRangeCost = useMemo(() => {
+    if (summary && summary.filtered_expense != null) {
+      return Number(summary.filtered_expense);
+    }
     return expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   }, [summary, expenses]);
+
+  const allTimeCost = useMemo(() => {
+    if (summary && summary.total_expense != null) {
+      return Number(summary.total_expense);
+    }
+    return filteredRangeCost;
+  }, [summary, filteredRangeCost]);
+
+  const thisMonthCost = useMemo(() => {
+    return Number(summary?.this_month_expense || 0);
+  }, [summary]);
+
+  const filteredCount = useMemo(() => {
+    if (summary && summary.filtered_count != null) {
+      return summary.filtered_count;
+    }
+    return expenses.length;
+  }, [summary, expenses]);
+
+  const totalExpenseComputed = isDateFiltered ? filteredRangeCost : allTimeCost;
 
   const formatDateLabel = (dStr: string) => {
     try {
@@ -245,6 +271,48 @@ export default function ExpensesManager() {
       return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
     } catch {
       return dStr;
+    }
+  };
+
+  const applyPreset = (preset: "all" | "today" | "this_month" | "last_month" | "last_30_days") => {
+    const today = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const fmt = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+    if (preset === "all") {
+      setStartDate("");
+      setEndDate("");
+      return;
+    }
+
+    if (preset === "today") {
+      const todayStr = fmt(today);
+      setStartDate(todayStr);
+      setEndDate(todayStr);
+      return;
+    }
+
+    if (preset === "this_month") {
+      const start = new Date(today.getFullYear(), today.getMonth(), 1);
+      setStartDate(fmt(start));
+      setEndDate(fmt(today));
+      return;
+    }
+
+    if (preset === "last_month") {
+      const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const end = new Date(today.getFullYear(), today.getMonth(), 0);
+      setStartDate(fmt(start));
+      setEndDate(fmt(end));
+      return;
+    }
+
+    if (preset === "last_30_days") {
+      const start = new Date();
+      start.setDate(today.getDate() - 30);
+      setStartDate(fmt(start));
+      setEndDate(fmt(today));
+      return;
     }
   };
 
@@ -298,20 +366,37 @@ export default function ExpensesManager() {
 
       {/* 4 Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {/* 1. Total Expenses */}
+        {/* 1. Primary Highlight Card */}
         <div className="bg-white rounded-[22px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.03)] flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#FF4D6D] to-[#FF7A93] flex items-center justify-center text-white shadow-md shadow-[#FF4D6D]/20">
               <IconWallet className="w-5 h-5" />
             </div>
-            <span className="text-[11.5px] font-semibold text-[#736E9B]">All Time Cost</span>
+            {isDateFiltered ? (
+              <span className="px-2.5 py-0.5 rounded-full bg-[#FFEAF0] text-[#FF4D6D] text-[10.5px] font-extrabold tracking-wide uppercase">
+                Selected Period
+              </span>
+            ) : (
+              <span className="text-[11.5px] font-semibold text-[#736E9B]">All Time Cost</span>
+            )}
           </div>
           <div className="mt-4">
             <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block font-mono">
-              ৳{Number(totalExpenseComputed).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ৳{Number(isDateFiltered ? filteredRangeCost : allTimeCost).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
             <div className="flex items-center gap-1.5 mt-2 text-[11px] text-[#736E9B]">
-              <span className="font-bold text-[#171136]">{summary?.total_count || expenses.length}</span> recorded entries
+              {isDateFiltered ? (
+                <>
+                  <span className="font-bold text-[#FF4D6D]">{startDate ? formatDateLabel(startDate) : "Start"}</span>
+                  <span>→</span>
+                  <span className="font-bold text-[#FF4D6D]">{endDate ? formatDateLabel(endDate) : "Today"}</span>
+                  <span>({filteredCount} entries)</span>
+                </>
+              ) : (
+                <>
+                  <span className="font-bold text-[#171136]">{summary?.total_count || expenses.length}</span> recorded entries
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -326,7 +411,7 @@ export default function ExpensesManager() {
           </div>
           <div className="mt-4">
             <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block font-mono">
-              ৳{Number(summary?.this_month_expense || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ৳{Number(thisMonthCost).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
             <div className="flex items-center gap-1.5 mt-2 text-[11px] text-[#736E9B]">
               Current calendar month
@@ -334,42 +419,75 @@ export default function ExpensesManager() {
           </div>
         </div>
 
-        {/* 3. Top Expense Category */}
+        {/* 3. All Time / Top Category */}
         <div className="bg-white rounded-[22px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.03)] flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#13BFC9] to-[#57E0C9] flex items-center justify-center text-white shadow-md shadow-[#13BFC9]/20">
-              <IconBox className="w-5 h-5" />
+              {isDateFiltered ? <IconFolder className="w-5 h-5" /> : <IconBox className="w-5 h-5" />}
             </div>
-            <span className="text-[11.5px] font-semibold text-[#736E9B]">Top Category</span>
+            <span className="text-[11.5px] font-semibold text-[#736E9B]">
+              {isDateFiltered ? "All Time Total" : "Top Category"}
+            </span>
           </div>
           <div className="mt-4">
-            <span className="font-[family-name:var(--font-display)] font-extrabold text-lg sm:text-[19px] text-[#171136] tracking-tight block truncate" title={topCategory?.label || "None"}>
-              {topCategory?.label || "None"}
-            </span>
-            <div className="flex items-center gap-1.5 mt-2 text-[11px] text-[#736E9B]">
-              <span className="font-mono font-bold text-[#FF4D6D]">
-                ৳{Number(topCategory?.total_amount || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-              </span>
-              <span>({topCategory?.count || 0} times)</span>
-            </div>
+            {isDateFiltered ? (
+              <>
+                <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block font-mono">
+                  ৳{Number(allTimeCost).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+                <div className="flex items-center gap-1.5 mt-2 text-[11px] text-[#736E9B]">
+                  <span className="font-bold text-[#171136]">{summary?.total_count || expenses.length}</span> all-time entries
+                </div>
+              </>
+            ) : (
+              <>
+                <span className="font-[family-name:var(--font-display)] font-extrabold text-lg sm:text-[19px] text-[#171136] tracking-tight block truncate" title={topCategory?.label || "None"}>
+                  {topCategory?.label || "None"}
+                </span>
+                <div className="flex items-center gap-1.5 mt-2 text-[11px] text-[#736E9B]">
+                  <span className="font-mono font-bold text-[#FF4D6D]">
+                    ৳{Number(topCategory?.total_amount || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </span>
+                  <span>({topCategory?.count || 0} times)</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        {/* 4. Active Categories Count */}
+        {/* 4. Fourth Card: Top in Period or Categories Tracked */}
         <div className="bg-white rounded-[22px] p-5 border border-[#EAE3F7] shadow-[0_4px_20px_rgba(23,17,54,0.03)] flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-[#FF9F43] to-[#FFC93C] flex items-center justify-center text-white shadow-md shadow-[#FF9F43]/20">
-              <IconFolder className="w-5 h-5" />
+              {isDateFiltered ? <IconBox className="w-5 h-5" /> : <IconFolder className="w-5 h-5" />}
             </div>
-            <span className="text-[11.5px] font-semibold text-[#736E9B]">Categories Tracked</span>
+            <span className="text-[11.5px] font-semibold text-[#736E9B]">
+              {isDateFiltered ? "Top in Period" : "Categories Tracked"}
+            </span>
           </div>
           <div className="mt-4">
-            <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block">
-              {summary?.category_breakdown?.length || 5} / 5
-            </span>
-            <div className="flex items-center gap-1.5 mt-2 text-[11px] text-[#2ECC8F] font-semibold">
-              ✓ All Standard Categories
-            </div>
+            {isDateFiltered ? (
+              <>
+                <span className="font-[family-name:var(--font-display)] font-extrabold text-lg sm:text-[19px] text-[#171136] tracking-tight block truncate" title={topCategory?.label || "None"}>
+                  {topCategory?.label || "None"}
+                </span>
+                <div className="flex items-center gap-1.5 mt-2 text-[11px] text-[#736E9B]">
+                  <span className="font-mono font-bold text-[#FF4D6D]">
+                    ৳{Number(topCategory?.total_amount || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </span>
+                  <span>({topCategory?.count || 0} times)</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <span className="font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-[25px] text-[#171136] tracking-tight block">
+                  {summary?.category_breakdown?.length || 5} / 5
+                </span>
+                <div className="flex items-center gap-1.5 mt-2 text-[11px] text-[#2ECC8F] font-semibold">
+                  ✓ All Standard Categories
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -425,6 +543,40 @@ export default function ExpensesManager() {
 
       {/* Filter and Search Bar */}
       <div className="bg-white rounded-[22px] border border-[#EAE3F7] p-5 shadow-[0_4px_20px_rgba(23,17,54,0.02)] space-y-4">
+        {/* Quick Date Presets & Filter Status */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#F0EBFA]">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <span className="text-[11px] font-bold text-[#736E9B] uppercase tracking-wider mr-1">
+              Quick Filter:
+            </span>
+            {[
+              { id: "all", label: "All Time" },
+              { id: "today", label: "Today" },
+              { id: "this_month", label: "This Month" },
+              { id: "last_month", label: "Last Month" },
+              { id: "last_30_days", label: "Last 30 Days" },
+            ].map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => applyPreset(p.id as any)}
+                className="px-3 py-1 rounded-full text-[11px] font-bold bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#3B3468] transition-all cursor-pointer hover:scale-102 active:scale-98"
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          {isDateFiltered && (
+            <div className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FFEAF0] text-[#FF4D6D] text-xs font-bold border border-[#FF4D6D]/20 animate-in fade-in">
+              <span className="text-[11px] uppercase tracking-wider">Filtered Cost:</span>
+              <span className="font-mono text-sm font-extrabold">
+                ৳{filteredRangeCost.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+          )}
+        </div>
+
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Search form */}
           <form onSubmit={handleSearchSubmit} className="relative w-full md:w-80">

@@ -1975,6 +1975,11 @@ export interface ExpenseSummary {
   total_expense: number;
   this_month_expense: number;
   total_count: number;
+  filtered_expense?: number;
+  filtered_count?: number;
+  is_filtered?: boolean;
+  start_date?: string | null;
+  end_date?: string | null;
   category_breakdown: {
     category: string;
     label: string;
@@ -2010,9 +2015,21 @@ export async function getExpenses(params?: {
   }
 }
 
-export async function getExpenseSummary(): Promise<ExpenseSummary | null> {
+export async function getExpenseSummary(params?: {
+  category?: string;
+  search?: string;
+  start_date?: string;
+  end_date?: string;
+}): Promise<ExpenseSummary | null> {
   try {
-    const res = await fetch(`${getApiBaseUrl()}/expenses/summary/`, {
+    const query = new URLSearchParams();
+    if (params?.category && params.category !== "all") query.set("category", params.category);
+    if (params?.search) query.set("search", params.search);
+    if (params?.start_date) query.set("start_date", params.start_date);
+    if (params?.end_date) query.set("end_date", params.end_date);
+
+    const queryString = query.toString() ? `?${query.toString()}` : "";
+    const res = await fetch(`${getApiBaseUrl()}/expenses/summary/${queryString}`, {
       headers: getAuthHeaders(),
       credentials: "include",
       cache: "no-store",
