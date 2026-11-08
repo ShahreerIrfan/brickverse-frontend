@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { IconPhone, IconMapPin, IconFacebook, IconInstagram } from "./icons";
 
 const columns = [
@@ -16,8 +17,8 @@ const columns = [
     title: "Support",
     links: [
       { label: "Help centre", href: "/contact" },
-      { label: "Delivery info", href: "/contact#faq" },
-      { label: "Returns policy", href: "/contact#faq" },
+      { label: "Delivery info", href: "/delivery" },
+      { label: "Returns policy", href: "/returns" },
       { label: "Track my order", href: "/dashboard" },
       { label: "FAQ", href: "/contact#faq" },
     ],
@@ -25,10 +26,8 @@ const columns = [
   {
     title: "Company",
     links: [
-      { label: "About us", href: "/contact" },
-      { label: "Careers", href: "/contact" },
+      { label: "About us", href: "/about" },
       { label: "Blog", href: "/blog" },
-      { label: "Affiliates", href: "/contact" },
       { label: "Contact", href: "/contact" },
     ],
   },
@@ -85,9 +84,9 @@ export default function Footer() {
             <ul className="flex flex-col gap-3.5">
               {col.links.map((link) => (
                 <li key={link.label}>
-                  <a href={link.href} className="text-[13px] text-[#B9B2DA] hover:text-white transition-colors">
+                  <Link href={link.href} className="text-[13px] text-[#B9B2DA] hover:text-white transition-colors">
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -122,9 +121,9 @@ export default function Footer() {
             © 2026 Kawaii Subete. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-[12.5px] text-[#8880B5]">
-            <a href="#" className="hover:text-white">Privacy</a>
-            <a href="#" className="hover:text-white">Terms</a>
-            <a href="#" className="hover:text-white">Cookies</a>
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
+            <Link href="/privacy#cookies" className="hover:text-white transition-colors">Cookies</Link>
           </div>
         </div>
       </div>

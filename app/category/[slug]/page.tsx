@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import NavLinks from "@/components/NavLinks";
 import ShopCatalog from "@/components/ShopCatalog";
@@ -114,6 +114,26 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
   const products: Product[] = Array.isArray(pageData?.results) ? pageData.results : [];
   const totalCount = typeof pageData?.count === "number" ? pageData.count : products.length;
+
+  // STEP 6 FIX 3: Out-of-range pagination clamp / redirect to last valid page
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  if (currentPage > totalPages && totalCount > 0) {
+    const redirectQs = new URLSearchParams();
+    if (resolvedParams?.subcategory && resolvedParams.subcategory !== "all") {
+      redirectQs.set("subcategory", resolvedParams.subcategory);
+    }
+    if (resolvedParams?.search?.trim()) {
+      redirectQs.set("search", resolvedParams.search.trim());
+    }
+    if (resolvedParams?.sort) {
+      redirectQs.set("sort", resolvedParams.sort);
+    }
+    if (totalPages > 1) {
+      redirectQs.set("page", String(totalPages));
+    }
+    const queryStr = redirectQs.toString();
+    redirect(queryStr ? `/category/${seo.slug}?${queryStr}` : `/category/${seo.slug}`);
+  }
 
   const jsonLd = buildCategoryJsonLd(seo.h1, seo.slug, totalCount, products);
 

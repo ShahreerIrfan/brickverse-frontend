@@ -36,6 +36,29 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // STEP 5: Redirect www to apex (preserves path & query)
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.kawaiisubete.com" }],
+        destination: "https://kawaiisubete.com/:path*",
+        permanent: true,
+      },
+      // STEP 6: Redirect orphaned policy & support URLs
+      {
+        source: "/help",
+        destination: "/contact",
+        permanent: true,
+      },
+      {
+        source: "/faq",
+        destination: "/contact#faq",
+        permanent: true,
+      },
+      {
+        source: "/cookies",
+        destination: "/privacy",
+        permanent: true,
+      },
       // 301 Redirects from query-param URLs to clean category paths (Task 07 / Part 2)
       {
         source: "/shop",
