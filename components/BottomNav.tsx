@@ -24,6 +24,7 @@ export default function BottomNav() {
         <button
           type="button"
           onClick={openCart}
+          aria-label="Shopping Cart"
           className="relative flex flex-col items-center justify-center gap-1 py-2.5 text-[#736E9B] hover:text-[#FF4D6D] cursor-pointer"
         >
           <span className="relative">
@@ -70,6 +71,7 @@ export default function BottomNav() {
         ) : (
           <button
             onClick={openLoginModal}
+            aria-label="Sign in to your account"
             className="relative flex flex-col items-center justify-center gap-1 py-2.5 text-[#736E9B] cursor-pointer"
           >
             <span className="relative">

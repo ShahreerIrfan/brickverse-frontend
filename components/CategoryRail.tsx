@@ -172,12 +172,17 @@ export default function CategoryRail({ initialCategories }: { initialCategories?
   // near the bottom (e.g. the last category) opens a flyout anchored near
   // the top, leaving a gap the cursor has to cross diagonally and closing
   // the menu (via handleMouseLeave's timeout) before it gets there.
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!hoveredCatId || !asideRef.current || !flyoutRef.current) return;
-    const asideHeight = asideRef.current.offsetHeight;
-    const flyoutHeight = flyoutRef.current.offsetHeight;
-    const maxTop = Math.max(0, asideHeight - flyoutHeight);
-    setFlyoutTop(Math.min(preferredTopRef.current, maxTop));
+    const aside = asideRef.current;
+    const flyout = flyoutRef.current;
+    const animId = requestAnimationFrame(() => {
+      const asideHeight = aside.offsetHeight;
+      const flyoutHeight = flyout.offsetHeight;
+      const maxTop = Math.max(0, asideHeight - flyoutHeight);
+      setFlyoutTop(Math.min(preferredTopRef.current, maxTop));
+    });
+    return () => cancelAnimationFrame(animId);
   }, [hoveredCatId, activeSubcategories.length]);
 
   return (

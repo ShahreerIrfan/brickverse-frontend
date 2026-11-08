@@ -121,6 +121,7 @@ export default function SearchBox() {
           onFocus={() => setOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder="Search figures, brick sets, collectibles…"
+          aria-label="Search figures, brick sets, collectibles"
           autoComplete="off"
           role="combobox"
           aria-expanded={showPanel}

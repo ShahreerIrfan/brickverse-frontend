@@ -69,6 +69,7 @@ export default function Navbar({ categories }: { categories?: Category[] } = {})
               <Link
                 href={user.role === "admin" ? "/admin" : "/dashboard"}
                 title={`Go to ${user.role === "admin" ? "Admin Dashboard" : "Dashboard"}`}
+                aria-label={`Go to ${user.role === "admin" ? "Admin Dashboard" : "Dashboard"}`}
                 className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-[#F6F1FF] hover:bg-[#EFE9FF] border border-[#EAE3F7] flex items-center justify-center cursor-pointer transition-transform active:scale-95"
               >
                 <span

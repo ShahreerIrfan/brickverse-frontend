@@ -15,6 +15,7 @@ import {
   getCategories,
   getHeroSlides,
   getNewArrivals,
+  getMediaUrl,
 } from "@/lib/api";
 import { HOMEPAGE_SEO, buildHomepageJsonLd } from "@/lib/seoData";
 
@@ -55,8 +56,16 @@ export default async function Home() {
 
   const jsonLd = buildHomepageJsonLd();
 
+  const firstSlideImage =
+    heroSlides && heroSlides.length > 0 && heroSlides[0]?.image
+      ? getMediaUrl(heroSlides[0].image)
+      : "/images/figure-samurai-red.svg";
+
   return (
     <div className="flex flex-col flex-1 bg-[#FFF6EE] pb-16 lg:pb-0">
+      {/* High-priority LCP Preload for Mobile Hero */}
+      <link rel="preload" as="image" href={firstSlideImage} fetchPriority="high" />
+
       {/* Homepage Structured Data (Organization + WebSite) */}
       <script
         type="application/ld+json"

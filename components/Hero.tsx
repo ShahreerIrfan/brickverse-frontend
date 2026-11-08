@@ -17,7 +17,7 @@ const fallbackSlide: HeroSlide = {
 
 const AUTOPLAY_MS = 6000;
 
-function SlideContent({ slide }: { slide: HeroSlide }) {
+function SlideContent({ slide, isFirst = false }: { slide: HeroSlide; isFirst?: boolean }) {
   const hasCustomImage = !!slide.image;
   return (
     <>
@@ -25,10 +25,13 @@ function SlideContent({ slide }: { slide: HeroSlide }) {
         <>
           <Image
             src={getMediaUrl(slide.image)}
-            alt=""
+            alt={slide.title || "Kawaii Subete Collectibles"}
             fill
-            priority
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 800px"
+            priority={isFirst}
+            loading={isFirst ? "eager" : "lazy"}
+            fetchPriority={isFirst ? "high" : "auto"}
+            quality={80}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 75vw, 850px"
             className="object-cover pointer-events-none"
           />
           {/* Color overlay to ensure image and text show clearly */}
@@ -44,20 +47,23 @@ function SlideContent({ slide }: { slide: HeroSlide }) {
           <div className="absolute right-1 sm:right-6 lg:right-12 bottom-0 w-[80px] sm:w-[155px] lg:w-[250px] xl:w-[270px] pointer-events-none">
             <Image
               src="/images/figure-samurai-red.svg"
-              alt=""
+              alt="Anime samurai figure"
               width={270}
               height={370}
               className="w-full h-auto drop-shadow-lg"
-              priority
+              priority={isFirst}
+              fetchPriority={isFirst ? "high" : "auto"}
+              loading={isFirst ? "eager" : "lazy"}
             />
           </div>
           <div className="hidden lg:block absolute right-[24%] bottom-4 w-[105px] pointer-events-none opacity-90">
             <Image
               src="/images/bricks-stack-purple.svg"
-              alt=""
+              alt="Building brick toys"
               width={105}
               height={130}
               className="w-full h-auto"
+              loading="lazy"
             />
           </div>
         </>
@@ -155,7 +161,7 @@ export default function Hero({ slides }: { slides?: HeroSlide[] }) {
               pointerEvents: isActive ? "auto" : "none",
             }}
           >
-            {isActive ? <SlideContent key={s.id} slide={s} /> : <SlideContent slide={s} />}
+            <SlideContent key={s.id} slide={s} isFirst={i === 0} />
           </div>
         );
       })}
