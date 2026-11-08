@@ -162,9 +162,8 @@ export default function SearchBox() {
                       href={`/product/${p.slug || p.id}`}
                       onClick={() => setOpen(false)}
                       onMouseEnter={() => setActive(i)}
-                      className={`flex items-center gap-3 px-3.5 py-2.5 transition-colors ${
-                        i === active ? "bg-[#F6F1FF]" : "hover:bg-[#FAF7FF]"
-                      }`}
+                      className={`flex items-center gap-3 px-3.5 py-2.5 transition-colors ${i === active ? "bg-[#F6F1FF]" : "hover:bg-[#FAF7FF]"
+                        }`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
