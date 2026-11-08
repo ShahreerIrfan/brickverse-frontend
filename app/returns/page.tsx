@@ -10,14 +10,14 @@ import { SITE_URL } from "@/lib/seoData";
 export const metadata: Metadata = {
   title: "Returns & Replacement Policy | Kawaii Subete Bangladesh",
   description:
-    "Kawaii Subete 7-day replacement guarantee: Hassle-free replacement for damaged or defective anime figures and brick sets across Bangladesh.",
+    "Kawaii Subete 1-day replacement guarantee: Hassle-free replacement for damaged or defective anime figures and brick sets across Bangladesh.",
   alternates: {
     canonical: `${SITE_URL}/returns`,
   },
   openGraph: {
     title: "Returns & Replacement Policy | Kawaii Subete",
     description:
-      "7-day replacement guarantee for damaged or defective anime figures and brick sets across Bangladesh.",
+      "1-day replacement guarantee for damaged or defective anime figures and brick sets across Bangladesh.",
     url: `${SITE_URL}/returns`,
     siteName: "Kawaii Subete",
     locale: "en_BD",
@@ -42,7 +42,7 @@ export default function ReturnsPage() {
             <span className="text-[#171136] font-medium">Returns &amp; Replacements</span>
           </nav>
           <h1 className="font-[family-name:var(--font-display)] font-extrabold text-3xl sm:text-4xl text-[#171136] tracking-tight">
-            7-Day Replacement Guarantee
+            1-Day Replacement Guarantee
           </h1>
           <p className="mt-4 text-base sm:text-lg text-[#5D5775] leading-relaxed">
             We inspect every item before packaging, but in the rare event an item is damaged during transit
@@ -57,10 +57,10 @@ export default function ReturnsPage() {
               1
             </span>
             <h2 className="font-[family-name:var(--font-display)] text-lg font-bold text-[#171136] mb-2">
-              Notify Us Within 7 Days
+              Notify Us Within 1 Days
             </h2>
             <p className="text-sm text-[#5D5775] leading-relaxed">
-              Contact our support team within 7 days of delivery. Share your Order ID and clear photos or a brief video showing the defect.
+              Contact our support team within 1 days of delivery. Share your Order ID and clear photos or a brief video showing the defect.
             </p>
           </div>
 
@@ -142,3 +142,4 @@ export default function ReturnsPage() {
     </div>
   );
 }
+

@@ -65,7 +65,7 @@ export default function AboutPage() {
             <p className="text-[15px] text-[#4C4566] leading-relaxed">
               We changed that by creating a direct, reliable local inventory based right in Dhaka. Everything
               you see on Kawaii Subete is already in stock in our warehouse. When you place an order, it ships
-              within 48 hours with full cash on delivery anywhere in Bangladesh.
+              within 24 hours in Dhaka and 48 hours outside Dhaka with full cash on delivery anywhere in Bangladesh.
             </p>
 
             <h3 className="font-[family-name:var(--font-display)] text-xl font-bold text-[#171136] pt-4">
@@ -99,7 +99,7 @@ export default function AboutPage() {
                   <IconCheck className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm text-[#171136]">7-Day Replacement</h4>
+                  <h4 className="font-bold text-sm text-[#171136]">1-Day Replacement</h4>
                   <p className="text-xs text-[#66607E] mt-1">
                     Hassle-free replacement for any transit damage or defects.
                   </p>
@@ -170,3 +170,4 @@ export default function AboutPage() {
     </div>
   );
 }
+
