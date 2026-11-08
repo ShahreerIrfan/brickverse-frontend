@@ -46,7 +46,7 @@ export default function ReturnsPage() {
           </h1>
           <p className="mt-4 text-base sm:text-lg text-[#5D5775] leading-relaxed">
             We inspect every item before packaging, but in the rare event an item is damaged during transit
-            or contains missing components, we guarantee a swift, hassle-free replacement.
+            or contains missing components, we guarantee a swift 24-hour (1-day) hassle-free replacement.
           </p>
         </div>
 
@@ -57,10 +57,10 @@ export default function ReturnsPage() {
               1
             </span>
             <h2 className="font-[family-name:var(--font-display)] text-lg font-bold text-[#171136] mb-2">
-              Notify Us Within 1 Days
+              Notify Us Within 24 Hours
             </h2>
             <p className="text-sm text-[#5D5775] leading-relaxed">
-              Contact our support team within 1 days of delivery. Share your Order ID and clear photos or a brief video showing the defect.
+              Contact our support team within 24 hours (1 day) of delivery. Share your Order ID and clear photos or a brief video showing the defect.
             </p>
           </div>
 

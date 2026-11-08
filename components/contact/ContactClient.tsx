@@ -39,7 +39,7 @@ const INITIAL_FORM: FormState = {
 const faqs = [
   {
     q: "How long does shipping take?",
-    a: "Inside Dhaka city, deliveries are completed within 24 to 48 hours. For all other districts across Bangladesh, standard courier shipping takes 48 to 72 hours.",
+    a: "Inside Dhaka city, deliveries are completed within 24 hours. For all other districts across Bangladesh, standard courier shipping takes 48 hours.",
   },
   {
     q: "Is Cash on Delivery (COD) supported?",
@@ -51,7 +51,7 @@ const faqs = [
   },
   {
     q: "What is your return and replacement policy?",
-    a: "We offer a 7-day hassle-free replacement if any product is received damaged or with missing parts during transit.",
+    a: "We offer a 1-day (24-hour) hassle-free replacement if any product is received damaged or with missing parts during transit. Please notify us within 24 hours of delivery.",
   },
   {
     q: "Can I visit your office in person?",

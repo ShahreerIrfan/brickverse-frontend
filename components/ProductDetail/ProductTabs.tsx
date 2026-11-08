@@ -187,15 +187,15 @@ export default function ProductTabs({ product }: ProductTabsProps) {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 rounded-2xl bg-[#FFF6EE] border border-[#FFE3CC]">
-              <h3 className="font-bold text-sm text-[#171136] mb-1">🚀 Fast 48-Hour Dispatch</h3>
+              <h3 className="font-bold text-sm text-[#171136] mb-1">🚀 Fast 24/48h Dispatch</h3>
               <p className="text-xs text-[#736E9B]">
-                All in-stock collector items ship within 48 hours with signature on delivery and custom bubble corner protection.
+                Delivered within 24 hours inside Dhaka and 48 hours nationwide with custom bubble corner protection.
               </p>
             </div>
             <div className="p-4 rounded-2xl bg-[#FFF6EE] border border-[#FFE3CC]">
-              <h3 className="font-bold text-sm text-[#171136] mb-1">🛡️ 7-Day Collector Guarantee</h3>
+              <h3 className="font-bold text-sm text-[#171136] mb-1">🛡️ 1-Day Collector Guarantee</h3>
               <p className="text-xs text-[#736E9B]">
-                Unopened mint condition box returns accepted within 7 days. Full refunds or replacements guaranteed.
+                Damaged in transit or defective items replaced when reported within 24 hours of delivery.
               </p>
             </div>
           </div>

@@ -85,7 +85,7 @@ export default function TermsPage() {
               4. Replacement Warranty
             </h2>
             <p>
-              All eligible orders are covered under our <strong>1-Day Replacement Guarantee</strong>. Claims for items damaged during transit or with missing parts must be communicated to our support within 7 days of receiving the package.
+              All eligible orders are covered under our <strong>1-Day Replacement Guarantee</strong>. Claims for items damaged during transit or with missing parts must be communicated to our support within 24 hours (1 day) of receiving the package.
             </p>
           </section>
 

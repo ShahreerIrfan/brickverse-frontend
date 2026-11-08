@@ -72,7 +72,7 @@ export default function PrivacyPage() {
             <ul className="list-disc pl-5 space-y-1.5 text-sm">
               <li>Dispatching parcels through our authorized domestic logistics and courier partners.</li>
               <li>Sending order confirmation SMS and status updates regarding delivery.</li>
-              <li>Providing customer support and facilitating 7-day product replacement requests.</li>
+              <li>Providing customer support and facilitating 1-day product replacement requests.</li>
             </ul>
             <p className="font-medium text-[#171136]">
               We never sell, rent, or trade your personal information to third-party advertisers or data brokers.

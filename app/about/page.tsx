@@ -38,10 +38,10 @@ export const metadata: Metadata = {
 };
 
 const stats = [
-  { value: "48h", label: "Fast Dhaka Dispatch", sub: "Doorstep delivery in 24-48 hrs" },
+  { value: "24h", label: "Inside Dhaka", sub: "Doorstep delivery in 24 hrs" },
+  { value: "48h", label: "Outside Dhaka", sub: "Nationwide courier delivery" },
   { value: "100%", label: "Dhaka Local Stock", sub: "No pre-order wait times" },
-  { value: "470+", label: "Curated Items", sub: "Figures, bricks & collectibles" },
-  { value: "7-Day", label: "Replacement Warranty", sub: "Hassle-free damage coverage" },
+  { value: "1-Day", label: "Replacement Warranty", sub: "Report within 24 hours" },
   { value: "64", label: "Districts Covered", sub: "Nationwide Cash on Delivery" },
 ];
 
@@ -67,7 +67,7 @@ const coreValues = [
   {
     icon: IconCheck,
     title: "Safe Cash on Delivery (COD)",
-    desc: "Inspect your package condition at handover before making payment. If any item is damaged in transit, we replace it at zero cost.",
+    desc: "Inspect your package condition at handover before making payment. If any item is damaged in transit, we provide a 1-day replacement at zero cost.",
     tag: "Risk-Free Shopping",
   },
 ];
@@ -110,7 +110,7 @@ export default function AboutPage() {
 
               <p className="text-base sm:text-lg text-[#CFC6EE] max-w-2xl leading-relaxed">
                 Kawaii Subete is Bangladesh&apos;s trusted hub for authentic anime figures, building block sets,
-                and cartoon collectibles. Every single piece is warehoused in Dhaka, ready for nationwide Cash on Delivery within 48 hours.
+                and cartoon collectibles. Every single piece is warehoused in Dhaka, ready for delivery within 24 hours inside Dhaka and 48 hours nationwide with Cash on Delivery.
               </p>
 
               <div className="flex flex-wrap items-center gap-4 pt-3">

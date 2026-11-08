@@ -10,14 +10,14 @@ import { SITE_URL } from "@/lib/seoData";
 export const metadata: Metadata = {
   title: "Delivery & Shipping Information | Kawaii Subete Bangladesh",
   description:
-    "Kawaii Subete delivery details: 24–48 hours inside Dhaka, 48–72 hours nationwide across Bangladesh. Cash on delivery (COD) available with parcel inspection.",
+    "Kawaii Subete delivery details: 24 hours inside Dhaka, 48 hours outside Dhaka nationwide across Bangladesh. Cash on delivery (COD) available with parcel inspection.",
   alternates: {
     canonical: `${SITE_URL}/delivery`,
   },
   openGraph: {
     title: "Delivery & Shipping Information | Kawaii Subete",
     description:
-      "24–48h inside Dhaka, 48–72h nationwide across Bangladesh. Cash on delivery available with parcel inspection.",
+      "24h inside Dhaka, 48h outside Dhaka nationwide across Bangladesh. Cash on delivery available with parcel inspection.",
     url: `${SITE_URL}/delivery`,
     siteName: "Kawaii Subete",
     locale: "en_BD",
@@ -67,7 +67,7 @@ export default function DeliveryPage() {
               <div className="flex items-start gap-2.5">
                 <IconClock className="w-4 h-4 text-[#FF4D6D] shrink-0 mt-0.5" />
                 <span>
-                  <strong>24 to 48 Hours:</strong> Orders placed before 2:00 PM are usually dispatched the same afternoon.
+                  <strong>24 Hours:</strong> Orders inside Dhaka are dispatched and delivered to your doorstep within 24 hours.
                 </span>
               </div>
               <div className="flex items-start gap-2.5">
@@ -96,7 +96,7 @@ export default function DeliveryPage() {
               <div className="flex items-start gap-2.5">
                 <IconClock className="w-4 h-4 text-[#4F46E5] shrink-0 mt-0.5" />
                 <span>
-                  <strong>48 to 72 Hours:</strong> Delivered via trusted courier partners across all 64 districts.
+                  <strong>48 Hours:</strong> Delivered via trusted courier partners across all 64 districts within 48 hours.
                 </span>
               </div>
               <div className="flex items-start gap-2.5">
