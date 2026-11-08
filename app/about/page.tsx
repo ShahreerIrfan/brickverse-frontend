@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import NavLinks from "@/components/NavLinks";
@@ -94,55 +93,38 @@ export default function AboutPage() {
           <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[#FF4D6D]/15 blur-3xl pointer-events-none" />
           <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-[#7C3AED]/20 blur-3xl pointer-events-none" />
 
-          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div className="lg:col-span-8 space-y-5">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-bold tracking-wide uppercase text-[#FFA8BA]">
-                <span className="w-2 h-2 rounded-full bg-[#FF4D6D] animate-pulse" />
-                Bangladesh&apos;s Premier Collectibles Store
-              </div>
-
-              <h1 className="font-[family-name:var(--font-display)] font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight leading-[1.15]">
-                Built by Collectors, <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF758F] via-[#FFB800] to-[#FFE066]">
-                  Dedicated to Bangladeshi Fans.
-                </span>
-              </h1>
-
-              <p className="text-base sm:text-lg text-[#CFC6EE] max-w-2xl leading-relaxed">
-                Kawaii Subete is Bangladesh&apos;s trusted hub for authentic anime figures, building block sets,
-                and cartoon collectibles. Every single piece is warehoused in Dhaka, ready for delivery within 24 hours inside Dhaka and 48 hours nationwide with Cash on Delivery.
-              </p>
-
-              <div className="flex flex-wrap items-center gap-4 pt-3">
-                <Link
-                  href="/shop"
-                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#FF4D6D] hover:bg-[#E03353] text-white text-sm font-bold shadow-lg shadow-[#FF4D6D]/25 transition-all hover:scale-105 active:scale-95"
-                >
-                  Explore Collection
-                  <IconArrowRight className="w-4 h-4" />
-                </Link>
-                <Link
-                  href="/contact"
-                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm font-bold backdrop-blur-md border border-white/15 transition-colors"
-                >
-                  Contact Our Team
-                </Link>
-              </div>
+          <div className="relative z-10 max-w-3xl space-y-5">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-bold tracking-wide uppercase text-[#FFA8BA]">
+              <span className="w-2 h-2 rounded-full bg-[#FF4D6D] animate-pulse" />
+              Bangladesh&apos;s Premier Collectibles Store
             </div>
 
-            {/* Mascot / Vector Illustration */}
-            <div className="lg:col-span-4 hidden lg:flex justify-end items-center relative">
-              <div className="relative w-[280px] h-[280px] flex items-center justify-center">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[#FF4D6D]/20 to-[#6366F1]/20 blur-xl" />
-                <Image
-                  src="/images/figure-samurai-red.svg"
-                  alt="Anime samurai figure mascot"
-                  width={240}
-                  height={300}
-                  className="relative z-10 w-auto h-[260px] drop-shadow-2xl"
-                  priority
-                />
-              </div>
+            <h1 className="font-[family-name:var(--font-display)] font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight leading-[1.15]">
+              Built by Collectors, <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF758F] via-[#FFB800] to-[#FFE066]">
+                Dedicated to Bangladeshi Fans.
+              </span>
+            </h1>
+
+            <p className="text-base sm:text-lg text-[#CFC6EE] max-w-2xl leading-relaxed">
+              Kawaii Subete is Bangladesh&apos;s trusted hub for authentic anime figures, building block sets,
+              and cartoon collectibles. Every single piece is warehoused in Dhaka, ready for delivery within 24 hours inside Dhaka and 48 hours nationwide with Cash on Delivery.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-4 pt-3">
+              <Link
+                href="/shop"
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#FF4D6D] hover:bg-[#E03353] text-white text-sm font-bold shadow-lg shadow-[#FF4D6D]/25 transition-all hover:scale-105 active:scale-95"
+              >
+                Explore Collection
+                <IconArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/contact"
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm font-bold backdrop-blur-md border border-white/15 transition-colors"
+              >
+                Contact Our Team
+              </Link>
             </div>
           </div>
         </div>

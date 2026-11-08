@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
   IconPhone,
   IconMapPin,
@@ -185,58 +184,41 @@ export default function ContactClient() {
         <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[#FF4D6D]/15 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-[#7C3AED]/20 blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          <div className="lg:col-span-8 space-y-5">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-bold tracking-wide uppercase text-[#FFA8BA]">
-              <span className="w-2 h-2 rounded-full bg-[#FF4D6D] animate-pulse" />
-              We&apos;re Here to Help
-            </div>
-
-            <h1 className="font-[family-name:var(--font-display)] font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight leading-[1.15]">
-              Get in Touch with <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF758F] via-[#FFB800] to-[#FFE066]">
-                Our Dhaka Team.
-              </span>
-            </h1>
-
-            <p className="text-base sm:text-lg text-[#CFC6EE] max-w-2xl leading-relaxed">
-              Have questions about an upcoming anime figure release, need help with your order status,
-              or want to discuss wholesale orders? Reach out via hotline, WhatsApp, or drop a message below.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-4 pt-3">
-              <a
-                href="tel:01402494401"
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#FF4D6D] hover:bg-[#E03353] text-white text-sm font-bold shadow-lg shadow-[#FF4D6D]/25 transition-all hover:scale-105 active:scale-95"
-              >
-                <IconPhone className="w-4 h-4" />
-                Call 01402494401
-              </a>
-              <a
-                href="https://wa.me/8801402494401"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#25D366] hover:bg-[#1EBE5D] text-white text-sm font-bold shadow-lg shadow-[#25D366]/20 transition-all hover:scale-105 active:scale-95"
-              >
-                <IconWhatsApp className="w-4 h-4" />
-                Chat on WhatsApp
-              </a>
-            </div>
+        <div className="relative z-10 max-w-3xl space-y-5">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-bold tracking-wide uppercase text-[#FFA8BA]">
+            <span className="w-2 h-2 rounded-full bg-[#FF4D6D] animate-pulse" />
+            We&apos;re Here to Help
           </div>
 
-          {/* Right Mascot Vector */}
-          <div className="lg:col-span-4 hidden lg:flex justify-end items-center relative">
-            <div className="relative w-[280px] h-[280px] flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[#FF4D6D]/20 to-[#6366F1]/20 blur-xl" />
-              <Image
-                src="/images/figure-ninja-gold.svg"
-                alt="Kawaii mascot"
-                width={240}
-                height={280}
-                className="relative z-10 w-auto h-[250px] drop-shadow-2xl"
-                priority
-              />
-            </div>
+          <h1 className="font-[family-name:var(--font-display)] font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight leading-[1.15]">
+            Get in Touch with <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF758F] via-[#FFB800] to-[#FFE066]">
+              Our Dhaka Team.
+            </span>
+          </h1>
+
+          <p className="text-base sm:text-lg text-[#CFC6EE] max-w-2xl leading-relaxed">
+            Have questions about an upcoming anime figure release, need help with your order status,
+            or want to discuss wholesale orders? Reach out via hotline, WhatsApp, or drop a message below.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-4 pt-3">
+            <a
+              href="tel:01402494401"
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#FF4D6D] hover:bg-[#E03353] text-white text-sm font-bold shadow-lg shadow-[#FF4D6D]/25 transition-all hover:scale-105 active:scale-95"
+            >
+              <IconPhone className="w-4 h-4" />
+              Call 01402494401
+            </a>
+            <a
+              href="https://wa.me/8801402494401"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#25D366] hover:bg-[#1EBE5D] text-white text-sm font-bold shadow-lg shadow-[#25D366]/20 transition-all hover:scale-105 active:scale-95"
+            >
+              <IconWhatsApp className="w-4 h-4" />
+              Chat on WhatsApp
+            </a>
           </div>
         </div>
       </div>
