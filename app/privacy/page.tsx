@@ -30,7 +30,7 @@ export default function PrivacyPage() {
       <Navbar />
       <NavLinks />
 
-      <main className="flex-1 max-w-[900px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
+      <main className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="max-w-2xl mb-8">
           <nav className="flex items-center gap-2 text-xs text-[#8880B5] mb-3">
             <Link href="/" className="hover:text-[#FF4D6D] transition-colors">

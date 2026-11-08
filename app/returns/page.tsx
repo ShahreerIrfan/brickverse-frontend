@@ -31,7 +31,7 @@ export default function ReturnsPage() {
       <Navbar />
       <NavLinks />
 
-      <main className="flex-1 max-w-[1100px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
+      <main className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Header Breadcrumb & Title */}
         <div className="max-w-3xl mb-10">
           <nav className="flex items-center gap-2 text-xs text-[#8880B5] mb-3">
