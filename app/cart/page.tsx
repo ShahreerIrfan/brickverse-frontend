@@ -8,7 +8,7 @@ import BottomNav from "@/components/BottomNav";
 export const metadata: Metadata = {
   title: "Shopping Cart | Kawaii Subete",
   description:
-    "Review your Kawaii Subete shopping cart with authentic anime figures, building sets, and STEM coding kits.",
+    "Review your Kawaii Subete shopping cart with authentic anime figures, building sets, and character brick sets.",
 };
 
 export default function Cart() {

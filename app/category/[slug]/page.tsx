@@ -51,9 +51,33 @@ export async function generateMetadata({ params, searchParams }: CategoryPagePro
   const baseCanonical = `${SITE_URL}/category/${seo.slug}`;
   const canonicalUrl = pageNum > 1 ? `${baseCanonical}?page=${pageNum}` : baseCanonical;
 
+  // PART E — Zero-product category noindex protection (e.g. empty bundle-deals)
+  const isBundleDeals = seo.slug === "bundle-deals";
+  const checkQs = new URLSearchParams({
+    page: "1",
+    page_size: "1",
+  });
+  if (isBundleDeals) {
+    checkQs.set("deals", "true");
+  } else {
+    checkQs.set("category", seo.apiSlugs[0] || seo.slug);
+  }
+  let isZeroProducts = false;
+  try {
+    const res = await fetch(`${apiBase}/products/?${checkQs.toString()}`, { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json();
+      const count = typeof data?.count === "number" ? data.count : Array.isArray(data?.results) ? data.results.length : Array.isArray(data) ? data.length : 0;
+      if (count === 0) isZeroProducts = true;
+    }
+  } catch {
+    // fallback
+  }
+
   return {
     title: seo.title,
     description: seo.description,
+    ...(isZeroProducts ? { robots: { index: false, follow: true } } : {}),
     alternates: {
       canonical: canonicalUrl,
     },
@@ -157,6 +181,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
           initialSort={initialSort}
           forcedCategory={isBundleDeals ? "bundle-deals" : seo.slug}
           customH1={seo.h1}
+          introText={seo.introText}
           basePath={`/category/${seo.slug}`}
           currentPage={currentPage}
           pageSize={pageSize}

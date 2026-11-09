@@ -150,6 +150,22 @@ const nextConfig: NextConfig = {
         destination: "/category/bundle-deals",
         permanent: true,
       },
+      // STEP 7: Slug normalization redirects (Part D.1, D.2, D.3)
+      {
+        source: "/category/character-bricks/anime",
+        destination: "/category/character-bricks/anime-character-figures",
+        permanent: true,
+      },
+      {
+        source: "/category/building-bricks/sanrio-buildings-",
+        destination: "/category/building-bricks/sanrio-buildings",
+        permanent: true,
+      },
+      {
+        source: "/category/accessories/bags-bags",
+        destination: "/category/accessories/bags",
+        permanent: true,
+      },
       // Slug mismatch redirects for direct URLs
       {
         source: "/category/coding-kits",

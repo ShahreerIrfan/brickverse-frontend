@@ -65,9 +65,29 @@ export async function generateMetadata({ params, searchParams }: SubcategoryPage
   const baseCanonical = `${SITE_URL}/category/${seo.parentSlug}/${seo.subSlug}`;
   const canonicalUrl = pageNum > 1 ? `${baseCanonical}?page=${pageNum}` : baseCanonical;
 
+  // PART E — Zero-product subcategory noindex protection
+  const checkQs = new URLSearchParams({
+    page: "1",
+    page_size: "1",
+    category: seo.parentSlug,
+    subcategory: seo.apiSubSlugs[0] || seo.subSlug,
+  });
+  let isZeroProducts = false;
+  try {
+    const res = await fetch(`${apiBase}/products/?${checkQs.toString()}`, { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json();
+      const count = typeof data?.count === "number" ? data.count : Array.isArray(data?.results) ? data.results.length : Array.isArray(data) ? data.length : 0;
+      if (count === 0) isZeroProducts = true;
+    }
+  } catch {
+    // fallback
+  }
+
   return {
     title: seo.title,
     description: seo.description,
+    ...(isZeroProducts ? { robots: { index: false, follow: true } } : {}),
     alternates: {
       canonical: canonicalUrl,
     },
@@ -177,6 +197,7 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
           forcedCategory={parentSeo.slug}
           forcedSubcategory={subSeo.subSlug}
           customH1={subSeo.h1}
+          introText={subSeo.introText}
           basePath={`/category/${parentSeo.slug}/${subSeo.subSlug}`}
           currentPage={currentPage}
           pageSize={pageSize}

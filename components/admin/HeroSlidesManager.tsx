@@ -257,7 +257,7 @@ export default function HeroSlidesManager() {
                 <textarea
                   value={subtitle}
                   onChange={(e) => setSubtitle(e.target.value)}
-                  placeholder="e.g. Anime figures, cartoon collectibles, brick sets & coding kits."
+                  placeholder="e.g. Anime figures, cartoon collectibles, and brick sets."
                   rows={2}
                   className="w-full p-2.5 rounded-xl border border-[#EAE3F7] focus:outline-none focus:border-[#FF4D6D] resize-none"
                 />

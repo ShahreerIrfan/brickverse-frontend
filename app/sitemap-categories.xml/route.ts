@@ -13,16 +13,18 @@ export async function GET() {
   const products = await fetchSitemapProducts();
   const subcategories = getDerivedSubcategories(products);
 
-  // 11 Canonical top-level categories
-  const categoryEntries = Object.keys(CATEGORY_SEO_MAP).map((slug) => ({
-    loc: `${SITE_URL}/category/${slug}`,
-    lastmod: "2026-11-05",
-  }));
+  // 10 Canonical top-level categories (excluding empty bundle-deals per Step 7 Part E)
+  const categoryEntries = Object.keys(CATEGORY_SEO_MAP)
+    .filter((slug) => slug !== "bundle-deals")
+    .map((slug) => ({
+      loc: `${SITE_URL}/category/${slug}`,
+      lastmod: "2026-11-09",
+    }));
 
-  // 43 Derived subcategories
+  // 44 Derived subcategories
   const subcategoryEntries = subcategories.map((sub) => ({
     loc: `${SITE_URL}${sub.fullPath}`,
-    lastmod: "2026-11-05",
+    lastmod: "2026-11-09",
   }));
 
   const allEntries = [...categoryEntries, ...subcategoryEntries];

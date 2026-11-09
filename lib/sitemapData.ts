@@ -122,12 +122,15 @@ export function getDerivedSubcategories(
       const rawChild = path[1]?.slug;
       if (!rawParent || !rawChild) continue;
 
-      // Clean child slug (trim any trailing hyphens, e.g. sanrio-buildings- -> sanrio-buildings)
-      const cleanChild = rawChild.replace(/-+$/, "");
+      // Clean child slug (trim any trailing hyphens, normalize slugs per Step 7 Part D)
+      let cleanChild = rawChild.replace(/-+$/, "");
+      if (rawParent === "character-bricks" && cleanChild === "anime") {
+        cleanChild = "anime-character-figures";
+      }
+      if (rawParent === "accessories" && cleanChild === "bags-bags") {
+        cleanChild = "bags";
+      }
       const cleanKey = `${rawParent}/${cleanChild}`;
-
-      // Exclude problematic anime subcategory (Section 4.3 b)
-      if (cleanKey === "character-bricks/anime") continue;
 
       if (!subMap.has(cleanKey) && isCleanSlug(rawParent) && isCleanSlug(cleanChild)) {
         subMap.set(cleanKey, {

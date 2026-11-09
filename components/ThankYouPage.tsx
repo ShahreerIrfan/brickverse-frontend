@@ -81,7 +81,7 @@ const DEFAULT_DEMO_ORDER: OrderDetails = {
     {
       id: "robo-coder",
       name: "Robo Coder",
-      subtitle: "Starter robot · block coding kit",
+      subtitle: "Starter robot · mini brick set",
       price: 16.0,
       quantity: 1,
       image: "/images/robot-gold.svg",

@@ -36,6 +36,7 @@ type ShopCatalogProps = {
   forcedCategory?: string;
   forcedSubcategory?: string;
   customH1?: string;
+  introText?: string;
   basePath?: string;
   currentPage?: number;
   pageSize?: number;
@@ -51,6 +52,7 @@ function ShopCatalogContent({
   forcedCategory,
   forcedSubcategory,
   customH1,
+  introText,
   basePath,
   currentPage: propCurrentPage,
   pageSize: propPageSize,
@@ -480,6 +482,15 @@ function ShopCatalogContent({
           </div>
         </div>
       </div>
+
+      {/* Intro Text Section (Part A & Part C Placement: below H1, above product grid) */}
+      {introText && (
+        <div className="mb-6 max-w-[860px] text-sm sm:text-[15px] text-[#4C4566] leading-[1.75] space-y-3 bg-white/70 p-4 sm:p-5 rounded-2xl border border-[#EAE3F7]/90 shadow-xs">
+          {introText.split("\n\n").map((para, i) => (
+            <p key={i}>{para.trim()}</p>
+          ))}
+        </div>
+      )}
 
       {/* 3. Main Layout: Left Sidebar + Product Grid */}
       <div className="flex flex-col lg:flex-row items-start gap-6 xl:gap-8">
