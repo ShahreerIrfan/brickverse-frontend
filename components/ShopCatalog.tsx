@@ -37,6 +37,7 @@ type ShopCatalogProps = {
   forcedSubcategory?: string;
   customH1?: string;
   introText?: string;
+  isCategoryArchive?: boolean;
   basePath?: string;
   currentPage?: number;
   pageSize?: number;
@@ -53,6 +54,7 @@ function ShopCatalogContent({
   forcedSubcategory,
   customH1,
   introText,
+  isCategoryArchive,
   basePath,
   currentPage: propCurrentPage,
   pageSize: propPageSize,
@@ -61,6 +63,7 @@ function ShopCatalogContent({
   const { addToCart } = useCart();
   const router = useRouter();
   const { openLoginModal } = useAuth();
+  const isCategory = isCategoryArchive ?? Boolean(basePath?.startsWith("/category"));
 
   const [seed] = useState<string>(() => initialSeed || Math.random().toString(36).substring(2, 10));
 
@@ -433,18 +436,12 @@ function ShopCatalogContent({
       </nav>
 
       {/* 2. Top Header Title & Sorting Control Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 sm:gap-4 pb-4 border-b border-[#EAE3F7] mb-5 sm:mb-6">
-        <div>
-          <h1 className="font-[family-name:var(--font-display)] font-extrabold text-xl sm:text-3xl text-[#171136] tracking-tight">
+      {isCategory ? (
+        <div className="flex items-center justify-between sm:justify-end gap-2.5 sm:gap-3 pb-3 border-b border-[#EAE3F7] mb-5 sm:mb-6">
+          <h1 className="sr-only">
             {customH1 || (paramDeals && selectedCategory === "all" ? "Exclusive Deals & Bundles" : (activeCategoryLabel || "Shop All Products"))}
           </h1>
-          <p className="text-xs sm:text-sm text-[#736E9B] mt-0.5 sm:mt-1 font-medium">
-            Showing <span className="font-bold text-[#171136]">{totalCount}</span>{" "}
-            {paramDeals ? "bundle deal products" : "products"} {searchQuery ? `for "${searchQuery}"` : ""}
-          </p>
-        </div>
 
-        <div className="flex items-center justify-between sm:justify-end gap-2.5 sm:gap-3">
           {/* Mobile Filter Toggle Button */}
           <button
             onClick={() => setMobileFilterOpen(true)}
@@ -478,13 +475,61 @@ function ShopCatalogContent({
               <option value="discount">Biggest Discount</option>
               <option value="name_asc">Name: A to Z</option>
             </select>
-
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 sm:gap-4 pb-4 border-b border-[#EAE3F7] mb-5 sm:mb-6">
+          <div>
+            <h1 className="font-[family-name:var(--font-display)] font-extrabold text-xl sm:text-3xl text-[#171136] tracking-tight">
+              {customH1 || (paramDeals && selectedCategory === "all" ? "Exclusive Deals & Bundles" : (activeCategoryLabel || "Shop All Products"))}
+            </h1>
+            <p className="text-xs sm:text-sm text-[#736E9B] mt-0.5 sm:mt-1 font-medium">
+              Showing <span className="font-bold text-[#171136]">{totalCount}</span>{" "}
+              {paramDeals ? "bundle deal products" : "products"} {searchQuery ? `for "${searchQuery}"` : ""}
+            </p>
+          </div>
 
-      {/* Intro Text Section (Part A & Part C Placement: below H1, above product grid) */}
-      {introText && (
+          <div className="flex items-center justify-between sm:justify-end gap-2.5 sm:gap-3">
+            {/* Mobile Filter Toggle Button */}
+            <button
+              onClick={() => setMobileFilterOpen(true)}
+              className="lg:hidden flex items-center gap-2 bg-[#F6F1FF] hover:bg-[#EFE9FF] border border-[#EAE3F7] text-[#171136] font-bold text-xs sm:text-sm px-3.5 py-2 rounded-xl sm:rounded-full shadow-xs active:scale-95 transition-all"
+            >
+              <IconFilter className="w-4 h-4 text-[#FF4D6D]" />
+              <span>Filters</span>
+              {activeFilterCount > 0 && (
+                <span className="bg-[#FF4D6D] text-white text-[10px] font-extrabold w-4.5 h-4.5 rounded-full flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+
+            {/* Sort Dropdown */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="hidden sm:inline text-xs font-semibold text-[#736E9B]">Sort by:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => {
+                  const nextSort = e.target.value;
+                  setSortBy(nextSort);
+                  updateUrl(selectedCategory, selectedSubcategory, nextSort);
+                }}
+                className="bg-white border border-[#EAE3F7] text-[#171136] font-semibold text-xs sm:text-sm rounded-xl px-2.5 sm:px-3.5 py-2 sm:py-2.5 outline-none focus:border-[#FF4D6D] shadow-xs cursor-pointer"
+              >
+                <option value="random">Random / Featured</option>
+                <option value="newest">Newest Arrivals</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+                <option value="discount">Biggest Discount</option>
+                <option value="name_asc">Name: A to Z</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Intro Text Section (Omitted on category archive pages per user request) */}
+      {!isCategory && introText && (
         <div className="mb-6 max-w-[860px] text-sm sm:text-[15px] text-[#4C4566] leading-[1.75] space-y-3 bg-white/70 p-4 sm:p-5 rounded-2xl border border-[#EAE3F7]/90 shadow-xs">
           {introText.split("\n\n").map((para, i) => (
             <p key={i}>{para.trim()}</p>

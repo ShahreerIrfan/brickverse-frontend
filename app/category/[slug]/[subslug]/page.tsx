@@ -197,7 +197,7 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
           forcedCategory={parentSeo.slug}
           forcedSubcategory={subSeo.subSlug}
           customH1={subSeo.h1}
-          introText={subSeo.introText}
+          isCategoryArchive={true}
           basePath={`/category/${parentSeo.slug}/${subSeo.subSlug}`}
           currentPage={currentPage}
           pageSize={pageSize}

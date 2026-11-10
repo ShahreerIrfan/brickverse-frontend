@@ -181,7 +181,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
           initialSort={initialSort}
           forcedCategory={isBundleDeals ? "bundle-deals" : seo.slug}
           customH1={seo.h1}
-          introText={seo.introText}
+          isCategoryArchive={true}
           basePath={`/category/${seo.slug}`}
           currentPage={currentPage}
           pageSize={pageSize}
