@@ -727,6 +727,23 @@ export async function updateOrderStatus(orderId: number | string, status: string
   }
 }
 
+export async function updateOrderDetails(orderId: number | string, orderData: Record<string, any>) {
+  try {
+    const headers = getAuthHeaders();
+    const res = await fetch(`${getApiBaseUrl()}/orders/${orderId}/`, {
+      method: "PATCH",
+      headers,
+      credentials: "include",
+      body: JSON.stringify(orderData),
+    });
+    const data = await res.json().catch(() => null);
+    const errorMsg = data?.error || data?.detail || (!res.ok ? "Failed to update order" : undefined);
+    return { success: res.ok, data, error: errorMsg };
+  } catch (error) {
+    return { success: false, error: "Failed to update order" };
+  }
+}
+
 export async function deleteOrder(orderId: number | string) {
   try {
     const headers = getAuthHeaders();

@@ -21,6 +21,7 @@ import {
   reorderMegaMenuCategories,
   getAllOrders,
   updateOrderStatus,
+  updateOrderDetails,
   deleteOrder,
   getAllUsers,
   updateUserRole,
@@ -430,6 +431,63 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [updatingOrderIds, setUpdatingOrderIds] = useState<Record<string | number, boolean>>({});
   const [copiedTracking, setCopiedTracking] = useState(false);
+
+  // Order In-Place Editing States
+  const [isEditingOrder, setIsEditingOrder] = useState(false);
+  const [savingOrder, setSavingOrder] = useState(false);
+  const [editOrderForm, setEditOrderForm] = useState<any>({
+    id: null,
+    customer_name: "",
+    customer_email: "",
+    customer_phone: "",
+    shipping_address: "",
+    status: "pending",
+    tracking_number: "",
+    carrier: "Steadfast Courier",
+    shipping_cost: 60,
+    total_amount: 0,
+    items: [],
+  });
+
+  const initOrderEditForm = (order: any) => {
+    if (!order) return;
+    const rawItems = Array.isArray(order.items) && order.items.length > 0 ? order.items : [];
+    const items = rawItems.map((it: any) => ({
+      id: it.id,
+      product_name: it.product_name || "",
+      quantity: Number(it.quantity || 1),
+      price: Number(it.price || 0),
+      image: it.image || it.product_image || it.product?.image || "",
+      sku: it.sku || it.product?.sku || "",
+    }));
+
+    const subtotal = items.reduce((acc: number, item: any) => acc + (Number(item.price || 0) * (item.quantity || 1)), 0);
+    const shipping = typeof order.shipping_cost === "number" || typeof order.shipping_fee === "number" || typeof order.delivery_charge === "number"
+      ? Number(order.shipping_cost ?? order.shipping_fee ?? order.delivery_charge ?? 0)
+      : 60;
+    const total = Number(order.total_amount) > 0 ? Number(order.total_amount) : (subtotal + shipping);
+
+    setEditOrderForm({
+      id: order.id || order.order_number,
+      customer_name: order.customer_name || "",
+      customer_email: order.customer_email || "",
+      customer_phone: order.customer_phone || "",
+      shipping_address: order.shipping_address || "",
+      status: order.status || "pending",
+      tracking_number: order.tracking_number || "",
+      carrier: order.carrier || "Steadfast Courier",
+      shipping_cost: shipping,
+      total_amount: total,
+      items: items.length > 0 ? items : [
+        {
+          id: undefined,
+          product_name: "Item 1",
+          quantity: 1,
+          price: total,
+        }
+      ],
+    });
+  };
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [formCategory, setFormCategory] = useState<string>("figures");
   const [submittingProduct, setSubmittingProduct] = useState(false);
@@ -1751,6 +1809,67 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
         if (previousOrder?.order_number) delete next[previousOrder.order_number];
         return next;
       });
+    }
+  };
+
+  const handleSaveOrderChanges = async (currentOrder: any) => {
+    const orderId = currentOrder?.id || currentOrder?.order_number;
+    if (!orderId) {
+      alert("No order selected to update.");
+      return;
+    }
+    if (!editOrderForm.customer_name?.trim()) {
+      alert("Please enter customer name.");
+      return;
+    }
+    if (!editOrderForm.customer_phone?.trim()) {
+      alert("Please enter customer phone number.");
+      return;
+    }
+
+    setSavingOrder(true);
+    try {
+      const payload = {
+        customer_name: editOrderForm.customer_name.trim(),
+        customer_email: editOrderForm.customer_email.trim(),
+        customer_phone: editOrderForm.customer_phone.trim(),
+        shipping_address: editOrderForm.shipping_address.trim(),
+        status: editOrderForm.status,
+        tracking_number: editOrderForm.tracking_number.trim(),
+        carrier: editOrderForm.carrier.trim(),
+        shipping_cost: Number(editOrderForm.shipping_cost) || 0,
+        total_amount: Number(editOrderForm.total_amount) || 0,
+        items: Array.isArray(editOrderForm.items)
+          ? editOrderForm.items.map((it: any) => ({
+              ...(it.id ? { id: it.id } : {}),
+              product_name: (it.product_name || "Item").trim(),
+              quantity: Math.max(1, Number(it.quantity) || 1),
+              price: Number(it.price) || 0,
+            }))
+          : [],
+      };
+
+      const res = await updateOrderDetails(orderId, payload);
+      if (res.success) {
+        const updated = res.data ? res.data : { ...currentOrder, ...payload };
+        setOrders((prev) =>
+          prev.map((o) =>
+            String(o.id) === String(orderId) || String(o.order_number) === String(orderId)
+              ? { ...o, ...updated }
+              : o
+          )
+        );
+        setSelectedOrder((prev: any) => ({ ...prev, ...updated }));
+        setIsEditingOrder(false);
+        showToast(`✓ Order #${currentOrder.order_number || orderId} updated successfully!`);
+      } else {
+        const errDetail = res.error || (res as any)?.data?.error || (res as any)?.data?.detail || "Failed to update order.";
+        alert(typeof errDetail === "string" ? errDetail : JSON.stringify(errDetail));
+      }
+    } catch (err: any) {
+      alert(err?.message || "Failed to save order changes.");
+    } finally {
+      setSavingOrder(false);
     }
   };
 
@@ -5015,6 +5134,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                   <button
                                     onClick={() => {
                                       setSelectedOrder(o);
+                                      setIsEditingOrder(false);
                                       navigateTo("orders-single", `/admin/orders/${o.id || o.order_number}`);
                                     }}
                                     className="px-3.5 py-1.5 bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] font-bold text-xs rounded-xl border border-[#EAE3F7] transition-all cursor-pointer shadow-2xs"
@@ -5024,6 +5144,20 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                   <button
                                     onClick={() => {
                                       setSelectedOrder(o);
+                                      initOrderEditForm(o);
+                                      setIsEditingOrder(true);
+                                      navigateTo("orders-single", `/admin/orders/${o.id || o.order_number}`);
+                                    }}
+                                    className="px-3 py-1.5 bg-[#FFF4D6] hover:bg-[#FFEAB0] text-[#B76E00] font-bold text-xs rounded-xl border border-[#F3DF9D] transition-all cursor-pointer shadow-2xs flex items-center gap-1.5"
+                                    title="Edit Order Details"
+                                  >
+                                    <IconEdit className="w-3.5 h-3.5" />
+                                    <span>Edit</span>
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setSelectedOrder(o);
+                                      setIsEditingOrder(false);
                                       navigateTo("orders-single", `/admin/orders/${o.id || o.order_number}`);
                                     }}
                                     className="p-1.5 bg-[#FFF1F4] hover:bg-[#FFE4EA] text-[#FF4D6D] rounded-xl transition-all cursor-pointer"
@@ -5157,23 +5291,38 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
             return (
               <div className="space-y-6 animate-in fade-in-50 duration-300">
                 {/* Breadcrumb & Navigation */}
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => navigateTo("orders-all", "/admin/orders")}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-[#F6F1FF] text-[#7B5CFF] font-bold text-xs rounded-xl border border-[#EAE3F7] transition-all cursor-pointer shadow-2xs"
-                  >
-                    ← Back
-                  </button>
-                  <div className="flex items-center gap-2 text-xs">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
                     <button
-                      onClick={() => navigateTo("orders-all", "/admin/orders")}
-                      className="text-[#736E9B] hover:text-[#171136] font-medium cursor-pointer"
+                      onClick={() => {
+                        setIsEditingOrder(false);
+                        navigateTo("orders-all", "/admin/orders");
+                      }}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-[#F6F1FF] text-[#7B5CFF] font-bold text-xs rounded-xl border border-[#EAE3F7] transition-all cursor-pointer shadow-2xs"
                     >
-                      Orders
+                      ← Back to Orders
                     </button>
-                    <span className="text-[#8A84A6]">/</span>
-                    <span className="font-extrabold text-[#171136]">#{currentOrder.order_number}</span>
+                    <div className="flex items-center gap-2 text-xs">
+                      <button
+                        onClick={() => {
+                          setIsEditingOrder(false);
+                          navigateTo("orders-all", "/admin/orders");
+                        }}
+                        className="text-[#736E9B] hover:text-[#171136] font-medium cursor-pointer"
+                      >
+                        Orders
+                      </button>
+                      <span className="text-[#8A84A6]">/</span>
+                      <span className="font-extrabold text-[#171136]">#{currentOrder.order_number}</span>
+                    </div>
                   </div>
+
+                  {isEditingOrder && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FFF4D6] border border-[#F3DF9D] text-[#B76E00] font-bold text-xs shadow-2xs">
+                      <span className="w-2 h-2 rounded-full bg-[#B76E00] animate-pulse" />
+                      <span>Editing Order #{currentOrder.order_number}</span>
+                    </span>
+                  )}
                 </div>
 
                 {/* Order Header Card */}
@@ -5224,34 +5373,79 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                       <span>Print Invoice</span>
                     </button>
 
-                    {/* Update Status Dropdown */}
-                    <div className="relative inline-flex items-center gap-2">
-                      <select
-                        value={currentOrder.status}
-                        onChange={(e) => {
-                          const newSt = e.target.value;
-                          handleUpdateStatus(currentOrder.id, newSt);
-                        }}
-                        disabled={Boolean(updatingOrderIds[currentOrder.id] || updatingOrderIds[currentOrder.order_number])}
-                        className="px-4 py-2 bg-[#FF4D6D] hover:bg-[#ff3358] text-white font-bold text-xs rounded-xl transition-all cursor-pointer outline-none shadow-2xs disabled:opacity-85 disabled:cursor-wait"
-                      >
-                        <option value="pending" className="bg-white text-[#171136]">Status: Pending</option>
-                        <option value="processing" className="bg-white text-[#171136]">Status: Processing</option>
-                        <option value="shipped" className="bg-white text-[#171136]">Status: Shipped</option>
-                        <option value="delivered" className="bg-white text-[#171136]">Status: Delivered</option>
-                        <option value="cancelled" className="bg-white text-[#171136]">Status: Cancelled</option>
-                      </select>
+                    {/* Edit Order Toggle Button */}
+                    <button
+                      onClick={() => {
+                        if (!isEditingOrder) {
+                          initOrderEditForm(currentOrder);
+                          setIsEditingOrder(true);
+                        } else {
+                          setIsEditingOrder(false);
+                        }
+                      }}
+                      className={`px-3.5 py-2 font-bold text-xs rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs ${
+                        isEditingOrder
+                          ? "bg-[#FFF1F4] border-[#FF4D6D]/30 text-[#FF4D6D] hover:bg-[#FFE4EA]"
+                          : "bg-[#FFF4D6] border-[#F3DF9D] text-[#B76E00] hover:bg-[#FFEAB0]"
+                      }`}
+                      title={isEditingOrder ? "Discard changes and exit edit mode" : "Edit order details"}
+                    >
+                      <IconEdit className="w-3.5 h-3.5" />
+                      <span>{isEditingOrder ? "Cancel Edit" : "Edit Order"}</span>
+                    </button>
 
-                      {Boolean(updatingOrderIds[currentOrder.id] || updatingOrderIds[currentOrder.order_number]) && (
-                        <div
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white border border-[#EAE3F7] shadow-xs text-xs font-bold text-[#FF4D6D] animate-in fade-in"
-                          title="Syncing status with server..."
+                    {/* Save Order Changes Button (when editing) */}
+                    {isEditingOrder && (
+                      <button
+                        onClick={() => handleSaveOrderChanges(currentOrder)}
+                        disabled={savingOrder}
+                        className="px-4 py-2 bg-[#2ECC8F] hover:bg-[#28B880] text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-75"
+                        title="Save all changes to server"
+                      >
+                        {savingOrder ? (
+                          <>
+                            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>Saving...</span>
+                          </>
+                        ) : (
+                          <>
+                            <IconCheck className="w-3.5 h-3.5" />
+                            <span>Save Changes</span>
+                          </>
+                        )}
+                      </button>
+                    )}
+
+                    {/* Quick Update Status Dropdown */}
+                    {!isEditingOrder && (
+                      <div className="relative inline-flex items-center gap-2">
+                        <select
+                          value={currentOrder.status}
+                          onChange={(e) => {
+                            const newSt = e.target.value;
+                            handleUpdateStatus(currentOrder.id, newSt);
+                          }}
+                          disabled={Boolean(updatingOrderIds[currentOrder.id] || updatingOrderIds[currentOrder.order_number])}
+                          className="px-4 py-2 bg-[#FF4D6D] hover:bg-[#ff3358] text-white font-bold text-xs rounded-xl transition-all cursor-pointer outline-none shadow-2xs disabled:opacity-85 disabled:cursor-wait"
                         >
-                          <div className="w-3.5 h-3.5 border-2 border-[#FF4D6D] border-t-transparent rounded-full animate-spin shrink-0" />
-                          <span className="text-[11px]">Saving...</span>
-                        </div>
-                      )}
-                    </div>
+                          <option value="pending" className="bg-white text-[#171136]">Status: Pending</option>
+                          <option value="processing" className="bg-white text-[#171136]">Status: Processing</option>
+                          <option value="shipped" className="bg-white text-[#171136]">Status: Shipped</option>
+                          <option value="delivered" className="bg-white text-[#171136]">Status: Delivered</option>
+                          <option value="cancelled" className="bg-white text-[#171136]">Status: Cancelled</option>
+                        </select>
+
+                        {Boolean(updatingOrderIds[currentOrder.id] || updatingOrderIds[currentOrder.order_number]) && (
+                          <div
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white border border-[#EAE3F7] shadow-xs text-xs font-bold text-[#FF4D6D] animate-in fade-in"
+                            title="Syncing status with server..."
+                          >
+                            <div className="w-3.5 h-3.5 border-2 border-[#FF4D6D] border-t-transparent rounded-full animate-spin shrink-0" />
+                            <span className="text-[11px]">Saving...</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -5261,130 +5455,304 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                   <div className="lg:col-span-5 space-y-6">
                     {/* Customer Information Card */}
                     <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 shadow-xs space-y-4">
-                      <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
-                        Customer Information
-                      </h2>
-                      <div className="border-t border-[#F0EBF8] pt-4 flex items-center gap-3.5">
-                        <div
-                          className={`w-11 h-11 rounded-full ${getOrderAvatarBg(
-                            initial
-                          )} font-extrabold flex items-center justify-center text-sm shrink-0 shadow-2xs`}
-                        >
-                          {initial}
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm text-[#171136] leading-tight">
-                            {currentOrder.customer_name || "Guest Customer"}
-                          </p>
-                          <p className="text-xs text-[#736E9B] mt-0.5">{currentOrder.customer_email}</p>
-                        </div>
+                      <div className="flex items-center justify-between">
+                        <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
+                          Customer Information
+                        </h2>
+                        {isEditingOrder && (
+                          <span className="text-[10px] font-bold text-[#B76E00] bg-[#FFF4D6] px-2.5 py-0.5 rounded-full border border-[#F3DF9D]">
+                            Editable
+                          </span>
+                        )}
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 text-xs">
-                        <div>
-                          <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block">
-                            PHONE
-                          </span>
-                          <p className="font-semibold text-[#171136] mt-1">
-                            {currentOrder.customer_phone || "—"}
-                          </p>
+                      {isEditingOrder ? (
+                        <div className="border-t border-[#F0EBF8] pt-4 space-y-3.5 text-xs">
+                          <div>
+                            <label className="text-[10.5px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
+                              Customer Name *
+                            </label>
+                            <input
+                              type="text"
+                              value={editOrderForm.customer_name}
+                              onChange={(e) => setEditOrderForm((prev: any) => ({ ...prev, customer_name: e.target.value }))}
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE3F7] bg-[#FDFBFF] font-semibold text-xs text-[#171136] outline-none focus:border-[#7B5CFF] focus:bg-white transition-all shadow-2xs"
+                              placeholder="Customer Full Name"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-[10.5px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
+                              Phone Number *
+                            </label>
+                            <input
+                              type="text"
+                              value={editOrderForm.customer_phone}
+                              onChange={(e) => setEditOrderForm((prev: any) => ({ ...prev, customer_phone: e.target.value }))}
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE3F7] bg-[#FDFBFF] font-semibold text-xs text-[#171136] outline-none focus:border-[#7B5CFF] focus:bg-white transition-all shadow-2xs font-mono"
+                              placeholder="01XXXXXXXXX"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-[10.5px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
+                              Email Address
+                            </label>
+                            <input
+                              type="email"
+                              value={editOrderForm.customer_email}
+                              onChange={(e) => setEditOrderForm((prev: any) => ({ ...prev, customer_email: e.target.value }))}
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE3F7] bg-[#FDFBFF] font-semibold text-xs text-[#171136] outline-none focus:border-[#7B5CFF] focus:bg-white transition-all shadow-2xs"
+                              placeholder="customer@example.com"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-[10.5px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
+                              Shipping Address *
+                            </label>
+                            <textarea
+                              rows={3}
+                              value={editOrderForm.shipping_address}
+                              onChange={(e) => setEditOrderForm((prev: any) => ({ ...prev, shipping_address: e.target.value }))}
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE3F7] bg-[#FDFBFF] font-medium text-xs text-[#171136] outline-none focus:border-[#7B5CFF] focus:bg-white transition-all shadow-2xs leading-relaxed resize-none"
+                              placeholder="Full delivery address with city/district"
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block">
-                            SHIPPING ADDRESS
-                          </span>
-                          <p className="font-medium text-[#171136] mt-1 leading-relaxed">
-                            {currentOrder.shipping_address || "Standard Customer Address"}
-                          </p>
-                        </div>
-                      </div>
+                      ) : (
+                        <>
+                          <div className="border-t border-[#F0EBF8] pt-4 flex items-center gap-3.5">
+                            <div
+                              className={`w-11 h-11 rounded-full ${getOrderAvatarBg(
+                                initial
+                              )} font-extrabold flex items-center justify-center text-sm shrink-0 shadow-2xs`}
+                            >
+                              {initial}
+                            </div>
+                            <div>
+                              <p className="font-bold text-sm text-[#171136] leading-tight">
+                                {currentOrder.customer_name || "Guest Customer"}
+                              </p>
+                              <p className="text-xs text-[#736E9B] mt-0.5">{currentOrder.customer_email || "No email provided"}</p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 text-xs">
+                            <div>
+                              <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block">
+                                PHONE
+                              </span>
+                              <p className="font-semibold text-[#171136] mt-1 font-mono">
+                                {currentOrder.customer_phone || "—"}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block">
+                                SHIPPING ADDRESS
+                              </span>
+                              <p className="font-medium text-[#171136] mt-1 leading-relaxed">
+                                {currentOrder.shipping_address || "Standard Customer Address"}
+                              </p>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     {/* Status & Tracking Card */}
                     <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 shadow-xs space-y-4">
-                      <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
-                        Status & Tracking
-                      </h2>
-                      <div className="border-t border-[#F0EBF8] pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center text-xs">
-                        <div>
-                          <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
-                            ORDER STATUS
+                      <div className="flex items-center justify-between">
+                        <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
+                          Status & Tracking
+                        </h2>
+                        {isEditingOrder && (
+                          <span className="text-[10px] font-bold text-[#B76E00] bg-[#FFF4D6] px-2.5 py-0.5 rounded-full border border-[#F3DF9D]">
+                            Editable
                           </span>
-                          <span
-                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold capitalize ${
-                              currentOrder.status === "delivered"
-                                ? "bg-[#E7F8F0] text-[#2ECC8F]"
-                                : currentOrder.status === "shipped"
-                                ? "bg-[#E3F0FF] text-[#3B82F6]"
-                                : currentOrder.status === "cancelled"
-                                ? "bg-[#FFF1F4] text-[#FF4D6D]"
-                                : "bg-[#FFF4D6] text-[#C08A00]"
-                            }`}
-                          >
-                            <span
-                              className={`w-1.5 h-1.5 rounded-full ${
-                                currentOrder.status === "delivered"
-                                  ? "bg-[#2ECC8F]"
-                                  : currentOrder.status === "shipped"
-                                  ? "bg-[#3B82F6]"
-                                  : currentOrder.status === "cancelled"
-                                  ? "bg-[#FF4D6D]"
-                                  : "bg-[#C08A00]"
-                              }`}
-                            />
-                            {currentOrder.status}
-                          </span>
-                        </div>
+                        )}
+                      </div>
 
-                        <div>
-                          <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
-                            TRACKING NUMBER
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-xs text-[#171136] font-mono">
-                              {trackingNum}
-                            </span>
-                            <button
-                              onClick={() => copyTracking(trackingNum)}
-                              className="px-2.5 py-1 bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] font-bold text-[11px] rounded-lg transition-all cursor-pointer"
-                              title="Copy Tracking Number"
+                      {isEditingOrder ? (
+                        <div className="border-t border-[#F0EBF8] pt-4 space-y-3.5 text-xs">
+                          <div>
+                            <label className="text-[10.5px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
+                              Order Status
+                            </label>
+                            <select
+                              value={editOrderForm.status}
+                              onChange={(e) => setEditOrderForm((prev: any) => ({ ...prev, status: e.target.value }))}
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE3F7] bg-[#FDFBFF] font-bold text-xs text-[#171136] outline-none focus:border-[#7B5CFF] focus:bg-white transition-all shadow-2xs capitalize"
                             >
-                              {copiedTracking ? "Copied! ✓" : "Copy ↗"}
-                            </button>
+                              <option value="pending">Pending</option>
+                              <option value="processing">Processing</option>
+                              <option value="shipped">Shipped</option>
+                              <option value="delivered">Delivered</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="text-[10.5px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
+                              Tracking Number
+                            </label>
+                            <input
+                              type="text"
+                              value={editOrderForm.tracking_number}
+                              onChange={(e) => setEditOrderForm((prev: any) => ({ ...prev, tracking_number: e.target.value }))}
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE3F7] bg-[#FDFBFF] font-bold text-xs text-[#171136] outline-none focus:border-[#7B5CFF] focus:bg-white transition-all shadow-2xs font-mono"
+                              placeholder="e.g. KS-TRACK-12345"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-[10.5px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
+                              Shipping Carrier
+                            </label>
+                            <input
+                              type="text"
+                              value={editOrderForm.carrier}
+                              onChange={(e) => setEditOrderForm((prev: any) => ({ ...prev, carrier: e.target.value }))}
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE3F7] bg-[#FDFBFF] font-semibold text-xs text-[#171136] outline-none focus:border-[#7B5CFF] focus:bg-white transition-all shadow-2xs"
+                              placeholder="e.g. Steadfast Courier"
+                            />
                           </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="border-t border-[#F0EBF8] pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center text-xs">
+                          <div>
+                            <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
+                              ORDER STATUS
+                            </span>
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold capitalize ${
+                                currentOrder.status === "delivered"
+                                  ? "bg-[#E7F8F0] text-[#2ECC8F]"
+                                  : currentOrder.status === "shipped"
+                                  ? "bg-[#E3F0FF] text-[#3B82F6]"
+                                  : currentOrder.status === "cancelled"
+                                  ? "bg-[#FFF1F4] text-[#FF4D6D]"
+                                  : "bg-[#FFF4D6] text-[#C08A00]"
+                              }`}
+                            >
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  currentOrder.status === "delivered"
+                                    ? "bg-[#2ECC8F]"
+                                    : currentOrder.status === "shipped"
+                                    ? "bg-[#3B82F6]"
+                                    : currentOrder.status === "cancelled"
+                                    ? "bg-[#FF4D6D]"
+                                    : "bg-[#C08A00]"
+                                }`}
+                              />
+                              {currentOrder.status}
+                            </span>
+                          </div>
+
+                          <div>
+                            <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
+                              TRACKING NUMBER
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-xs text-[#171136] font-mono">
+                                {trackingNum}
+                              </span>
+                              <button
+                                onClick={() => copyTracking(trackingNum)}
+                                className="px-2.5 py-1 bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] font-bold text-[11px] rounded-lg transition-all cursor-pointer"
+                                title="Copy Tracking Number"
+                              >
+                                {copiedTracking ? "Copied! ✓" : "Copy ↗"}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Payment Information Card */}
                     <div className="bg-white rounded-3xl border border-[#EAE3F7] p-6 shadow-xs space-y-4">
-                      <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
-                        Payment Information
-                      </h2>
-                      <div className="border-t border-[#F0EBF8] pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                        <div>
-                          <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
-                            PAYMENT METHOD
+                      <div className="flex items-center justify-between">
+                        <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
+                          Payment Information
+                        </h2>
+                        {isEditingOrder && (
+                          <span className="text-[10px] font-bold text-[#B76E00] bg-[#FFF4D6] px-2.5 py-0.5 rounded-full border border-[#F3DF9D]">
+                            Editable
                           </span>
-                          <p className="font-semibold text-[#171136]">
-                            Cash on Delivery / Card
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
-                            PAYMENT STATUS
-                          </span>
-                          <span
-                            className={`inline-block px-3 py-1 rounded-lg text-xs font-bold ${
-                              currentOrder.status === "delivered"
-                                ? "bg-[#E7F8F0] text-[#2ECC8F]"
-                                : "bg-[#FFF4D6] text-[#C08A00]"
-                            }`}
-                          >
-                            {currentOrder.status === "delivered" ? "Paid ✓" : "Pending COD"}
-                          </span>
-                        </div>
+                        )}
                       </div>
+
+                      {isEditingOrder ? (
+                        <div className="border-t border-[#F0EBF8] pt-4 space-y-3.5 text-xs">
+                          <div>
+                            <label className="text-[10.5px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
+                              Delivery Charge (৳)
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={editOrderForm.shipping_cost}
+                              onChange={(e) => {
+                                const newShip = Math.max(0, Number(e.target.value) || 0);
+                                setEditOrderForm((prev: any) => {
+                                  const itemsSub = (prev.items || []).reduce((acc: number, itm: any) => acc + ((Number(itm.price) || 0) * (Number(itm.quantity) || 1)), 0);
+                                  return {
+                                    ...prev,
+                                    shipping_cost: newShip,
+                                    total_amount: Math.round(itemsSub + newShip),
+                                  };
+                                });
+                              }}
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE3F7] bg-[#FDFBFF] font-bold text-xs text-[#171136] outline-none focus:border-[#7B5CFF] focus:bg-white transition-all shadow-2xs"
+                              placeholder="60"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-[10.5px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
+                              Final Total Amount (৳)
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={editOrderForm.total_amount}
+                              onChange={(e) => setEditOrderForm((prev: any) => ({ ...prev, total_amount: Math.max(0, Number(e.target.value) || 0) }))}
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-[#EAE3F7] bg-[#FDFBFF] font-extrabold text-sm text-[#FF4D6D] outline-none focus:border-[#FF4D6D] focus:bg-white transition-all shadow-2xs"
+                              placeholder="0"
+                            />
+                            <p className="text-[10.5px] text-[#736E9B] mt-1">
+                              Auto-calculated from items + delivery, or set custom amount.
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="border-t border-[#F0EBF8] pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                          <div>
+                            <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
+                              PAYMENT METHOD
+                            </span>
+                            <p className="font-semibold text-[#171136]">
+                              Cash on Delivery / Card
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-bold text-[#8A84A6] uppercase tracking-wider block mb-1">
+                              PAYMENT STATUS
+                            </span>
+                            <span
+                              className={`inline-block px-3 py-1 rounded-lg text-xs font-bold ${
+                                currentOrder.status === "delivered"
+                                  ? "bg-[#E7F8F0] text-[#2ECC8F]"
+                                  : "bg-[#FFF4D6] text-[#C08A00]"
+                              }`}
+                            >
+                              {currentOrder.status === "delivered" ? "Paid ✓" : "Pending COD"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -5396,165 +5764,329 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                         <h2 className="font-[family-name:var(--font-display)] font-extrabold text-base text-[#171136]">
                           Ordered Items
                         </h2>
-                        <span className="text-xs font-semibold text-[#736E9B] bg-[#F6F1FF] px-3 py-1 rounded-full border border-[#EAE3F7]">
-                          {items.length} {items.length === 1 ? "item" : "items"}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {isEditingOrder && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditOrderForm((prev: any) => {
+                                  const updatedItems = [
+                                    ...prev.items,
+                                    {
+                                      id: undefined,
+                                      product_name: "New Custom Item",
+                                      quantity: 1,
+                                      price: 100,
+                                    },
+                                  ];
+                                  const sub = updatedItems.reduce((acc: number, it: any) => acc + (Number(it.price || 0) * (Number(it.quantity) || 1)), 0);
+                                  const ship = Number(prev.shipping_cost) || 0;
+                                  return {
+                                    ...prev,
+                                    items: updatedItems,
+                                    total_amount: Math.round(sub + ship),
+                                  };
+                                });
+                              }}
+                              className="px-3 py-1.5 bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] font-bold text-xs rounded-xl border border-[#EAE3F7] transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
+                            >
+                              <IconPlus className="w-3.5 h-3.5" />
+                              <span>Add Line Item</span>
+                            </button>
+                          )}
+                          <span className="text-xs font-semibold text-[#736E9B] bg-[#F6F1FF] px-3 py-1 rounded-full border border-[#EAE3F7]">
+                            {(isEditingOrder ? editOrderForm.items : items).length} {(isEditingOrder ? editOrderForm.items : items).length === 1 ? "item" : "items"}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="overflow-x-auto border-t border-[#F0EBF8] pt-2">
-                        <table className="w-full text-left text-xs">
-                          <thead>
-                            <tr className="text-[#8A84A6] border-b border-[#F0EBF8]">
-                              <th className="py-3 font-bold text-[10.5px] tracking-wider uppercase">PRODUCT</th>
-                              <th className="py-3 font-bold text-[10.5px] tracking-wider uppercase text-center">QTY</th>
-                              <th className="py-3 font-bold text-[10.5px] tracking-wider uppercase text-right">PRICE</th>
-                              <th className="py-3 font-bold text-[10.5px] tracking-wider uppercase text-right">TOTAL</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-[#F0EBF8]">
-                            {items.map((item: any, idx: number) => {
-                              const itemInitial = (item.product_name?.[0] || "P").toUpperCase();
-                              const itemTotal = Number(item.price || 0) * (item.quantity || 1);
-                              const itemImage = item.image || item.product_image || item.product?.image;
-                              const itemSku = item.sku || item.product?.sku || "";
-                              const productTarget = item.slug || item.productId || item.product_id || item.product?.slug || item.product?.id;
-                              const productUrl = productTarget ? `/product/${productTarget}` : null;
+                      {isEditingOrder ? (
+                        <div className="space-y-3.5 border-t border-[#F0EBF8] pt-3">
+                          {editOrderForm.items.map((it: any, itIdx: number) => {
+                            const itTotal = (Number(it.price) || 0) * (Number(it.quantity) || 1);
+                            return (
+                              <div key={itIdx} className="p-4 bg-[#FAF8FE] rounded-2xl border border-[#ECE6F6] space-y-2.5">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-[11px] font-bold text-[#8A84A6] uppercase tracking-wider">
+                                    Line Item #{itIdx + 1}
+                                  </span>
+                                  {editOrderForm.items.length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditOrderForm((prev: any) => {
+                                          const filtered = prev.items.filter((_: any, i: number) => i !== itIdx);
+                                          const sub = filtered.reduce((acc: number, item: any) => acc + (Number(item.price || 0) * (Number(item.quantity) || 1)), 0);
+                                          const ship = Number(prev.shipping_cost) || 0;
+                                          return {
+                                            ...prev,
+                                            items: filtered,
+                                            total_amount: Math.round(sub + ship),
+                                          };
+                                        });
+                                      }}
+                                      className="p-1.5 text-[#FF4D6D] hover:bg-[#FFF1F4] rounded-lg transition-all cursor-pointer flex items-center gap-1 text-[11px] font-bold"
+                                      title="Remove this line item"
+                                    >
+                                      <IconTrash className="w-3.5 h-3.5" />
+                                      <span>Remove</span>
+                                    </button>
+                                  )}
+                                </div>
 
-                              return (
-                                <tr key={idx} className="hover:bg-[#F8F6FD]/60 transition-colors">
-                                  <td className="py-3.5 pr-2">
-                                    <div className="flex items-center gap-3">
-                                      {productUrl ? (
-                                        <Link
-                                          href={productUrl}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="w-10 h-10 rounded-xl bg-[#F8F6FC] border border-[#ECE6F6] overflow-hidden flex items-center justify-center shrink-0 hover:ring-2 hover:ring-[#7B5CFF]/30 transition-all"
-                                        >
-                                          {itemImage && itemImage !== "/images/figure-samurai-red.svg" ? (
-                                            <img
-                                              src={getMediaUrl(itemImage)}
-                                              alt={item.product_name || "Product"}
-                                              className="w-full h-full object-cover object-center"
-                                              onError={(e) => {
-                                                (e.currentTarget as HTMLImageElement).style.display = "none";
-                                              }}
-                                            />
+                                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                                  <div className="sm:col-span-6">
+                                    <label className="text-[10.5px] font-bold text-[#736E9B] block mb-1">Product Title</label>
+                                    <input
+                                      type="text"
+                                      value={it.product_name}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        setEditOrderForm((prev: any) => {
+                                          const updated = [...prev.items];
+                                          updated[itIdx] = { ...updated[itIdx], product_name: val };
+                                          return { ...prev, items: updated };
+                                        });
+                                      }}
+                                      className="w-full px-3 py-2 rounded-xl border border-[#EAE3F7] bg-white font-semibold text-xs text-[#171136] outline-none focus:border-[#7B5CFF] shadow-2xs"
+                                      placeholder="Product title"
+                                    />
+                                  </div>
+
+                                  <div className="sm:col-span-2">
+                                    <label className="text-[10.5px] font-bold text-[#736E9B] block mb-1">Quantity</label>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      value={it.quantity}
+                                      onChange={(e) => {
+                                        const qty = Math.max(1, Number(e.target.value) || 1);
+                                        setEditOrderForm((prev: any) => {
+                                          const updated = [...prev.items];
+                                          updated[itIdx] = { ...updated[itIdx], quantity: qty };
+                                          const sub = updated.reduce((acc: number, itm: any) => acc + (Number(itm.price || 0) * (Number(itm.quantity) || 1)), 0);
+                                          const ship = Number(prev.shipping_cost) || 0;
+                                          return { ...prev, items: updated, total_amount: Math.round(sub + ship) };
+                                        });
+                                      }}
+                                      className="w-full px-3 py-2 rounded-xl border border-[#EAE3F7] bg-white font-bold text-xs text-center text-[#171136] outline-none focus:border-[#7B5CFF] shadow-2xs"
+                                    />
+                                  </div>
+
+                                  <div className="sm:col-span-2">
+                                    <label className="text-[10.5px] font-bold text-[#736E9B] block mb-1">Price (৳)</label>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      value={it.price}
+                                      onChange={(e) => {
+                                        const pr = Math.max(0, Number(e.target.value) || 0);
+                                        setEditOrderForm((prev: any) => {
+                                          const updated = [...prev.items];
+                                          updated[itIdx] = { ...updated[itIdx], price: pr };
+                                          const sub = updated.reduce((acc: number, itm: any) => acc + (Number(itm.price || 0) * (Number(itm.quantity) || 1)), 0);
+                                          const ship = Number(prev.shipping_cost) || 0;
+                                          return { ...prev, items: updated, total_amount: Math.round(sub + ship) };
+                                        });
+                                      }}
+                                      className="w-full px-3 py-2 rounded-xl border border-[#EAE3F7] bg-white font-bold text-xs text-right text-[#171136] outline-none focus:border-[#7B5CFF] shadow-2xs"
+                                    />
+                                  </div>
+
+                                  <div className="sm:col-span-2 text-right">
+                                    <label className="text-[10.5px] font-bold text-[#736E9B] block mb-1">Line Total</label>
+                                    <span className="font-extrabold text-xs text-[#171136] block py-2">
+                                      ৳{itTotal.toLocaleString()}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          {/* Real-time Order Summary for Edit Mode */}
+                          {(() => {
+                            const editSubtotal = (editOrderForm.items || []).reduce((acc: number, it: any) => acc + ((Number(it.price) || 0) * (Number(it.quantity) || 1)), 0);
+                            const editDelivery = Number(editOrderForm.shipping_cost) || 0;
+                            const editTotal = Number(editOrderForm.total_amount) || (editSubtotal + editDelivery);
+
+                            return (
+                              <div className="border-t border-[#F0EBF8] pt-4 space-y-2 text-xs text-right">
+                                <div className="flex justify-end gap-8 text-[#736E9B]">
+                                  <span>Subtotal</span>
+                                  <span className="font-semibold text-[#171136] w-24">৳{editSubtotal.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-end gap-8 text-[#736E9B]">
+                                  <span>Delivery Fee</span>
+                                  <span className="font-semibold text-[#171136] w-24">৳{editDelivery.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-end gap-8 text-base font-extrabold border-t border-[#F0EBF8] pt-2 text-[#171136]">
+                                  <span>Total Amount</span>
+                                  <span className="text-[#FF4D6D] w-24">৳{editTotal.toLocaleString()}</span>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      ) : (
+                        <>
+                          <div className="overflow-x-auto border-t border-[#F0EBF8] pt-2">
+                            <table className="w-full text-left text-xs">
+                              <thead>
+                                <tr className="text-[#8A84A6] border-b border-[#F0EBF8]">
+                                  <th className="py-3 font-bold text-[10.5px] tracking-wider uppercase">PRODUCT</th>
+                                  <th className="py-3 font-bold text-[10.5px] tracking-wider uppercase text-center">QTY</th>
+                                  <th className="py-3 font-bold text-[10.5px] tracking-wider uppercase text-right">PRICE</th>
+                                  <th className="py-3 font-bold text-[10.5px] tracking-wider uppercase text-right">TOTAL</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-[#F0EBF8]">
+                                {items.map((item: any, idx: number) => {
+                                  const itemInitial = (item.product_name?.[0] || "P").toUpperCase();
+                                  const itemTotal = Number(item.price || 0) * (item.quantity || 1);
+                                  const itemImage = item.image || item.product_image || item.product?.image;
+                                  const itemSku = item.sku || item.product?.sku || "";
+                                  const productTarget = item.slug || item.productId || item.product_id || item.product?.slug || item.product?.id;
+                                  const productUrl = productTarget ? `/product/${productTarget}` : null;
+
+                                  return (
+                                    <tr key={idx} className="hover:bg-[#F8F6FD]/60 transition-colors">
+                                      <td className="py-3.5 pr-2">
+                                        <div className="flex items-center gap-3">
+                                          {productUrl ? (
+                                            <Link
+                                              href={productUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="w-10 h-10 rounded-xl bg-[#F8F6FC] border border-[#ECE6F6] overflow-hidden flex items-center justify-center shrink-0 hover:ring-2 hover:ring-[#7B5CFF]/30 transition-all"
+                                            >
+                                              {itemImage && itemImage !== "/images/figure-samurai-red.svg" ? (
+                                                <img
+                                                  src={getMediaUrl(itemImage)}
+                                                  alt={item.product_name || "Product"}
+                                                  className="w-full h-full object-cover object-center"
+                                                  onError={(e) => {
+                                                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                                                  }}
+                                                />
+                                              ) : (
+                                                <div className="w-full h-full bg-[#FFF1F4] text-[#FF4D6D] font-extrabold flex items-center justify-center text-xs">
+                                                  {itemInitial}
+                                                </div>
+                                              )}
+                                            </Link>
                                           ) : (
-                                            <div className="w-full h-full bg-[#FFF1F4] text-[#FF4D6D] font-extrabold flex items-center justify-center text-xs">
-                                              {itemInitial}
+                                            <div className="w-10 h-10 rounded-xl bg-[#F8F6FC] border border-[#ECE6F6] overflow-hidden flex items-center justify-center shrink-0">
+                                              {itemImage && itemImage !== "/images/figure-samurai-red.svg" ? (
+                                                <img
+                                                  src={getMediaUrl(itemImage)}
+                                                  alt={item.product_name || "Product"}
+                                                  className="w-full h-full object-cover object-center"
+                                                  onError={(e) => {
+                                                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                                                  }}
+                                                />
+                                              ) : (
+                                                <div className="w-full h-full bg-[#FFF1F4] text-[#FF4D6D] font-extrabold flex items-center justify-center text-xs">
+                                                  {itemInitial}
+                                                </div>
+                                              )}
                                             </div>
                                           )}
-                                        </Link>
-                                      ) : (
-                                        <div className="w-10 h-10 rounded-xl bg-[#F8F6FC] border border-[#ECE6F6] overflow-hidden flex items-center justify-center shrink-0">
-                                          {itemImage && itemImage !== "/images/figure-samurai-red.svg" ? (
-                                            <img
-                                              src={getMediaUrl(itemImage)}
-                                              alt={item.product_name || "Product"}
-                                              className="w-full h-full object-cover object-center"
-                                              onError={(e) => {
-                                                (e.currentTarget as HTMLImageElement).style.display = "none";
-                                              }}
-                                            />
-                                          ) : (
-                                            <div className="w-full h-full bg-[#FFF1F4] text-[#FF4D6D] font-extrabold flex items-center justify-center text-xs">
-                                              {itemInitial}
+                                          <div>
+                                            {productUrl ? (
+                                              <Link
+                                                href={productUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="font-bold text-[#171136] text-xs sm:text-sm leading-tight hover:text-[#7B5CFF] transition-colors inline-block"
+                                              >
+                                                {item.product_name}
+                                              </Link>
+                                            ) : (
+                                              <p className="font-bold text-[#171136] text-xs sm:text-sm leading-tight">
+                                                {item.product_name}
+                                              </p>
+                                            )}
+                                            <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                                              {itemSku ? (
+                                                <p className="text-[10.5px] text-[#736E9B] font-mono">
+                                                  SKU: {itemSku}
+                                                </p>
+                                              ) : null}
+                                              {(item.lotNumber || item.lot_number) && (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#EEF2FF] text-[#4F46E5] text-[10px] font-bold font-mono border border-[#C7D2FE]">
+                                                  <span className="text-[#6366F1] font-semibold">Lot:</span> {item.lotNumber || item.lot_number}
+                                                </span>
+                                              )}
                                             </div>
-                                          )}
+                                            {(item.isPreorder || item.is_preorder) && (
+                                              <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-[#FFF1D6] text-[#B76E00] text-[10px] font-extrabold uppercase tracking-wide">
+                                                Pre-order · no stock deducted
+                                              </span>
+                                            )}
+                                            {Array.isArray(item.bundleItems) && item.bundleItems.length > 0 && (
+                                              <p className="text-[10.5px] text-[#7B5CFF] mt-0.5">
+                                                Includes:{" "}
+                                                {item.bundleItems.map((b: { name: string; quantity: number }) => `${b.quantity}× ${b.name}`).join(", ")}
+                                              </p>
+                                            )}
+                                          </div>
                                         </div>
-                                      )}
-                                      <div>
-                                        {productUrl ? (
-                                          <Link
-                                            href={productUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="font-bold text-[#171136] text-xs sm:text-sm leading-tight hover:text-[#7B5CFF] transition-colors inline-block"
-                                          >
-                                            {item.product_name}
-                                          </Link>
-                                        ) : (
-                                          <p className="font-bold text-[#171136] text-xs sm:text-sm leading-tight">
-                                            {item.product_name}
-                                          </p>
-                                        )}
-                                        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-                                          {itemSku ? (
-                                            <p className="text-[10.5px] text-[#736E9B] font-mono">
-                                              SKU: {itemSku}
-                                            </p>
-                                          ) : null}
-                                          {(item.lotNumber || item.lot_number) && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#EEF2FF] text-[#4F46E5] text-[10px] font-bold font-mono border border-[#C7D2FE]">
-                                              <span className="text-[#6366F1] font-semibold">Lot:</span> {item.lotNumber || item.lot_number}
+                                      </td>
+                                      <td className="py-3.5 px-2 text-center font-bold text-[#171136]">
+                                        ×{item.quantity || 1}
+                                      </td>
+                                      <td className="py-3.5 px-2 text-right font-medium text-[#736E9B]">
+                                        {(item.originalPrice || item.original_price || item.regularPrice || item.regular_price) &&
+                                          Number(item.originalPrice || item.original_price || item.regularPrice || item.regular_price) > Number(item.price) && (
+                                            <span className="line-through text-[11px] text-[#8A84A6] mr-1.5 block sm:inline">
+                                              ৳{Number(item.originalPrice || item.original_price || item.regularPrice || item.regular_price).toLocaleString()}
                                             </span>
                                           )}
-                                        </div>
-                                        {(item.isPreorder || item.is_preorder) && (
-                                          <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-[#FFF1D6] text-[#B76E00] text-[10px] font-extrabold uppercase tracking-wide">
-                                            Pre-order · no stock deducted
-                                          </span>
-                                        )}
-                                        {Array.isArray(item.bundleItems) && item.bundleItems.length > 0 && (
-                                          <p className="text-[10.5px] text-[#7B5CFF] mt-0.5">
-                                            Includes:{" "}
-                                            {item.bundleItems.map((b: { name: string; quantity: number }) => `${b.quantity}× ${b.name}`).join(", ")}
-                                          </p>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </td>
-                                  <td className="py-3.5 px-2 text-center font-bold text-[#171136]">
-                                    ×{item.quantity || 1}
-                                  </td>
-                                  <td className="py-3.5 px-2 text-right font-medium text-[#736E9B]">
-                                    {(item.originalPrice || item.original_price || item.regularPrice || item.regular_price) &&
-                                      Number(item.originalPrice || item.original_price || item.regularPrice || item.regular_price) > Number(item.price) && (
-                                        <span className="line-through text-[11px] text-[#8A84A6] mr-1.5 block sm:inline">
-                                          ৳{Number(item.originalPrice || item.original_price || item.regularPrice || item.regular_price).toLocaleString()}
+                                        <span className="text-[#171136] font-semibold">
+                                          ৳{Number(item.price || 0).toLocaleString()}
                                         </span>
-                                      )}
-                                    <span className="text-[#171136] font-semibold">
-                                      ৳{Number(item.price || 0).toLocaleString()}
-                                    </span>
-                                  </td>
-                                  <td className="py-3.5 pl-2 text-right font-extrabold text-[#171136] text-sm">
-                                    ৳{itemTotal.toLocaleString()}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {(() => {
-                        const discountVal = typeof currentOrder.discount === "number" || typeof currentOrder.discount === "string"
-                          ? Number(currentOrder.discount)
-                          : Math.max(0, (subtotal + deliveryFee) - Number(currentOrder.total_amount || 0));
-
-                        return (
-                          <div className="border-t border-[#F0EBF8] pt-4 space-y-2 text-xs text-right">
-                            <div className="flex justify-end gap-8 text-[#736E9B]">
-                              <span>Subtotal</span>
-                              <span className="font-semibold text-[#171136] w-24">৳{subtotal.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-end gap-8 text-[#736E9B]">
-                              <span>Standard Delivery</span>
-                              <span className={`font-semibold w-24 ${deliveryFee > 0 ? "text-[#171136]" : "text-emerald-600"}`}>
-                                {deliveryFee > 0 ? `৳${deliveryFee.toLocaleString()}` : "৳0"}
-                              </span>
-                            </div>
-                            {discountVal > 0 && (
-                              <div className="flex justify-end gap-8 text-emerald-600 font-bold">
-                                <span>Discount</span>
-                                <span className="w-24">-৳{discountVal.toLocaleString()}</span>
-                              </div>
-                            )}
+                                      </td>
+                                      <td className="py-3.5 pl-2 text-right font-extrabold text-[#171136] text-sm">
+                                        ৳{itemTotal.toLocaleString()}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
                           </div>
-                        );
-                      })()}
+
+                          {(() => {
+                            const discountVal = typeof currentOrder.discount === "number" || typeof currentOrder.discount === "string"
+                              ? Number(currentOrder.discount)
+                              : Math.max(0, (subtotal + deliveryFee) - Number(currentOrder.total_amount || 0));
+
+                            return (
+                              <div className="border-t border-[#F0EBF8] pt-4 space-y-2 text-xs text-right">
+                                <div className="flex justify-end gap-8 text-[#736E9B]">
+                                  <span>Subtotal</span>
+                                  <span className="font-semibold text-[#171136] w-24">৳{subtotal.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-end gap-8 text-[#736E9B]">
+                                  <span>Standard Delivery</span>
+                                  <span className={`font-semibold w-24 ${deliveryFee > 0 ? "text-[#171136]" : "text-emerald-600"}`}>
+                                    {deliveryFee > 0 ? `৳${deliveryFee.toLocaleString()}` : "৳0"}
+                                  </span>
+                                </div>
+                                {discountVal > 0 && (
+                                  <div className="flex justify-end gap-8 text-emerald-600 font-bold">
+                                    <span>Discount</span>
+                                    <span className="w-24">-৳{discountVal.toLocaleString()}</span>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </>
+                      )}
                     </div>
 
                     {/* Order Total Card */}
@@ -5565,7 +6097,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                             Order Total
                           </span>
                           <p className="font-[family-name:var(--font-display)] font-extrabold text-3xl sm:text-4xl text-[#FF4D6D] mt-1">
-                            ৳{Number(currentOrder.total_amount || 0).toLocaleString()}
+                            ৳{Number(isEditingOrder ? editOrderForm.total_amount : (currentOrder.total_amount || 0)).toLocaleString()}
                           </p>
                         </div>
 
@@ -5597,14 +6129,46 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                         })()}
                       </div>
 
-                      <button
-                        onClick={() => printOrderInvoice(currentOrder)}
-                        className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#FF4D6D] hover:bg-[#ff3358] text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all cursor-pointer"
-                        title="Generate & Print A4 PDF Invoice"
-                      >
-                        <IconDownload className="w-4 h-4" />
-                        <span>Print A4 Invoice (PDF) ↓</span>
-                      </button>
+                      <div className="flex items-center gap-3">
+                        {isEditingOrder ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setIsEditingOrder(false)}
+                              className="px-5 py-3.5 bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] font-bold text-xs rounded-xl border border-[#EAE3F7] transition-all cursor-pointer shadow-2xs"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSaveOrderChanges(currentOrder)}
+                              disabled={savingOrder}
+                              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#2ECC8F] hover:bg-[#28B880] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-75"
+                            >
+                              {savingOrder ? (
+                                <>
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                  <span>Saving Changes...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <IconCheck className="w-4 h-4" />
+                                  <span>Save Order Changes</span>
+                                </>
+                              )}
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => printOrderInvoice(currentOrder)}
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#FF4D6D] hover:bg-[#ff3358] text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all cursor-pointer"
+                            title="Generate & Print A4 PDF Invoice"
+                          >
+                            <IconDownload className="w-4 h-4" />
+                            <span>Print A4 Invoice (PDF) ↓</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -5625,7 +6189,6 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                         <p className="text-[11px] text-[#736E9B] mt-0.5">
                           Order #{currentOrder.order_number} confirmed.
                         </p>
-                        <p className="text-[10px] text-[#8A84A6] font-medium mt-1">{dateInfo.date}</p>
                       </div>
                     </div>
 
@@ -5645,7 +6208,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                           Processing
                         </p>
                         <p className="text-[11px] text-[#736E9B] mt-0.5">
-                          Picking and packing at warehouse.
+                          Packed & verified for shipping.
                         </p>
                       </div>
                     </div>
@@ -5693,6 +6256,49 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                     </div>
                   </div>
                 </div>
+
+                {/* Sticky Action Footer when editing order */}
+                {isEditingOrder && (
+                  <div className="sticky bottom-4 z-20 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-white/95 backdrop-blur-md rounded-2xl border border-[#7B5CFF]/30 shadow-[0_12px_32px_rgba(123,92,255,0.18)] animate-in slide-in-from-bottom-3 duration-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-[#FFF4D6] text-[#B76E00] flex items-center justify-center font-bold shrink-0">
+                        <IconEdit className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-[#171136]">Editing Order #{currentOrder.order_number}</p>
+                        <p className="text-[11px] text-[#736E9B]">Make sure to save your changes to customer, address, status, items and amounts.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingOrder(false)}
+                        className="px-4 py-2 bg-white hover:bg-[#F6F1FF] text-[#736E9B] hover:text-[#171136] font-bold text-xs rounded-xl border border-[#EAE3F7] transition-all cursor-pointer shadow-2xs"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSaveOrderChanges(currentOrder)}
+                        disabled={savingOrder}
+                        className="px-5 py-2 bg-[#2ECC8F] hover:bg-[#28B880] text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-75"
+                      >
+                        {savingOrder ? (
+                          <>
+                            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>Saving Changes...</span>
+                          </>
+                        ) : (
+                          <>
+                            <IconCheck className="w-3.5 h-3.5" />
+                            <span>Save Order Changes</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })()}
