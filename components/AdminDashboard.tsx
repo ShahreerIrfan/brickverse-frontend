@@ -471,6 +471,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
       );
 
       const itemQty = Number(it.quantity || 1);
+      const rawTP = it.trade_price || it.tradePrice || matched?.tradePrice || (matched as any)?.trade_price || "";
       return {
         id: it.id,
         productId: matched ? String(matched.id) : (pId ? String(pId) : undefined),
@@ -479,6 +480,8 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
         quantity: itemQty,
         originalQuantity: itemQty,
         price: Number(it.price || 0),
+        trade_price: rawTP,
+        tradePrice: rawTP,
         image: it.image || it.product_image || matched?.image || (matched?.image_file ? String(matched.image_file) : "") || "",
         sku: it.sku || matched?.sku || "",
         stock: matched?.stock ?? 0,
@@ -545,6 +548,8 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
         product: String(p.id),
         product_name: p.name,
         price: rawPrice,
+        trade_price: p.tradePrice || (p as any).trade_price || "",
+        tradePrice: p.tradePrice || (p as any).trade_price || "",
         image: p.image || (p.image_file ? String(p.image_file) : ""),
         sku: p.sku || "",
         stock: stockVal,
@@ -585,6 +590,8 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
           quantity: 1,
           originalQuantity: 0,
           price: rawPrice,
+          trade_price: p.tradePrice || (p as any).trade_price || "",
+          tradePrice: p.tradePrice || (p as any).trade_price || "",
           image: p.image || (p.image_file ? String(p.image_file) : ""),
           sku: p.sku || "",
           stock: stockVal,
@@ -1964,6 +1971,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
               product_name: (it.product_name || "Item").trim(),
               quantity: Math.max(1, Number(it.quantity) || 1),
               price: Number(it.price) || 0,
+              trade_price: it.trade_price || it.tradePrice || "",
             }))
           : [],
       };
@@ -6431,7 +6439,47 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                         </div>
 
                         {(() => {
-                          const { netIncome, totalTP } = getOrderNetIncome(currentOrder);
+                          let netIncome = 0;
+                          let totalTP = 0;
+
+                          if (isEditingOrder) {
+                            const editItems = Array.isArray(editOrderForm.items) ? editOrderForm.items : [];
+                            let totalSelling = 0;
+                            let sumTP = 0;
+
+                            for (const it of editItems) {
+                              const sellPrice = Number(it.price || 0);
+                              const qty = Math.max(1, Number(it.quantity || 1));
+
+                              let rawTP = it.trade_price || it.tradePrice || "";
+                              if (!rawTP) {
+                                const pId = it.productId || it.product_id || it.product;
+                                const matched = products.find(
+                                  (p) => String(p.id) === String(pId) || p.name.trim().toLowerCase() === String(it.product_name || "").trim().toLowerCase()
+                                );
+                                if (matched) {
+                                  rawTP = matched.tradePrice || (matched as any).trade_price || "";
+                                }
+                              }
+
+                              const cleanTP = String(rawTP).replace(/[^0-9.]/g, "");
+                              const unitTP = parseFloat(cleanTP) || 0;
+
+                              totalSelling += sellPrice * qty;
+                              sumTP += unitTP * qty;
+                            }
+
+                            const discount = Number(currentOrder.discount || currentOrder.discount_amount || 0);
+                            netIncome = Math.round((totalSelling - sumTP - discount) * 100) / 100;
+                            totalTP = Math.round(sumTP * 100) / 100;
+                          } else {
+                            const res = getOrderNetIncome(currentOrder);
+                            netIncome = res.netIncome;
+                            totalTP = res.totalTP;
+                          }
+
+                          const orderStatus = isEditingOrder ? editOrderForm.status : currentOrder.status;
+
                           return (
                             <div className="border-l border-[#F0EBF8] pl-6 sm:pl-8">
                               <span className="text-[11px] font-bold text-[#8A84A6] uppercase tracking-wider block">
@@ -6439,16 +6487,16 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                               </span>
                               <p
                                 className={`font-[family-name:var(--font-display)] font-extrabold text-2xl sm:text-3xl mt-1 ${
-                                  currentOrder.status === "cancelled"
+                                  orderStatus === "cancelled"
                                     ? "text-[#8A84A6] line-through"
                                     : netIncome >= 0
                                     ? "text-[#059669]"
                                     : "text-[#E11D48]"
                                 }`}
                               >
-                                {currentOrder.status === "cancelled" ? "৳0" : `${netIncome >= 0 ? "+" : ""}৳${netIncome.toLocaleString()}`}
+                                {orderStatus === "cancelled" ? "৳0" : `${netIncome >= 0 ? "+" : ""}৳${netIncome.toLocaleString()}`}
                               </p>
-                              {totalTP > 0 && currentOrder.status !== "cancelled" && (
+                              {totalTP > 0 && orderStatus !== "cancelled" && (
                                 <p className="text-[11px] text-[#736E9B] mt-0.5 font-medium">
                                   Total Cost (TP): ৳{totalTP.toLocaleString()}
                                 </p>
