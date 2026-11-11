@@ -435,6 +435,9 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   // Order In-Place Editing States
   const [isEditingOrder, setIsEditingOrder] = useState(false);
   const [savingOrder, setSavingOrder] = useState(false);
+  const [changingItemIndex, setChangingItemIndex] = useState<number | null>(null);
+  const [orderProductSearchQuery, setOrderProductSearchQuery] = useState("");
+  const [isAddProductPickerOpen, setIsAddProductPickerOpen] = useState(false);
   const [editOrderForm, setEditOrderForm] = useState<any>({
     id: null,
     customer_name: "",
@@ -451,15 +454,30 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
 
   const initOrderEditForm = (order: any) => {
     if (!order) return;
+    setChangingItemIndex(null);
+    setOrderProductSearchQuery("");
+    setIsAddProductPickerOpen(false);
+
     const rawItems = Array.isArray(order.items) && order.items.length > 0 ? order.items : [];
-    const items = rawItems.map((it: any) => ({
-      id: it.id,
-      product_name: it.product_name || "",
-      quantity: Number(it.quantity || 1),
-      price: Number(it.price || 0),
-      image: it.image || it.product_image || it.product?.image || "",
-      sku: it.sku || it.product?.sku || "",
-    }));
+    const items = rawItems.map((it: any) => {
+      const pId = it.productId || it.product_id || (typeof it.product === "object" ? it.product?.id : it.product);
+      const matched = products.find(
+        (p) => String(p.id) === String(pId) || p.name.trim().toLowerCase() === String(it.product_name || "").trim().toLowerCase()
+      );
+
+      return {
+        id: it.id,
+        productId: matched ? String(matched.id) : (pId ? String(pId) : undefined),
+        product: matched ? String(matched.id) : (pId ? String(pId) : undefined),
+        product_name: it.product_name || matched?.name || "Item",
+        quantity: Number(it.quantity || 1),
+        price: Number(it.price || 0),
+        image: it.image || it.product_image || matched?.image || (matched?.image_file ? String(matched.image_file) : "") || "",
+        sku: it.sku || matched?.sku || "",
+        lotId: it.lotId || it.lot_id,
+        lotNumber: it.lotNumber || it.lot_number || "",
+      };
+    });
 
     const subtotal = items.reduce((acc: number, item: any) => acc + (Number(item.price || 0) * (item.quantity || 1)), 0);
     const shipping = typeof order.shipping_cost === "number" || typeof order.shipping_fee === "number" || typeof order.delivery_charge === "number"
@@ -487,6 +505,82 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
         }
       ],
     });
+  };
+
+  const orderEditFilteredProducts = useMemo(() => {
+    if (!orderProductSearchQuery.trim()) return products.slice(0, 30);
+    const q = orderProductSearchQuery.toLowerCase().trim();
+    return products.filter((p) => {
+      const nameMatch = p.name.toLowerCase().includes(q);
+      const skuMatch = p.sku && p.sku.toLowerCase().includes(q);
+      const catMatch = typeof p.category === "string" && p.category.toLowerCase().includes(q);
+      return nameMatch || skuMatch || catMatch;
+    }).slice(0, 30);
+  }, [products, orderProductSearchQuery]);
+
+  const handleSelectProductForItem = (p: Product, itIdx: number) => {
+    const rawPrice = parseFloat(
+      String(p.discountedPrice || p.price || "0").replace(/[^\d.]/g, "")
+    ) || 0;
+
+    setEditOrderForm((prev: any) => {
+      const updated = [...prev.items];
+      updated[itIdx] = {
+        ...updated[itIdx],
+        productId: String(p.id),
+        product: String(p.id),
+        product_name: p.name,
+        price: rawPrice,
+        image: p.image || (p.image_file ? String(p.image_file) : ""),
+        sku: p.sku || "",
+        lotNumber: "",
+      };
+      const sub = updated.reduce(
+        (acc: number, itm: any) => acc + (Number(itm.price || 0) * (Number(itm.quantity) || 1)),
+        0
+      );
+      const ship = Number(prev.shipping_cost) || 0;
+      return { ...prev, items: updated, total_amount: Math.round(sub + ship) };
+    });
+
+    setChangingItemIndex(null);
+    setOrderProductSearchQuery("");
+  };
+
+  const handleAddProductToOrder = (p: Product) => {
+    const rawPrice = parseFloat(
+      String(p.discountedPrice || p.price || "0").replace(/[^\d.]/g, "")
+    ) || 0;
+
+    setEditOrderForm((prev: any) => {
+      const updatedItems = [
+        ...prev.items,
+        {
+          id: undefined,
+          productId: String(p.id),
+          product: String(p.id),
+          product_name: p.name,
+          quantity: 1,
+          price: rawPrice,
+          image: p.image || (p.image_file ? String(p.image_file) : ""),
+          sku: p.sku || "",
+          lotNumber: "",
+        },
+      ];
+      const sub = updatedItems.reduce(
+        (acc: number, it: any) => acc + (Number(it.price || 0) * (Number(it.quantity) || 1)),
+        0
+      );
+      const ship = Number(prev.shipping_cost) || 0;
+      return {
+        ...prev,
+        items: updatedItems,
+        total_amount: Math.round(sub + ship),
+      };
+    });
+
+    setIsAddProductPickerOpen(false);
+    setOrderProductSearchQuery("");
   };
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [formCategory, setFormCategory] = useState<string>("figures");
@@ -1842,6 +1936,7 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
         items: Array.isArray(editOrderForm.items)
           ? editOrderForm.items.map((it: any) => ({
               ...(it.id ? { id: it.id } : {}),
+              product_id: it.productId || it.product_id || (typeof it.product === "object" ? it.product?.id : it.product),
               product_name: (it.product_name || "Item").trim(),
               quantity: Math.max(1, Number(it.quantity) || 1),
               price: Number(it.price) || 0,
@@ -5769,29 +5864,14 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                             <button
                               type="button"
                               onClick={() => {
-                                setEditOrderForm((prev: any) => {
-                                  const updatedItems = [
-                                    ...prev.items,
-                                    {
-                                      id: undefined,
-                                      product_name: "New Custom Item",
-                                      quantity: 1,
-                                      price: 100,
-                                    },
-                                  ];
-                                  const sub = updatedItems.reduce((acc: number, it: any) => acc + (Number(it.price || 0) * (Number(it.quantity) || 1)), 0);
-                                  const ship = Number(prev.shipping_cost) || 0;
-                                  return {
-                                    ...prev,
-                                    items: updatedItems,
-                                    total_amount: Math.round(sub + ship),
-                                  };
-                                });
+                                setIsAddProductPickerOpen(!isAddProductPickerOpen);
+                                setOrderProductSearchQuery("");
                               }}
-                              className="px-3 py-1.5 bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] font-bold text-xs rounded-xl border border-[#EAE3F7] transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
+                              className="px-3.5 py-1.5 bg-[#F6F1FF] hover:bg-[#EFE9FF] text-[#7B5CFF] font-bold text-xs rounded-xl border border-[#EAE3F7] transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                              title="Add product from catalog"
                             >
                               <IconPlus className="w-3.5 h-3.5" />
-                              <span>Add Line Item</span>
+                              <span>{isAddProductPickerOpen ? "Close Catalog" : "+ Add Product"}</span>
                             </button>
                           )}
                           <span className="text-xs font-semibold text-[#736E9B] bg-[#F6F1FF] px-3 py-1 rounded-full border border-[#EAE3F7]">
@@ -5800,60 +5880,237 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                         </div>
                       </div>
 
+                      {/* Searchable Catalog Picker to Add Product */}
+                      {isEditingOrder && isAddProductPickerOpen && (
+                        <div className="p-4 bg-[#FAF8FF] border border-[#7B5CFF]/30 rounded-2xl shadow-sm space-y-3 animate-in fade-in duration-200">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <IconBox className="w-4 h-4 text-[#7B5CFF]" />
+                              <span className="font-extrabold text-xs text-[#171136]">Select Product from Catalog to Add</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setIsAddProductPickerOpen(false)}
+                              className="text-[#8A84A6] hover:text-[#171136] text-xs p-1 cursor-pointer"
+                            >
+                              ✕
+                            </button>
+                          </div>
+
+                          <div className="relative flex items-center">
+                            <IconSearch className="absolute left-3 w-3.5 h-3.5 text-[#8A84A6] pointer-events-none" />
+                            <input
+                              type="text"
+                              placeholder="Search product by name, SKU, or category..."
+                              value={orderProductSearchQuery}
+                              onChange={(e) => setOrderProductSearchQuery(e.target.value)}
+                              className="w-full pl-9 pr-3 py-2 bg-white border border-[#EAE3F7] rounded-xl text-xs font-semibold text-[#171136] focus:outline-none focus:border-[#7B5CFF] shadow-2xs"
+                              autoFocus
+                            />
+                          </div>
+
+                          <div className="max-h-60 overflow-y-auto divide-y divide-[#F0EBF8] bg-white rounded-xl border border-[#EAE3F7]">
+                            {orderEditFilteredProducts.length === 0 ? (
+                              <div className="p-4 text-center text-xs text-[#8A84A6]">No products found matching &ldquo;{orderProductSearchQuery}&rdquo;</div>
+                            ) : (
+                              orderEditFilteredProducts.map((p) => {
+                                const rawPrice = parseFloat(
+                                  String(p.discountedPrice || p.price || "0").replace(/[^\d.]/g, "")
+                                ) || 0;
+                                return (
+                                  <div
+                                    key={p.id}
+                                    onClick={() => handleAddProductToOrder(p)}
+                                    className="p-2.5 flex items-center justify-between gap-3 hover:bg-[#F6F1FF] transition-colors cursor-pointer group"
+                                  >
+                                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                      <div className="w-9 h-9 rounded-lg bg-[#FAF8FF] border border-[#EAE3F7] overflow-hidden flex items-center justify-center shrink-0">
+                                        {p.image || p.image_file ? (
+                                          <img
+                                            src={getMediaUrl(p.image || String(p.image_file))}
+                                            alt={p.name}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
+                                          />
+                                        ) : (
+                                          <IconBox className="w-3.5 h-3.5 text-[#7B5CFF]" />
+                                        )}
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <p className="font-bold text-xs text-[#171136] truncate group-hover:text-[#7B5CFF] transition-colors">
+                                          {p.name}
+                                        </p>
+                                        <p className="text-[10px] text-[#736E9B]">
+                                          SKU: {p.sku || "—"} • Stock: {p.stock ?? 0}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                      <span className="font-extrabold text-xs text-[#FF4D6D]">৳{rawPrice.toLocaleString()}</span>
+                                      <span className="block text-[10px] text-[#7B5CFF] font-bold group-hover:underline">+ Add</span>
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       {isEditingOrder ? (
                         <div className="space-y-3.5 border-t border-[#F0EBF8] pt-3">
                           {editOrderForm.items.map((it: any, itIdx: number) => {
                             const itTotal = (Number(it.price) || 0) * (Number(it.quantity) || 1);
                             return (
-                              <div key={itIdx} className="p-4 bg-[#FAF8FE] rounded-2xl border border-[#ECE6F6] space-y-2.5">
+                              <div key={itIdx} className="p-4 bg-[#FAF8FE] rounded-2xl border border-[#ECE6F6] space-y-3">
                                 <div className="flex items-center justify-between gap-2">
-                                  <span className="text-[11px] font-bold text-[#8A84A6] uppercase tracking-wider">
-                                    Line Item #{itIdx + 1}
-                                  </span>
-                                  {editOrderForm.items.length > 1 && (
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[11px] font-bold text-[#8A84A6] uppercase tracking-wider">
+                                      Line Item #{itIdx + 1}
+                                    </span>
+                                    {it.lotNumber && (
+                                      <span className="text-[10px] font-bold text-[#7B5CFF] bg-[#F6F1FF] px-2 py-0.5 rounded-md border border-[#EAE3F7]">
+                                        Batch / Lot: {it.lotNumber}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <div className="flex items-center gap-2">
                                     <button
                                       type="button"
                                       onClick={() => {
-                                        setEditOrderForm((prev: any) => {
-                                          const filtered = prev.items.filter((_: any, i: number) => i !== itIdx);
-                                          const sub = filtered.reduce((acc: number, item: any) => acc + (Number(item.price || 0) * (Number(item.quantity) || 1)), 0);
-                                          const ship = Number(prev.shipping_cost) || 0;
-                                          return {
-                                            ...prev,
-                                            items: filtered,
-                                            total_amount: Math.round(sub + ship),
-                                          };
-                                        });
+                                        setChangingItemIndex(changingItemIndex === itIdx ? null : itIdx);
+                                        setOrderProductSearchQuery("");
                                       }}
-                                      className="p-1.5 text-[#FF4D6D] hover:bg-[#FFF1F4] rounded-lg transition-all cursor-pointer flex items-center gap-1 text-[11px] font-bold"
-                                      title="Remove this line item"
+                                      className="px-2.5 py-1 text-[#7B5CFF] hover:bg-[#F6F1FF] rounded-lg transition-all cursor-pointer flex items-center gap-1 text-[11px] font-bold border border-[#EAE3F7]"
+                                      title="Change product object"
                                     >
-                                      <IconTrash className="w-3.5 h-3.5" />
-                                      <span>Remove</span>
+                                      <IconRefresh className="w-3 h-3" />
+                                      <span>{changingItemIndex === itIdx ? "Cancel Change" : "Change Product"}</span>
                                     </button>
-                                  )}
+
+                                    {editOrderForm.items.length > 1 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setEditOrderForm((prev: any) => {
+                                            const filtered = prev.items.filter((_: any, i: number) => i !== itIdx);
+                                            const sub = filtered.reduce((acc: number, item: any) => acc + (Number(item.price || 0) * (Number(item.quantity) || 1)), 0);
+                                            const ship = Number(prev.shipping_cost) || 0;
+                                            return {
+                                              ...prev,
+                                              items: filtered,
+                                              total_amount: Math.round(sub + ship),
+                                            };
+                                          });
+                                        }}
+                                        className="p-1.5 text-[#FF4D6D] hover:bg-[#FFF1F4] rounded-lg transition-all cursor-pointer flex items-center gap-1 text-[11px] font-bold"
+                                        title="Remove this line item"
+                                      >
+                                        <IconTrash className="w-3.5 h-3.5" />
+                                        <span>Remove</span>
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-                                  <div className="sm:col-span-6">
-                                    <label className="text-[10.5px] font-bold text-[#736E9B] block mb-1">Product Title</label>
-                                    <input
-                                      type="text"
-                                      value={it.product_name}
-                                      onChange={(e) => {
-                                        const val = e.target.value;
-                                        setEditOrderForm((prev: any) => {
-                                          const updated = [...prev.items];
-                                          updated[itIdx] = { ...updated[itIdx], product_name: val };
-                                          return { ...prev, items: updated };
-                                        });
-                                      }}
-                                      className="w-full px-3 py-2 rounded-xl border border-[#EAE3F7] bg-white font-semibold text-xs text-[#171136] outline-none focus:border-[#7B5CFF] shadow-2xs"
-                                      placeholder="Product title"
-                                    />
+                                {/* Selected Product Card (Displays real Product Object) */}
+                                <div className="p-3 bg-white rounded-xl border border-[#EAE3F7] flex items-center gap-3 shadow-2xs">
+                                  <div className="w-12 h-12 rounded-xl bg-[#FAF8FF] border border-[#EAE3F7] overflow-hidden flex items-center justify-center shrink-0">
+                                    {it.image ? (
+                                      <img
+                                        src={getMediaUrl(it.image)}
+                                        alt={it.product_name}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                          (e.target as HTMLElement).style.display = "none";
+                                        }}
+                                      />
+                                    ) : (
+                                      <IconBox className="w-5 h-5 text-[#7B5CFF]" />
+                                    )}
                                   </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="font-extrabold text-xs text-[#171136] leading-tight" title={it.product_name}>
+                                      {it.product_name || "Custom Item"}
+                                    </p>
+                                    <div className="flex items-center gap-2 mt-1 text-[11px] text-[#736E9B] flex-wrap">
+                                      {it.sku && <span className="font-mono">SKU: {it.sku}</span>}
+                                      {it.productId && <span className="text-[10px] text-[#8A84A6]">ID: #{String(it.productId).slice(0, 8)}</span>}
+                                    </div>
+                                  </div>
+                                </div>
 
-                                  <div className="sm:col-span-2">
+                                {/* Searchable Picker when Admin clicks "Change Product" */}
+                                {changingItemIndex === itIdx && (
+                                  <div className="p-3 bg-white border border-[#7B5CFF] rounded-xl shadow-lg space-y-2.5 animate-in fade-in duration-150">
+                                    <div className="flex items-center justify-between">
+                                      <span className="font-bold text-xs text-[#171136]">Select Replacement Product:</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => setChangingItemIndex(null)}
+                                        className="text-xs text-[#8A84A6] hover:text-[#171136]"
+                                      >
+                                        ✕
+                                      </button>
+                                    </div>
+                                    <div className="relative flex items-center">
+                                      <IconSearch className="absolute left-3 w-3.5 h-3.5 text-[#8A84A6] pointer-events-none" />
+                                      <input
+                                        type="text"
+                                        placeholder="Filter catalog products..."
+                                        value={orderProductSearchQuery}
+                                        onChange={(e) => setOrderProductSearchQuery(e.target.value)}
+                                        className="w-full pl-9 pr-3 py-2 bg-[#FAF8FF] border border-[#EAE3F7] rounded-lg text-xs font-semibold text-[#171136] focus:outline-none focus:border-[#7B5CFF]"
+                                        autoFocus
+                                      />
+                                    </div>
+                                    <div className="max-h-48 overflow-y-auto divide-y divide-[#F0EBF8] border border-[#EAE3F7] rounded-lg">
+                                      {orderEditFilteredProducts.length === 0 ? (
+                                        <div className="p-3 text-center text-xs text-[#8A84A6]">No products found</div>
+                                      ) : (
+                                        orderEditFilteredProducts.map((p) => {
+                                          const rawPrice = parseFloat(
+                                            String(p.discountedPrice || p.price || "0").replace(/[^\d.]/g, "")
+                                          ) || 0;
+                                          return (
+                                            <div
+                                              key={p.id}
+                                              onClick={() => handleSelectProductForItem(p, itIdx)}
+                                              className="p-2 flex items-center justify-between gap-2 hover:bg-[#F6F1FF] cursor-pointer group text-xs"
+                                            >
+                                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                <div className="w-8 h-8 rounded-lg bg-[#FAF8FF] border border-[#EAE3F7] overflow-hidden flex items-center justify-center shrink-0">
+                                                  {p.image || p.image_file ? (
+                                                    <img
+                                                      src={getMediaUrl(p.image || String(p.image_file))}
+                                                      alt={p.name}
+                                                      className="w-full h-full object-cover"
+                                                      onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
+                                                    />
+                                                  ) : (
+                                                    <IconBox className="w-3.5 h-3.5 text-[#7B5CFF]" />
+                                                  )}
+                                                </div>
+                                                <div className="min-w-0 flex-1 truncate font-semibold text-[#171136] group-hover:text-[#7B5CFF]">
+                                                  {p.name}
+                                                </div>
+                                              </div>
+                                              <div className="text-right shrink-0">
+                                                <span className="font-extrabold text-[#FF4D6D]">৳{rawPrice.toLocaleString()}</span>
+                                                <span className="block text-[10px] text-[#7B5CFF] font-bold">Select ↵</span>
+                                              </div>
+                                            </div>
+                                          );
+                                        })
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Quantity, Unit Price, Line Total Controls */}
+                                <div className="grid grid-cols-1 sm:grid-cols-8 gap-3 items-center pt-1 text-xs">
+                                  <div className="sm:col-span-3">
                                     <label className="text-[10.5px] font-bold text-[#736E9B] block mb-1">Quantity</label>
                                     <input
                                       type="number"
@@ -5873,8 +6130,10 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                     />
                                   </div>
 
-                                  <div className="sm:col-span-2">
-                                    <label className="text-[10.5px] font-bold text-[#736E9B] block mb-1">Price (৳)</label>
+                                  <div className="sm:col-span-3">
+                                    <label className="text-[10.5px] font-bold text-[#736E9B] block mb-1">
+                                      Unit Price (৳) {it.lotNumber && <span className="text-[9.5px] text-[#7B5CFF] font-normal">(Lot Price)</span>}
+                                    </label>
                                     <input
                                       type="number"
                                       min="0"
