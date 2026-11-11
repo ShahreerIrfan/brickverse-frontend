@@ -458,6 +458,11 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
     setOrderProductSearchQuery("");
     setIsAddProductPickerOpen(false);
 
+    // Refresh products catalog in background to get latest real-time stock
+    getAllProducts({ all: true }).then((prods) => {
+      if (prods && Array.isArray(prods)) setProducts(prods);
+    }).catch(() => {});
+
     const rawItems = Array.isArray(order.items) && order.items.length > 0 ? order.items : [];
     const items = rawItems.map((it: any) => {
       const pId = it.productId || it.product_id || (typeof it.product === "object" ? it.product?.id : it.product);
@@ -465,15 +470,18 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
         (p) => String(p.id) === String(pId) || p.name.trim().toLowerCase() === String(it.product_name || "").trim().toLowerCase()
       );
 
+      const itemQty = Number(it.quantity || 1);
       return {
         id: it.id,
         productId: matched ? String(matched.id) : (pId ? String(pId) : undefined),
         product: matched ? String(matched.id) : (pId ? String(pId) : undefined),
         product_name: it.product_name || matched?.name || "Item",
-        quantity: Number(it.quantity || 1),
+        quantity: itemQty,
+        originalQuantity: itemQty,
         price: Number(it.price || 0),
         image: it.image || it.product_image || matched?.image || (matched?.image_file ? String(matched.image_file) : "") || "",
         sku: it.sku || matched?.sku || "",
+        stock: matched?.stock ?? 0,
         lotId: it.lotId || it.lot_id,
         lotNumber: it.lotNumber || it.lot_number || "",
       };
@@ -519,6 +527,12 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   }, [products, orderProductSearchQuery]);
 
   const handleSelectProductForItem = (p: Product, itIdx: number) => {
+    const stockVal = typeof p.stock === "number" ? p.stock : 0;
+    if (stockVal <= 0) {
+      showToast(`⚠️ "${p.name}" is out of stock in the store. Please restock or add a new batch/lot first.`);
+      return;
+    }
+
     const rawPrice = parseFloat(
       String(p.discountedPrice || p.price || "0").replace(/[^\d.]/g, "")
     ) || 0;
@@ -533,6 +547,8 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
         price: rawPrice,
         image: p.image || (p.image_file ? String(p.image_file) : ""),
         sku: p.sku || "",
+        stock: stockVal,
+        originalQuantity: 0,
         lotNumber: "",
       };
       const sub = updated.reduce(
@@ -548,6 +564,12 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
   };
 
   const handleAddProductToOrder = (p: Product) => {
+    const stockVal = typeof p.stock === "number" ? p.stock : 0;
+    if (stockVal <= 0) {
+      showToast(`⚠️ "${p.name}" is out of stock in the store. Please restock or add a new batch/lot first.`);
+      return;
+    }
+
     const rawPrice = parseFloat(
       String(p.discountedPrice || p.price || "0").replace(/[^\d.]/g, "")
     ) || 0;
@@ -561,9 +583,11 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
           product: String(p.id),
           product_name: p.name,
           quantity: 1,
+          originalQuantity: 0,
           price: rawPrice,
           image: p.image || (p.image_file ? String(p.image_file) : ""),
           sku: p.sku || "",
+          stock: stockVal,
           lotNumber: "",
         },
       ];
@@ -5961,6 +5985,14 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                         <div className="space-y-3.5 border-t border-[#F0EBF8] pt-3">
                           {editOrderForm.items.map((it: any, itIdx: number) => {
                             const itTotal = (Number(it.price) || 0) * (Number(it.quantity) || 1);
+                            const matchedProd = products.find(
+                              (p) => String(p.id) === String(it.productId || it.product_id || it.product) ||
+                                     p.name.trim().toLowerCase() === String(it.product_name || "").trim().toLowerCase()
+                            );
+                            const catalogStock = typeof matchedProd?.stock === "number" ? Math.max(0, matchedProd.stock) : (typeof it.stock === "number" ? Math.max(0, it.stock) : 0);
+                            const origQty = typeof it.originalQuantity === "number" ? it.originalQuantity : (it.id ? it.quantity : 0);
+                            const maxAllowedQty = it.id ? (origQty + catalogStock) : catalogStock;
+
                             return (
                               <div key={itIdx} className="p-4 bg-[#FAF8FE] rounded-2xl border border-[#ECE6F6] space-y-3">
                                 <div className="flex items-center justify-between gap-2">
@@ -6037,6 +6069,9 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                     <div className="flex items-center gap-2 mt-1 text-[11px] text-[#736E9B] flex-wrap">
                                       {it.sku && <span className="font-mono">SKU: {it.sku}</span>}
                                       {it.productId && <span className="text-[10px] text-[#8A84A6]">ID: #{String(it.productId).slice(0, 8)}</span>}
+                                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${catalogStock > 0 ? "bg-[#E7F8F0] text-[#2ECC8F]" : "bg-[#FFF1F4] text-[#FF4D6D]"}`}>
+                                        Store Stock: {catalogStock} remaining
+                                      </span>
                                     </div>
                                   </div>
                                 </div>
@@ -6073,11 +6108,22 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                           const rawPrice = parseFloat(
                                             String(p.discountedPrice || p.price || "0").replace(/[^\d.]/g, "")
                                           ) || 0;
+                                          const stockVal = p.stock ?? 0;
+                                          const isOutOfStock = stockVal <= 0;
+
                                           return (
                                             <div
                                               key={p.id}
-                                              onClick={() => handleSelectProductForItem(p, itIdx)}
-                                              className="p-2 flex items-center justify-between gap-2 hover:bg-[#F6F1FF] cursor-pointer group text-xs"
+                                              onClick={() => {
+                                                if (isOutOfStock) {
+                                                  showToast(`⚠️ "${p.name}" is out of stock in the store. Please restock or add a new lot first.`);
+                                                  return;
+                                                }
+                                                handleSelectProductForItem(p, itIdx);
+                                              }}
+                                              className={`p-2 flex items-center justify-between gap-2 cursor-pointer group text-xs transition-colors ${
+                                                isOutOfStock ? "opacity-60 bg-[#FAF8FE] hover:bg-[#FFF1F4]" : "hover:bg-[#F6F1FF]"
+                                              }`}
                                             >
                                               <div className="flex items-center gap-2 min-w-0 flex-1">
                                                 <div className="w-8 h-8 rounded-lg bg-[#FAF8FF] border border-[#EAE3F7] overflow-hidden flex items-center justify-center shrink-0">
@@ -6092,8 +6138,13 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                                     <IconBox className="w-3.5 h-3.5 text-[#7B5CFF]" />
                                                   )}
                                                 </div>
-                                                <div className="min-w-0 flex-1 truncate font-semibold text-[#171136] group-hover:text-[#7B5CFF]">
-                                                  {p.name}
+                                                <div className="min-w-0 flex-1 truncate">
+                                                  <p className="font-semibold text-[#171136] group-hover:text-[#7B5CFF] truncate">
+                                                    {p.name}
+                                                  </p>
+                                                  <p className={`text-[10px] ${isOutOfStock ? "text-[#FF4D6D] font-bold" : "text-[#736E9B]"}`}>
+                                                    Stock: {stockVal} {isOutOfStock ? "(Out of Stock)" : "available"}
+                                                  </p>
                                                 </div>
                                               </div>
                                               <div className="text-right shrink-0">
@@ -6111,13 +6162,28 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                 {/* Quantity, Unit Price, Line Total Controls */}
                                 <div className="grid grid-cols-1 sm:grid-cols-8 gap-3 items-center pt-1 text-xs">
                                   <div className="sm:col-span-3">
-                                    <label className="text-[10.5px] font-bold text-[#736E9B] block mb-1">Quantity</label>
+                                    <div className="flex items-center justify-between mb-1">
+                                      <label className="text-[10.5px] font-bold text-[#736E9B]">Quantity</label>
+                                      <span
+                                        className={`text-[9.5px] font-bold px-1.5 py-0.5 rounded ${
+                                          catalogStock > 0 ? "text-[#7B5CFF] bg-[#F6F1FF]" : "text-[#FF4D6D] bg-[#FFF1F4]"
+                                        }`}
+                                        title={`Catalog stock: ${catalogStock}. Max allowed for this order: ${maxAllowedQty}`}
+                                      >
+                                        Max: {maxAllowedQty} ({catalogStock} in stock)
+                                      </span>
+                                    </div>
                                     <input
                                       type="number"
                                       min="1"
+                                      max={Math.max(1, maxAllowedQty)}
                                       value={it.quantity}
                                       onChange={(e) => {
-                                        const qty = Math.max(1, Number(e.target.value) || 1);
+                                        let qty = Math.max(1, Number(e.target.value) || 1);
+                                        if (maxAllowedQty > 0 && qty > maxAllowedQty) {
+                                          qty = maxAllowedQty;
+                                          showToast(`⚠️ Stock Limit: Max allowed for this order is ${maxAllowedQty} (${catalogStock} in store + ${origQty} in order). Restock or add a new lot to add more.`);
+                                        }
                                         setEditOrderForm((prev: any) => {
                                           const updated = [...prev.items];
                                           updated[itIdx] = { ...updated[itIdx], quantity: qty };
@@ -6126,7 +6192,11 @@ export default function AdminDashboard({ user, initialNav, initialOrderId, initi
                                           return { ...prev, items: updated, total_amount: Math.round(sub + ship) };
                                         });
                                       }}
-                                      className="w-full px-3 py-2 rounded-xl border border-[#EAE3F7] bg-white font-bold text-xs text-center text-[#171136] outline-none focus:border-[#7B5CFF] shadow-2xs"
+                                      className={`w-full px-3 py-2 rounded-xl border bg-white font-bold text-xs text-center text-[#171136] outline-none shadow-2xs transition-colors ${
+                                        it.quantity >= maxAllowedQty && maxAllowedQty > 0
+                                          ? "border-[#FFB703] focus:border-[#FFB703]"
+                                          : "border-[#EAE3F7] focus:border-[#7B5CFF]"
+                                      }`}
                                     />
                                   </div>
 
